@@ -1,9 +1,11 @@
 # Reinforcement Learning Routing
 
-AgentProp includes a small sequential routing environment and two policies:
+AgentProp includes a small sequential routing environment and three policies:
 
 - `GreedyCoveragePolicy`: one-step lookahead baseline.
 - `TabularQPolicy`: trained over full seed-selection episodes with Q-learning.
+- `ReinforcePolicy`: trained with a dependency-light episodic policy-gradient
+  loop over learned state-action preferences.
 
 Run the trainable policy:
 
@@ -11,8 +13,15 @@ Run the trainable policy:
 PYTHONPATH=src:. python experiments/run_rl_routing.py --policy q-learning --episodes 100 --out results/rl/routing_policy.json
 ```
 
-The Q-learning loop optimizes over complete routing trajectories. The default
-action set selects context seed nodes or stops. The expanded action set supports:
+Run the policy-gradient baseline:
+
+```bash
+PYTHONPATH=src:. python experiments/run_rl_routing.py --policy reinforce --episodes 100 --out results/rl/reinforce_policy.json
+```
+
+The Q-learning and REINFORCE loops optimize over complete routing trajectories.
+The default action set selects context seed nodes or stops. The expanded action
+set supports:
 
 - `SEND_CONTEXT(node)`
 - `ACTIVATE_VERIFIER(node)`
@@ -25,7 +34,7 @@ action set selects context seed nodes or stops. The expanded action set supports
 Run expanded-action training:
 
 ```bash
-PYTHONPATH=src:. python experiments/run_rl_routing.py --policy q-learning --expanded-actions --episodes 100
+PYTHONPATH=src:. python experiments/run_rl_routing.py --policy reinforce --expanded-actions --episodes 100
 ```
 
 The environment also exposes `reset_gymnasium()` and `step_gymnasium()` methods

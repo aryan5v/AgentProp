@@ -2,11 +2,14 @@ from agentprop.rl import (
     AgentRoutingEnv,
     GreedyCoveragePolicy,
     QLearningConfig,
+    ReinforceConfig,
+    ReinforcePolicy,
     RoutingAction,
     TabularQPolicy,
     format_routing_action,
     parse_routing_action,
     train_q_policy,
+    train_reinforce_policy,
 )
 from agentprop.workflows import planner_coder_tester_reviewer
 
@@ -105,3 +108,40 @@ def test_q_learning_can_train_with_expanded_actions() -> None:
 
     assert policy.expanded_actions
     assert result.q_value_count > 0
+
+
+def test_reinforce_trains_state_action_preferences() -> None:
+    graph = planner_coder_tester_reviewer()
+    env = AgentRoutingEnv(graph, budget=2, trials=3)
+
+    policy, result = train_reinforce_policy(
+        env,
+        config=ReinforceConfig(episodes=8, learning_rate=0.1, seed=1),
+    )
+    env.reset()
+    action = policy.act(env)
+
+    assert isinstance(policy, ReinforcePolicy)
+    assert result.episodes == 8
+    assert result.preference_count > 0
+    assert action in env.action_space
+    assert action != RoutingAction.STOP.value
+
+
+def test_reinforce_can_train_with_expanded_actions() -> None:
+    graph = planner_coder_tester_reviewer()
+    env = AgentRoutingEnv(graph, budget=2, trials=2)
+
+    policy, result = train_reinforce_policy(
+        env,
+        config=ReinforceConfig(
+            episodes=3,
+            learning_rate=0.05,
+            seed=2,
+            expanded_actions=True,
+            max_steps=5,
+        ),
+    )
+
+    assert policy.expanded_actions
+    assert result.preference_count > 0

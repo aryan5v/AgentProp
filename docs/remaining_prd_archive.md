@@ -230,7 +230,8 @@ Goal: move beyond seed-selection Q-learning toward real workflow control.
 
 ### Algorithms
 
-- REINFORCE baseline.
+- REINFORCE baseline: added dependency-light tabular policy-gradient trainer
+  with seed-selection and expanded-action support.
 - PPO baseline.
 - Evaluation against greedy, CELF, GNN, and broadcast.
 

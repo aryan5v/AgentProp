@@ -15,6 +15,12 @@ from agentprop.rl.q_learning import (
     TabularQPolicy,
     train_q_policy,
 )
+from agentprop.rl.reinforce import (
+    ReinforceConfig,
+    ReinforcePolicy,
+    ReinforceTrainingResult,
+    train_reinforce_policy,
+)
 from agentprop.rl.rewards import propagation_reward
 
 __all__ = [
@@ -22,6 +28,9 @@ __all__ = [
     "GreedyCoveragePolicy",
     "QLearningConfig",
     "QLearningTrainingResult",
+    "ReinforceConfig",
+    "ReinforcePolicy",
+    "ReinforceTrainingResult",
     "RoutingAction",
     "RoutingDecision",
     "RoutingState",
@@ -30,4 +39,5 @@ __all__ = [
     "TabularQPolicy",
     "propagation_reward",
     "train_q_policy",
+    "train_reinforce_policy",
 ]

@@ -94,3 +94,25 @@ def test_rl_routing_experiment_writes_trajectory(tmp_path: Path) -> None:
 
     assert exit_code == 0
     assert output.exists()
+
+
+def test_rl_routing_experiment_writes_reinforce_trajectory(tmp_path: Path) -> None:
+    output = tmp_path / "rl_reinforce.json"
+
+    exit_code = run_rl_routing.main(
+        [
+            "--policy",
+            "reinforce",
+            "--episodes",
+            "3",
+            "--trials",
+            "2",
+            "--max-steps",
+            "5",
+            "--out",
+            str(output),
+        ]
+    )
+
+    assert exit_code == 0
+    assert output.exists()
