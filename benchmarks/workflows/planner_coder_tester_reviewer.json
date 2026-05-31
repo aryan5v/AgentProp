@@ -1,0 +1,148 @@
+{
+  "edges": [
+    {
+      "activation_probability": 1.0,
+      "dependency_strength": 1.0,
+      "latency": 0.7,
+      "message_cost": 650,
+      "metadata": {},
+      "relevance": 1.0,
+      "reliability": 1.0,
+      "source": "planner",
+      "target": "coder",
+      "weight": 0.9
+    },
+    {
+      "activation_probability": 1.0,
+      "dependency_strength": 1.0,
+      "latency": 0.5,
+      "message_cost": 450,
+      "metadata": {},
+      "relevance": 1.0,
+      "reliability": 1.0,
+      "source": "coder",
+      "target": "tester",
+      "weight": 0.8
+    },
+    {
+      "activation_probability": 1.0,
+      "dependency_strength": 1.0,
+      "latency": 0.5,
+      "message_cost": 350,
+      "metadata": {},
+      "relevance": 1.0,
+      "reliability": 1.0,
+      "source": "tester",
+      "target": "reviewer",
+      "weight": 0.75
+    },
+    {
+      "activation_probability": 1.0,
+      "dependency_strength": 1.0,
+      "latency": 0.3,
+      "message_cost": 250,
+      "metadata": {},
+      "relevance": 1.0,
+      "reliability": 1.0,
+      "source": "reviewer",
+      "target": "final",
+      "weight": 0.9
+    },
+    {
+      "activation_probability": 1.0,
+      "dependency_strength": 1.0,
+      "latency": 0.4,
+      "message_cost": 400,
+      "metadata": {},
+      "relevance": 0.7,
+      "reliability": 1.0,
+      "source": "planner",
+      "target": "reviewer",
+      "weight": 0.45
+    },
+    {
+      "activation_probability": 1.0,
+      "dependency_strength": 1.0,
+      "latency": 0.4,
+      "message_cost": 300,
+      "metadata": {},
+      "relevance": 0.8,
+      "reliability": 1.0,
+      "source": "tester",
+      "target": "coder",
+      "weight": 0.55
+    }
+  ],
+  "nodes": [
+    {
+      "context_capacity": null,
+      "error_rate": 0.1,
+      "id": "planner",
+      "importance_score": null,
+      "latency": 1.4,
+      "metadata": {},
+      "name": null,
+      "reliability": 0.86,
+      "role": "decomposes the task and routes work",
+      "token_cost": 1200,
+      "tool_access": [],
+      "type": "PLANNER"
+    },
+    {
+      "context_capacity": null,
+      "error_rate": 0.18,
+      "id": "coder",
+      "importance_score": null,
+      "latency": 2.1,
+      "metadata": {},
+      "name": null,
+      "reliability": 0.8,
+      "role": "implements the solution",
+      "token_cost": 1700,
+      "tool_access": [],
+      "type": "EXECUTOR"
+    },
+    {
+      "context_capacity": null,
+      "error_rate": 0.08,
+      "id": "tester",
+      "importance_score": null,
+      "latency": 1.6,
+      "metadata": {},
+      "name": null,
+      "reliability": 0.88,
+      "role": "tests the implementation",
+      "token_cost": 950,
+      "tool_access": [],
+      "type": "VERIFIER"
+    },
+    {
+      "context_capacity": null,
+      "error_rate": 0.07,
+      "id": "reviewer",
+      "importance_score": null,
+      "latency": 1.8,
+      "metadata": {},
+      "name": null,
+      "reliability": 0.9,
+      "role": "reviews correctness and maintainability",
+      "token_cost": 1100,
+      "tool_access": [],
+      "type": "REVIEWER"
+    },
+    {
+      "context_capacity": null,
+      "error_rate": 0.0,
+      "id": "final",
+      "importance_score": null,
+      "latency": 0.4,
+      "metadata": {},
+      "name": null,
+      "reliability": 0.95,
+      "role": null,
+      "token_cost": 350,
+      "tool_access": [],
+      "type": "OUTPUT"
+    }
+  ]
+}

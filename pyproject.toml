@@ -21,6 +21,9 @@ dependencies = [
   "networkx>=3.2",
 ]
 
+[project.scripts]
+agentprop = "agentprop.cli:main"
+
 [project.optional-dependencies]
 dev = [
   "pytest>=8.0",
@@ -57,3 +60,4 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 python_version = "3.11"
 strict = true
 packages = ["agentprop"]
+ignore_missing_imports = true

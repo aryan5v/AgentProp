@@ -1,0 +1,15 @@
+import json
+from pathlib import Path
+
+from agentprop.cli import main
+
+
+def test_cli_optimize_emits_json(capsys) -> None:  # type: ignore[no-untyped-def]
+    workflow = Path("benchmarks/workflows/planner_coder_tester_reviewer.json")
+
+    exit_code = main(["optimize", str(workflow), "--budget", "2", "--trials", "10", "--json"])
+
+    assert exit_code == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["seeds"]
+    assert payload["estimated_savings"] >= 0

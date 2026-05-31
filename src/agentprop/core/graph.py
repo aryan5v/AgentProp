@@ -84,6 +84,7 @@ class AgentGraph:
         source: str,
         target: str,
         *,
+        cost: float | None = None,
         message_cost: float = 0.0,
         latency: float = 0.0,
         relevance: float = 1.0,
@@ -99,6 +100,9 @@ class AgentGraph:
             raise ValueError(f"Unknown source node: {source}")
         if target not in self._graph:
             raise ValueError(f"Unknown target node: {target}")
+
+        if cost is not None:
+            message_cost = cost
 
         edge = AgentEdge(
             source=source,
@@ -143,6 +147,36 @@ class AgentGraph:
         """Return a copy of the underlying NetworkX directed graph."""
 
         return self._graph.copy()
+
+    @classmethod
+    def from_networkx(cls, nx_graph: nx.DiGraph) -> AgentGraph:
+        """Build an AgentGraph from a NetworkX directed graph."""
+
+        graph = cls()
+        for node_id, data in nx_graph.nodes(data=True):
+            node_data = dict(data)
+            node_data.setdefault("id", str(node_id))
+            node = AgentNode.from_dict(node_data)
+            graph._graph.add_node(node.id, **node.to_dict())
+
+        for source, target, data in nx_graph.edges(data=True):
+            edge_data = dict(data)
+            edge_data.setdefault("source", str(source))
+            edge_data.setdefault("target", str(target))
+            edge = AgentEdge.from_dict(edge_data)
+            graph._graph.add_edge(edge.source, edge.target, **edge.to_dict())
+
+        return graph
+
+    def successors(self, node_id: str) -> list[str]:
+        """Return outgoing neighbor ids."""
+
+        return list(self._graph.successors(node_id))
+
+    def predecessors(self, node_id: str) -> list[str]:
+        """Return incoming neighbor ids."""
+
+        return list(self._graph.predecessors(node_id))
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize the graph to JSON-compatible data."""
