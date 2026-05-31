@@ -10,6 +10,7 @@ import networkx as nx
 
 from agentprop.core.models import AgentEdge, AgentNode
 from agentprop.core.types import NodeType
+from agentprop.core.validation import validate_workflow_dict
 
 
 class AgentGraph:
@@ -190,6 +191,7 @@ class AgentGraph:
     def from_dict(cls, data: dict[str, Any]) -> AgentGraph:
         """Build a graph from JSON-compatible data."""
 
+        validate_workflow_dict(data)
         graph = cls()
         for raw_node in data.get("nodes", []):
             node = AgentNode.from_dict(raw_node)

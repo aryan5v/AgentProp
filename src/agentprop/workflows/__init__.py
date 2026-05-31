@@ -9,6 +9,7 @@ from agentprop.workflows.templates import (
     research_writer_verifier,
     tool_use_pipeline,
 )
+from agentprop.workflows.export import export_builtin_workflows
 
 __all__ = [
     "WORKFLOW_TEMPLATES",
@@ -18,4 +19,5 @@ __all__ = [
     "rag_pipeline",
     "research_writer_verifier",
     "tool_use_pipeline",
+    "export_builtin_workflows",
 ]

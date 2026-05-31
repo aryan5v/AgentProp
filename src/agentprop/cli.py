@@ -10,6 +10,7 @@ from typing import Any
 from agentprop.algorithms import bottleneck_nodes, low_weight_edges, risk_aware_verifier_placement
 from agentprop.core import AgentGraph
 from agentprop.evaluation import compare_routing
+from agentprop.evaluation.reporting import report_to_dict, write_report
 from agentprop.evaluation.runner import make_propagation_model, run_benchmark, select_seeds
 from agentprop.workflows import WORKFLOW_TEMPLATES
 
@@ -26,6 +27,8 @@ def main(argv: list[str] | None = None) -> int:
         return _analyze(args)
     if args.command == "benchmark":
         return _benchmark(args)
+    if args.command == "report":
+        return _report(args)
 
     parser.print_help()
     return 1
@@ -73,29 +76,37 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     benchmark.add_argument("--json", action="store_true")
 
+    report = subparsers.add_parser("report", help="write a markdown or JSON optimization report")
+    report.add_argument("workflow", help="workflow JSON path or built-in workflow name")
+    report.add_argument("--budget", "-k", type=int, default=2)
+    report.add_argument(
+        "--algorithm",
+        choices=["random", "degree", "pagerank", "betweenness", "greedy"],
+        default="greedy",
+    )
+    report.add_argument(
+        "--model",
+        choices=["independent-cascade", "linear-threshold", "bootstrap", "rzf"],
+        default="independent-cascade",
+    )
+    report.add_argument("--trials", type=int, default=100)
+    report.add_argument("--out", type=Path, default=Path("reports/agentprop_report.md"))
+
     return parser
 
 
 def _optimize(args: argparse.Namespace) -> int:
-    graph = AgentGraph.from_json(args.workflow)
-    model = make_propagation_model(args.model)
-    seeds = select_seeds(graph, args.algorithm, args.budget, model, args.trials)
-    propagation = model.simulate(graph, seeds, trials=args.trials)
-    report = compare_routing(
+    _, graph = _load_workflow(str(args.workflow))
+    report = _build_recommendation_report(
         graph,
-        seeds,
-        model.name,
-        propagation,
-        bottlenecks=bottleneck_nodes(graph),
-        pruning_candidates=low_weight_edges(graph),
-        verifier_candidates=risk_aware_verifier_placement(
-            graph,
-            min(args.budget, graph.node_count),
-        ),
+        algorithm=args.algorithm,
+        model_name=args.model,
+        budget=args.budget,
+        trials=args.trials,
     )
 
     if args.json:
-        print(json.dumps(_report_to_dict(report), indent=2, sort_keys=True))
+        print(json.dumps(report_to_dict(report), indent=2, sort_keys=True))
     else:
         _print_report(report)
     return 0
@@ -123,6 +134,20 @@ def _benchmark(args: argparse.Namespace) -> int:
             f"{row.expected_propagation_time:.3f},"
             f"{row.full_activation_probability:.3f},{row.estimated_savings:.3f}"
         )
+    return 0
+
+
+def _report(args: argparse.Namespace) -> int:
+    workflow_name, graph = _load_workflow(args.workflow)
+    report = _build_recommendation_report(
+        graph,
+        algorithm=args.algorithm,
+        model_name=args.model,
+        budget=args.budget,
+        trials=args.trials,
+    )
+    output_path = write_report(report, args.out, workflow_name=workflow_name)
+    print(f"Wrote {output_path}")
     return 0
 
 
@@ -160,6 +185,28 @@ def _load_workflow(workflow: str) -> tuple[str, AgentGraph]:
     return path.stem, AgentGraph.from_json(path)
 
 
+def _build_recommendation_report(
+    graph: AgentGraph,
+    *,
+    algorithm: str,
+    model_name: str,
+    budget: int,
+    trials: int,
+) -> Any:
+    model = make_propagation_model(model_name)
+    seeds = select_seeds(graph, algorithm, budget, model, trials)
+    propagation = model.simulate(graph, seeds, trials=trials)
+    return compare_routing(
+        graph,
+        seeds,
+        model.name,
+        propagation,
+        bottlenecks=bottleneck_nodes(graph),
+        pruning_candidates=low_weight_edges(graph),
+        verifier_candidates=risk_aware_verifier_placement(graph, min(budget, graph.node_count)),
+    )
+
+
 def _print_report(report: Any) -> None:
     print("AgentProp Optimization Report")
     print("=============================")
@@ -189,35 +236,6 @@ def _print_report(report: Any) -> None:
     print("-------------------")
     for node_id in report.verifier_candidates:
         print(f"- {node_id}")
-
-
-def _report_to_dict(report: Any) -> dict[str, Any]:
-    return {
-        "seeds": report.seeds,
-        "propagation_model": report.propagation_model,
-        "coverage": report.propagation.coverage,
-        "expected_propagation_time": report.propagation.expected_propagation_time,
-        "full_activation_probability": report.propagation.full_activation_probability,
-        "activated_nodes": sorted(report.propagation.activated_nodes),
-        "broadcast_cost": {
-            "token_cost": report.broadcast_cost.token_cost,
-            "message_cost": report.broadcast_cost.message_cost,
-            "total_cost": report.broadcast_cost.total_cost,
-            "latency": report.broadcast_cost.latency,
-            "message_count": report.broadcast_cost.message_count,
-        },
-        "optimized_cost": {
-            "token_cost": report.optimized_cost.token_cost,
-            "message_cost": report.optimized_cost.message_cost,
-            "total_cost": report.optimized_cost.total_cost,
-            "latency": report.optimized_cost.latency,
-            "message_count": report.optimized_cost.message_count,
-        },
-        "estimated_savings": report.estimated_savings,
-        "bottlenecks": report.bottlenecks,
-        "pruning_candidates": report.pruning_candidates,
-        "verifier_candidates": report.verifier_candidates,
-    }
 
 
 if __name__ == "__main__":

@@ -1,5 +1,11 @@
+from pathlib import Path
+
 from agentprop.evaluation.runner import run_benchmark
-from agentprop.workflows import WORKFLOW_TEMPLATES, planner_coder_tester_reviewer
+from agentprop.workflows import (
+    WORKFLOW_TEMPLATES,
+    export_builtin_workflows,
+    planner_coder_tester_reviewer,
+)
 
 
 def test_builtin_workflow_registry_includes_research_fixtures() -> None:
@@ -23,3 +29,10 @@ def test_run_benchmark_compares_algorithms_and_models() -> None:
     assert len(rows) == 4
     assert {row.algorithm for row in rows} == {"degree", "greedy"}
     assert all(row.coverage > 0 for row in rows)
+
+
+def test_export_builtin_workflows_writes_all_templates(tmp_path: Path) -> None:
+    written = export_builtin_workflows(tmp_path)
+
+    assert len(written) == len(WORKFLOW_TEMPLATES)
+    assert (tmp_path / "rag_pipeline.json").exists()
