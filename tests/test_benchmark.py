@@ -20,14 +20,19 @@ def test_run_benchmark_compares_algorithms_and_models() -> None:
     rows = run_benchmark(
         graph,
         workflow_name="planner_coder_tester_reviewer",
-        algorithms=["degree", "greedy"],
+        algorithms=["degree", "greedy", "celf", "cost-aware-greedy"],
         models=["independent-cascade", "rzf"],
         budget=2,
         trials=5,
     )
 
-    assert len(rows) == 4
-    assert {row.algorithm for row in rows} == {"degree", "greedy"}
+    assert len(rows) == 8
+    assert {row.algorithm for row in rows} == {
+        "degree",
+        "greedy",
+        "celf",
+        "cost-aware-greedy",
+    }
     assert all(row.coverage > 0 for row in rows)
 
 

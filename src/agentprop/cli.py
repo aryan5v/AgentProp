@@ -43,7 +43,15 @@ def _build_parser() -> argparse.ArgumentParser:
     optimize.add_argument("--budget", "-k", type=int, default=2)
     optimize.add_argument(
         "--algorithm",
-        choices=["random", "degree", "pagerank", "betweenness", "greedy"],
+        choices=[
+            "random",
+            "degree",
+            "pagerank",
+            "betweenness",
+            "greedy",
+            "celf",
+            "cost-aware-greedy",
+        ],
         default="greedy",
     )
     optimize.add_argument(
@@ -66,7 +74,15 @@ def _build_parser() -> argparse.ArgumentParser:
         "--algorithms",
         nargs="+",
         default=["random", "degree", "pagerank", "greedy"],
-        choices=["random", "degree", "pagerank", "betweenness", "greedy"],
+        choices=[
+            "random",
+            "degree",
+            "pagerank",
+            "betweenness",
+            "greedy",
+            "celf",
+            "cost-aware-greedy",
+        ],
     )
     benchmark.add_argument(
         "--models",
@@ -81,7 +97,15 @@ def _build_parser() -> argparse.ArgumentParser:
     report.add_argument("--budget", "-k", type=int, default=2)
     report.add_argument(
         "--algorithm",
-        choices=["random", "degree", "pagerank", "betweenness", "greedy"],
+        choices=[
+            "random",
+            "degree",
+            "pagerank",
+            "betweenness",
+            "greedy",
+            "celf",
+            "cost-aware-greedy",
+        ],
         default="greedy",
     )
     report.add_argument(

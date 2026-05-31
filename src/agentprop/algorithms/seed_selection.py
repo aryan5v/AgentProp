@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import random
 from collections.abc import Callable
+from dataclasses import dataclass
 
 import networkx as nx
 
@@ -11,6 +12,14 @@ from agentprop.core import AgentGraph, NodeType
 from agentprop.propagation import IndependentCascade, PropagationModel
 
 ScoreMap = dict[str, float]
+
+
+@dataclass(slots=True)
+class SeedSelectionTrace:
+    """Debug trace for greedy-style seed selection."""
+
+    selected: list[str]
+    marginal_gains: dict[str, float]
 
 
 def random_seed_selection(graph: AgentGraph, k: int, *, seed: int | None = None) -> list[str]:
@@ -95,6 +104,71 @@ def greedy_seed_selection(
     return selected
 
 
+def cost_aware_greedy_seed_selection(
+    graph: AgentGraph,
+    k: int,
+    *,
+    propagation_model: PropagationModel | None = None,
+    trials: int = 100,
+    cost_weight: float = 0.001,
+) -> list[str]:
+    """Greedily select seeds with a token-cost penalty."""
+
+    return greedy_seed_selection(
+        graph,
+        k,
+        propagation_model=propagation_model,
+        trials=trials,
+        objective=lambda coverage, time: coverage - 0.02 * time,
+    ) if cost_weight == 0 else _cost_aware_greedy(
+        graph,
+        k,
+        propagation_model=propagation_model,
+        trials=trials,
+        cost_weight=cost_weight,
+    )
+
+
+def celf_seed_selection(
+    graph: AgentGraph,
+    k: int,
+    *,
+    propagation_model: PropagationModel | None = None,
+    trials: int = 100,
+) -> list[str]:
+    """Cost-effective lazy forward selection for influence maximization."""
+
+    _validate_budget(k)
+    model = propagation_model or IndependentCascade(seed=0)
+    candidates = _seed_eligible_nodes(graph)
+    selected: list[str] = []
+    queue = [
+        {
+            "node": node_id,
+            "gain": _seed_set_score(graph, [node_id], model, trials),
+            "last_updated": 0,
+        }
+        for node_id in candidates
+    ]
+
+    while len(selected) < min(k, len(candidates)) and queue:
+        queue.sort(key=lambda item: (-float(item["gain"]), str(item["node"])))
+        best = queue.pop(0)
+        if int(best["last_updated"]) == len(selected):
+            selected.append(str(best["node"]))
+            queue = [item for item in queue if item["node"] != best["node"]]
+            continue
+
+        candidate = str(best["node"])
+        current_score = _seed_set_score(graph, selected, model, trials)
+        updated_score = _seed_set_score(graph, [*selected, candidate], model, trials)
+        best["gain"] = updated_score - current_score
+        best["last_updated"] = len(selected)
+        queue.append(best)
+
+    return selected
+
+
 def centrality_scores(graph: AgentGraph) -> dict[str, ScoreMap]:
     """Return common centrality scores for report generation."""
 
@@ -122,6 +196,49 @@ def _top_k(scores: ScoreMap, k: int) -> list[str]:
 
 def _default_objective(coverage: float, propagation_time: float) -> float:
     return coverage - 0.02 * propagation_time
+
+
+def _cost_aware_greedy(
+    graph: AgentGraph,
+    k: int,
+    *,
+    propagation_model: PropagationModel | None,
+    trials: int,
+    cost_weight: float,
+) -> list[str]:
+    _validate_budget(k)
+    model = propagation_model or IndependentCascade(seed=0)
+    selected: list[str] = []
+    candidates = _seed_eligible_nodes(graph)
+
+    while len(selected) < min(k, len(candidates)):
+        best_node = None
+        best_score = float("-inf")
+        for node_id in candidates:
+            if node_id in selected:
+                continue
+            node = graph.node(node_id)
+            score = _seed_set_score(graph, [*selected, node_id], model, trials)
+            score -= cost_weight * node.token_cost
+            if score > best_score:
+                best_score = score
+                best_node = node_id
+        if best_node is None:
+            break
+        selected.append(best_node)
+
+    return selected
+
+
+def _seed_set_score(
+    graph: AgentGraph,
+    seeds: list[str],
+    model: PropagationModel,
+    trials: int,
+) -> float:
+    result = model.simulate(graph, seeds, trials=trials)
+    propagation_time = result.expected_propagation_time or result.propagation_time
+    return _default_objective(result.coverage, propagation_time)
 
 
 def _seed_eligible_nodes(graph: AgentGraph) -> list[str]:

@@ -6,6 +6,8 @@ from dataclasses import asdict, dataclass
 
 from agentprop.algorithms import (
     betweenness_seed_selection,
+    celf_seed_selection,
+    cost_aware_greedy_seed_selection,
     degree_seed_selection,
     greedy_seed_selection,
     pagerank_seed_selection,
@@ -114,4 +116,13 @@ def select_seeds(
         return betweenness_seed_selection(graph, budget)
     if algorithm == "greedy":
         return greedy_seed_selection(graph, budget, propagation_model=model, trials=trials)
+    if algorithm == "celf":
+        return celf_seed_selection(graph, budget, propagation_model=model, trials=trials)
+    if algorithm == "cost-aware-greedy":
+        return cost_aware_greedy_seed_selection(
+            graph,
+            budget,
+            propagation_model=model,
+            trials=trials,
+        )
     raise ValueError(f"Unknown seed algorithm: {algorithm}")

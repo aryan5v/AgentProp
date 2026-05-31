@@ -79,6 +79,8 @@ print(seeds)
   - PageRank-style influence score
   - Betweenness
   - Greedy influence maximization
+  - CELF lazy greedy
+  - Cost-aware greedy
 - Diagnostics:
   - Bottleneck nodes
   - Low-weight pruning candidates

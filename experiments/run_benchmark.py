@@ -25,7 +25,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--algorithms",
         nargs="+",
-        default=["random", "degree", "pagerank", "betweenness", "greedy"],
+        default=[
+            "random",
+            "degree",
+            "pagerank",
+            "betweenness",
+            "greedy",
+            "celf",
+            "cost-aware-greedy",
+        ],
     )
     parser.add_argument(
         "--models",
