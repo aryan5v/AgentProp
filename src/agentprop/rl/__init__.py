@@ -28,6 +28,12 @@ from agentprop.rl.reinforce import (
     train_reinforce_policy,
 )
 from agentprop.rl.rewards import propagation_reward
+from agentprop.rl.trajectory import (
+    RoutingReplayResult,
+    RoutingReplayStep,
+    actions_from_exported_trajectory,
+    replay_actions,
+)
 
 __all__ = [
     "AgentRoutingEnv",
@@ -40,13 +46,17 @@ __all__ = [
     "ReinforceConfig",
     "ReinforcePolicy",
     "ReinforceTrainingResult",
+    "RoutingReplayResult",
+    "RoutingReplayStep",
     "RoutingAction",
     "RoutingDecision",
     "RoutingState",
+    "actions_from_exported_trajectory",
     "format_routing_action",
     "parse_routing_action",
     "TabularQPolicy",
     "propagation_reward",
+    "replay_actions",
     "train_ppo_policy",
     "train_q_policy",
     "train_reinforce_policy",

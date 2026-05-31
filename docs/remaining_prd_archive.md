@@ -227,8 +227,10 @@ Goal: move beyond seed-selection Q-learning toward real workflow control.
 - Make `AgentRoutingEnv` Gymnasium-compatible: added dependency-light
   `reset_gymnasium()` and `step_gymnasium()` adapter methods.
 - Add trajectory export/import: trajectory export is present in
-  `experiments/run_rl_routing.py`; import remains.
-- Add deterministic evaluation mode.
+  `experiments/run_rl_routing.py`; import/replay added through
+  `agentprop.rl.replay_actions` and `experiments/replay_rl_trajectory.py`.
+- Add deterministic evaluation mode: replay script accepts a propagation seed
+  and trials count for reproducible trajectory checks.
 
 ### Algorithms
 

@@ -8,8 +8,10 @@ from agentprop.rl import (
     ReinforcePolicy,
     RoutingAction,
     TabularQPolicy,
+    actions_from_exported_trajectory,
     format_routing_action,
     parse_routing_action,
+    replay_actions,
     train_ppo_policy,
     train_q_policy,
     train_reinforce_policy,
@@ -187,3 +189,35 @@ def test_ppo_can_train_with_expanded_actions() -> None:
     assert policy.expanded_actions
     assert result.preference_count > 0
     assert result.value_count > 0
+
+
+def test_actions_from_exported_trajectory_extracts_actions() -> None:
+    actions = actions_from_exported_trajectory(
+        [
+            {"action": "planner", "coverage": 0.5},
+            {"action": "coder", "coverage": 0.75},
+        ]
+    )
+
+    assert actions == ["planner", "coder"]
+
+
+def test_replay_actions_recreates_expanded_routing_state() -> None:
+    graph = planner_coder_tester_reviewer()
+    env = AgentRoutingEnv(graph, budget=2, trials=3)
+    verifier_action = format_routing_action(
+        RoutingAction.ACTIVATE_VERIFIER,
+        node_id="tester",
+    )
+    prune_action = format_routing_action(
+        RoutingAction.PRUNE_EDGE,
+        edge=("planner", "reviewer"),
+    )
+
+    replay = replay_actions(env, [verifier_action, prune_action, "planner"])
+
+    assert replay.final_state.activated_verifiers == ("tester",)
+    assert replay.final_state.pruned_edges == (("planner", "reviewer"),)
+    assert replay.final_state.selected_seeds == ("planner",)
+    assert replay.total_reward != 0.0
+    assert not replay.truncated

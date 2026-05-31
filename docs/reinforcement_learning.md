@@ -52,6 +52,17 @@ baselines:
 PYTHONPATH=src:. python experiments/evaluate_routing_baselines.py --workflows chain,star,tree --episodes 40
 ```
 
+Replay an exported trajectory with a deterministic propagation seed:
+
+```bash
+PYTHONPATH=src:. python experiments/replay_rl_trajectory.py \
+  --trajectory results/rl/routing_policy.json \
+  --workflow planner_coder_tester_reviewer \
+  --policy ppo \
+  --seed 0 \
+  --out results/rl/replayed_trajectory.json
+```
+
 The environment also exposes `reset_gymnasium()` and `step_gymnasium()` methods
 that return Gymnasium-style observations without making Gymnasium a required
 core dependency.

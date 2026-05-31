@@ -4,6 +4,7 @@ from pathlib import Path
 from experiments import (
     evaluate_ml_generalization,
     evaluate_routing_baselines,
+    replay_rl_trajectory,
     run_benchmark,
     run_rl_routing,
     train_edge_pruning_scorer,
@@ -186,6 +187,47 @@ def test_rl_routing_experiment_writes_trajectory(tmp_path: Path) -> None:
 
     assert exit_code == 0
     assert output.exists()
+
+
+def test_replay_rl_trajectory_experiment_imports_exported_trajectory(tmp_path: Path) -> None:
+    source = tmp_path / "rl.json"
+    replayed = tmp_path / "replayed.json"
+    run_rl_routing.main(
+        [
+            "--policy",
+            "greedy",
+            "--trials",
+            "2",
+            "--max-steps",
+            "4",
+            "--out",
+            str(source),
+        ]
+    )
+
+    exit_code = replay_rl_trajectory.main(
+        [
+            "--trajectory",
+            str(source),
+            "--workflow",
+            "planner_coder_tester_reviewer",
+            "--policy",
+            "greedy",
+            "--trials",
+            "2",
+            "--seed",
+            "0",
+            "--out",
+            str(replayed),
+        ]
+    )
+    payload = json.loads(replayed.read_text())
+
+    assert exit_code == 0
+    assert replayed.exists()
+    assert payload["rows"][0]["workflow"] == "planner_coder_tester_reviewer"
+    assert payload["rows"][0]["steps"]
+    assert payload["rows"][0]["final_state"]["selected_seeds"]
 
 
 def test_rl_routing_experiment_writes_reinforce_trajectory(tmp_path: Path) -> None:
