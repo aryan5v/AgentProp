@@ -60,6 +60,12 @@ class AgentRoutingEnv:
 
         return [*self.available_seed_actions(), RoutingAction.STOP.value]
 
+    @property
+    def state(self) -> RoutingState:
+        """Return the current environment state."""
+
+        return self._state
+
     def available_seed_actions(self) -> list[str]:
         """Return node ids that can still be selected."""
 
