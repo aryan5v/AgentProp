@@ -8,7 +8,8 @@ version = "0.1.0"
 description = "Graph optimization for multi-agent LLM workflows."
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [{ name = "AgentProp contributors" }]
 keywords = [
   "multi-agent",
@@ -36,10 +37,15 @@ ml = [
 rl = [
   "gymnasium>=0.29",
 ]
+dl = [
+  "torch>=2.2",
+]
 
 [project.urls]
 Homepage = "https://github.com/agentprop/agentprop"
 Repository = "https://github.com/agentprop/agentprop"
+Documentation = "https://github.com/agentprop/agentprop#readme"
+Issues = "https://github.com/agentprop/agentprop/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/agentprop"]

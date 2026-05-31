@@ -12,6 +12,8 @@ from agentprop.core import AgentGraph
 from agentprop.evaluation import compare_routing
 from agentprop.evaluation.reporting import report_to_dict, write_report
 from agentprop.evaluation.runner import make_propagation_model, run_benchmark, select_seeds
+from agentprop.integrations import graph_from_trace
+from agentprop.visualization import write_dot
 from agentprop.workflows import WORKFLOW_TEMPLATES
 
 
@@ -29,6 +31,10 @@ def main(argv: list[str] | None = None) -> int:
         return _benchmark(args)
     if args.command == "report":
         return _report(args)
+    if args.command == "trace":
+        return _trace(args)
+    if args.command == "viz":
+        return _viz(args)
 
     parser.print_help()
     return 1
@@ -116,6 +122,14 @@ def _build_parser() -> argparse.ArgumentParser:
     report.add_argument("--trials", type=int, default=100)
     report.add_argument("--out", type=Path, default=Path("reports/agentprop_report.md"))
 
+    trace = subparsers.add_parser("trace", help="convert a trace JSON file into workflow JSON")
+    trace.add_argument("trace_file", type=Path)
+    trace.add_argument("--out", type=Path, default=Path("results/trace_workflow.json"))
+
+    viz = subparsers.add_parser("viz", help="export a workflow graph as Graphviz DOT")
+    viz.add_argument("workflow", help="workflow JSON path or built-in workflow name")
+    viz.add_argument("--out", type=Path, default=Path("reports/workflow.dot"))
+
     return parser
 
 
@@ -171,6 +185,24 @@ def _report(args: argparse.Namespace) -> int:
         trials=args.trials,
     )
     output_path = write_report(report, args.out, workflow_name=workflow_name)
+    print(f"Wrote {output_path}")
+    return 0
+
+
+def _trace(args: argparse.Namespace) -> int:
+    result = graph_from_trace(args.trace_file)
+    result.graph.to_json(args.out)
+    print(
+        f"Wrote {args.out} "
+        f"from {result.message_count} messages "
+        f"({result.total_token_cost:.0f} tokens)"
+    )
+    return 0
+
+
+def _viz(args: argparse.Namespace) -> int:
+    workflow_name, graph = _load_workflow(args.workflow)
+    output_path = write_dot(graph, args.out, name=workflow_name)
     print(f"Wrote {output_path}")
     return 0
 

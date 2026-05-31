@@ -113,3 +113,8 @@ AgentProp studies whether training-free graph algorithms and learned GNN/RL poli
 
 - [docs/PRD.md](docs/PRD.md) for the cleaned product and research plan.
 - [docs/research/literature_review.md](docs/research/literature_review.md) for the academic framing and related-work map.
+- [docs/trace_ingestion.md](docs/trace_ingestion.md) for converting message logs into workflow graphs.
+- [docs/visualization.md](docs/visualization.md) for Graphviz DOT exports.
+- [docs/deep_learning.md](docs/deep_learning.md) for the optional DL roadmap.
+- [docs/release_checklist.md](docs/release_checklist.md) for the v1 readiness checklist.
+- [CONTRIBUTING.md](CONTRIBUTING.md) for development and contribution guidance.
