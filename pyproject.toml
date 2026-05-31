@@ -1,0 +1,59 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agentprop"
+version = "0.1.0"
+description = "Graph optimization for multi-agent LLM workflows."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "AgentProp contributors" }]
+keywords = [
+  "multi-agent",
+  "llm",
+  "graph-optimization",
+  "influence-maximization",
+  "reinforcement-learning",
+]
+dependencies = [
+  "networkx>=3.2",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.5",
+  "mypy>=1.10",
+]
+ml = [
+  "numpy>=1.26",
+]
+rl = [
+  "gymnasium>=0.29",
+]
+
+[project.urls]
+Homepage = "https://github.com/agentprop/agentprop"
+Repository = "https://github.com/agentprop/agentprop"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agentprop"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+packages = ["agentprop"]
