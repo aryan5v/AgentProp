@@ -7,24 +7,11 @@ import json
 from pathlib import Path
 from typing import Any
 
-from agentprop.algorithms import (
-    betweenness_seed_selection,
-    bottleneck_nodes,
-    degree_seed_selection,
-    greedy_seed_selection,
-    low_weight_edges,
-    pagerank_seed_selection,
-    random_seed_selection,
-    risk_aware_verifier_placement,
-)
+from agentprop.algorithms import bottleneck_nodes, low_weight_edges, risk_aware_verifier_placement
 from agentprop.core import AgentGraph
 from agentprop.evaluation import compare_routing
-from agentprop.propagation import (
-    BootstrapPercolation,
-    IndependentCascade,
-    LinearThreshold,
-    RandomizedZeroForcing,
-)
+from agentprop.evaluation.runner import make_propagation_model, run_benchmark, select_seeds
+from agentprop.workflows import WORKFLOW_TEMPLATES
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -37,6 +24,8 @@ def main(argv: list[str] | None = None) -> int:
         return _optimize(args)
     if args.command == "analyze":
         return _analyze(args)
+    if args.command == "benchmark":
+        return _benchmark(args)
 
     parser.print_help()
     return 1
@@ -66,13 +55,31 @@ def _build_parser() -> argparse.ArgumentParser:
     analyze.add_argument("workflow", type=Path)
     analyze.add_argument("--json", action="store_true")
 
+    benchmark = subparsers.add_parser("benchmark", help="compare algorithms and propagation models")
+    benchmark.add_argument("workflow", help="workflow JSON path or built-in workflow name")
+    benchmark.add_argument("--budget", "-k", type=int, default=2)
+    benchmark.add_argument("--trials", type=int, default=100)
+    benchmark.add_argument(
+        "--algorithms",
+        nargs="+",
+        default=["random", "degree", "pagerank", "greedy"],
+        choices=["random", "degree", "pagerank", "betweenness", "greedy"],
+    )
+    benchmark.add_argument(
+        "--models",
+        nargs="+",
+        default=["independent-cascade", "rzf"],
+        choices=["independent-cascade", "linear-threshold", "bootstrap", "rzf"],
+    )
+    benchmark.add_argument("--json", action="store_true")
+
     return parser
 
 
 def _optimize(args: argparse.Namespace) -> int:
     graph = AgentGraph.from_json(args.workflow)
-    model = _propagation_model(args.model)
-    seeds = _select_seeds(graph, args.algorithm, args.budget, model, args.trials)
+    model = make_propagation_model(args.model)
+    seeds = select_seeds(graph, args.algorithm, args.budget, model, args.trials)
     propagation = model.simulate(graph, seeds, trials=args.trials)
     report = compare_routing(
         graph,
@@ -91,6 +98,31 @@ def _optimize(args: argparse.Namespace) -> int:
         print(json.dumps(_report_to_dict(report), indent=2, sort_keys=True))
     else:
         _print_report(report)
+    return 0
+
+
+def _benchmark(args: argparse.Namespace) -> int:
+    workflow_name, graph = _load_workflow(args.workflow)
+    rows = run_benchmark(
+        graph,
+        workflow_name=workflow_name,
+        algorithms=args.algorithms,
+        models=args.models,
+        budget=args.budget,
+        trials=args.trials,
+    )
+    if args.json:
+        print(json.dumps([row.to_dict() for row in rows], indent=2, sort_keys=True))
+        return 0
+
+    print("workflow,algorithm,model,seeds,coverage,expected_time,full_activation,savings")
+    for row in rows:
+        print(
+            f"{row.workflow},{row.algorithm},{row.propagation_model},"
+            f"{'|'.join(row.seeds)},{row.coverage:.3f},"
+            f"{row.expected_propagation_time:.3f},"
+            f"{row.full_activation_probability:.3f},{row.estimated_savings:.3f}"
+        )
     return 0
 
 
@@ -120,36 +152,12 @@ def _analyze(args: argparse.Namespace) -> int:
     return 0
 
 
-def _propagation_model(name: str) -> Any:
-    if name == "independent-cascade":
-        return IndependentCascade(seed=0)
-    if name == "linear-threshold":
-        return LinearThreshold()
-    if name == "bootstrap":
-        return BootstrapPercolation()
-    if name == "rzf":
-        return RandomizedZeroForcing(seed=0)
-    raise ValueError(f"Unknown propagation model: {name}")
+def _load_workflow(workflow: str) -> tuple[str, AgentGraph]:
+    if workflow in WORKFLOW_TEMPLATES:
+        return workflow, WORKFLOW_TEMPLATES[workflow]()
 
-
-def _select_seeds(
-    graph: AgentGraph,
-    algorithm: str,
-    budget: int,
-    model: Any,
-    trials: int,
-) -> list[str]:
-    if algorithm == "random":
-        return random_seed_selection(graph, budget, seed=0)
-    if algorithm == "degree":
-        return degree_seed_selection(graph, budget)
-    if algorithm == "pagerank":
-        return pagerank_seed_selection(graph, budget)
-    if algorithm == "betweenness":
-        return betweenness_seed_selection(graph, budget)
-    if algorithm == "greedy":
-        return greedy_seed_selection(graph, budget, propagation_model=model, trials=trials)
-    raise ValueError(f"Unknown seed algorithm: {algorithm}")
+    path = Path(workflow)
+    return path.stem, AgentGraph.from_json(path)
 
 
 def _print_report(report: Any) -> None:
