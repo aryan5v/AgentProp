@@ -188,9 +188,9 @@ Progress:
 
 ### Later DL Additions
 
-- Graph Transformer.
-- Heterogeneous GNN.
-- Edge-conditioned GNN.
+- Graph Transformer: added to optional torch backend.
+- Heterogeneous GNN: added to optional torch backend with node-type embeddings.
+- Edge-conditioned GNN: added to optional torch backend with edge-attribute gates.
 - Trace-conditioned learned propagation model.
 
 Acceptance evidence:
@@ -208,7 +208,7 @@ becomes useful when we add:
 
 - larger synthetic graph sweeps
 - hyperparameter searches
-- Graph Transformer or heterogeneous GNN experiments
+- larger optional torch GNN sweeps
 - learned propagation from many traces
 
 Use env vars, never committed secrets:

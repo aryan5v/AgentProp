@@ -19,7 +19,15 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Train a torch GNN seed-selection scorer.")
     parser.add_argument(
         "--architecture",
-        choices=["gcn", "graphsage", "gat", "gin"],
+        choices=[
+            "gcn",
+            "graphsage",
+            "gat",
+            "gin",
+            "graph_transformer",
+            "heterogeneous",
+            "edge_conditioned",
+        ],
         default="graphsage",
     )
     parser.add_argument("--task", choices=["seed", "verifier"], default="seed")

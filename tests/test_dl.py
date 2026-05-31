@@ -26,14 +26,14 @@ def test_require_torch_raises_clear_error_without_torch() -> None:
 
 
 def test_torch_gnn_scorer_uses_optional_backend_boundary() -> None:
-    config = GraphEncoderConfig(input_dim=9, architecture="gin")
+    config = GraphEncoderConfig(input_dim=9, architecture="graph_transformer")
 
     try:
         scorer = TorchGNNSeedScorer(config)
     except TorchBackendUnavailable as exc:
         assert "agentprop[dl]" in str(exc)
     else:
-        assert scorer.config.architecture == "gin"
+        assert scorer.config.architecture == "graph_transformer"
 
 
 def test_torch_gnn_training_loop_when_torch_is_installed() -> None:
@@ -49,4 +49,21 @@ def test_torch_gnn_training_loop_when_torch_is_installed() -> None:
     scores = scorer.score_nodes(graph)
 
     assert result.epochs == 2
+    assert set(scores) == {node.id for node in graph.nodes() if node.type != NodeType.OUTPUT}
+
+
+@pytest.mark.parametrize(
+    "architecture",
+    ["graph_transformer", "heterogeneous", "edge_conditioned"],
+)
+def test_advanced_torch_architectures_score_when_torch_is_installed(
+    architecture: str,
+) -> None:
+    pytest.importorskip("torch")
+    graph = planner_coder_tester_reviewer()
+    config = GraphEncoderConfig(input_dim=9, hidden_dim=8, architecture=architecture)
+
+    scorer = TorchGNNSeedScorer(config)
+    scores = scorer.score_nodes(graph)
+
     assert set(scores) == {node.id for node in graph.nodes() if node.type != NodeType.OUTPUT}

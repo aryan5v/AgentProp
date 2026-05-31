@@ -22,6 +22,9 @@ The optional torch backend includes:
 - GraphSAGE seed scorer
 - GAT seed scorer
 - GIN seed scorer
+- Graph Transformer seed scorer
+- Heterogeneous GNN seed scorer with node-type embeddings
+- Edge-conditioned GNN seed scorer with edge reliability/relevance gates
 - training loops that consume `SeedSelectionExample`
 
 Run it with:
@@ -29,6 +32,8 @@ Run it with:
 ```bash
 pip install "agentprop[dl]"
 PYTHONPATH=src:. python experiments/train_torch_gnn.py --architecture graphsage --epochs 100
+PYTHONPATH=src:. python experiments/train_torch_gnn.py --architecture graph_transformer --epochs 100
+PYTHONPATH=src:. python experiments/train_torch_gnn.py --architecture edge_conditioned --epochs 100
 ```
 
 The base training loop imitates greedy influence-maximization labels and scores
@@ -58,8 +63,8 @@ PYTHONPATH=src:. python experiments/evaluate_ml_generalization.py --model mlp
 
 ## Still Planned
 
-- larger torch experiments that compare ranking/regression heads with GNN/RL
-  policies
+- larger torch sweeps that compare all GNN architectures with ranking,
+  regression, and RL policies
 
 ## Dependency Policy
 
