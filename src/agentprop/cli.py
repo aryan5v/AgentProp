@@ -62,7 +62,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     optimize.add_argument(
         "--model",
-        choices=["independent-cascade", "linear-threshold", "bootstrap", "rzf"],
+        choices=["independent-cascade", "linear-threshold", "bootstrap", "rzf", "zero-forcing"],
         default="independent-cascade",
     )
     optimize.add_argument("--trials", type=int, default=100)
@@ -94,7 +94,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "--models",
         nargs="+",
         default=["independent-cascade", "rzf"],
-        choices=["independent-cascade", "linear-threshold", "bootstrap", "rzf"],
+        choices=["independent-cascade", "linear-threshold", "bootstrap", "rzf", "zero-forcing"],
     )
     benchmark.add_argument("--json", action="store_true")
 
@@ -116,7 +116,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     report.add_argument(
         "--model",
-        choices=["independent-cascade", "linear-threshold", "bootstrap", "rzf"],
+        choices=["independent-cascade", "linear-threshold", "bootstrap", "rzf", "zero-forcing"],
         default="independent-cascade",
     )
     report.add_argument("--trials", type=int, default=100)

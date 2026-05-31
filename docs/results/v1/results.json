@@ -1,0 +1,3362 @@
+[
+  {
+    "algorithm": "random",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.26590909090909093,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5652.5,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "tester",
+      "planner"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "degree",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 0.8,
+    "estimated_savings": 0.40194805194805194,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 4605.0,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "coder",
+      "reviewer"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "pagerank",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2025974025974026,
+    "expected_propagation_time": 2.3,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6140.0,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "coder",
+      "planner"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "betweenness",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 0.8,
+    "estimated_savings": 0.46525974025974026,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 4117.5,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "reviewer",
+      "tester"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "greedy",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.26590909090909093,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5652.5,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "planner",
+      "tester"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "celf",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2532467532467532,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5750.0,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "planner",
+      "reviewer"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "cost-aware-greedy",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.26590909090909093,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5652.5,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "tester",
+      "planner"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "random",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.26590909090909093,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5652.5,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "tester",
+      "planner"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "degree",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 0.8,
+    "estimated_savings": 0.40194805194805194,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 4605.0,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "coder",
+      "reviewer"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "pagerank",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2025974025974026,
+    "expected_propagation_time": 3.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6140.0,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "coder",
+      "planner"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "betweenness",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 0.6,
+    "estimated_savings": 0.6399350649350649,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 2772.5,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "reviewer",
+      "tester"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "greedy",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.26590909090909093,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5652.5,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "planner",
+      "tester"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "celf",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2532467532467532,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5750.0,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "planner",
+      "reviewer"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "cost-aware-greedy",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.26590909090909093,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5652.5,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "planner",
+      "tester"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "random",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 0.8,
+    "estimated_savings": 0.3142857142857143,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 5280.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "tester",
+      "planner"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "degree",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 0.4,
+    "estimated_savings": 0.6363636363636364,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 2800.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "coder",
+      "reviewer"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "pagerank",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 0.4,
+    "estimated_savings": 0.538961038961039,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3550.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "coder",
+      "planner"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "betweenness",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 0.4,
+    "estimated_savings": 0.6883116883116883,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 2400.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "reviewer",
+      "tester"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "greedy",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 0.8,
+    "estimated_savings": 0.3142857142857143,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 5280.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "planner",
+      "tester"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "celf",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 0.4,
+    "estimated_savings": 0.538961038961039,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3550.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "coder",
+      "planner"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "cost-aware-greedy",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 0.8,
+    "estimated_savings": 0.3142857142857143,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 5280.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "tester",
+      "planner"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "random",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.26590909090909093,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5652.5,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "tester",
+      "planner"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "degree",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 0.8,
+    "estimated_savings": 0.40194805194805194,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 4605.0,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "coder",
+      "reviewer"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "pagerank",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2025974025974026,
+    "expected_propagation_time": 2.65,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6140.0,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "coder",
+      "planner"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "betweenness",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 0.8,
+    "estimated_savings": 0.46525974025974026,
+    "expected_propagation_time": 1.05,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 4117.5,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "reviewer",
+      "tester"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "greedy",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.26590909090909093,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5652.5,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "planner",
+      "tester"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "celf",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.26590909090909093,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5652.5,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "planner",
+      "tester"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "cost-aware-greedy",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.26590909090909093,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5652.5,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "tester",
+      "planner"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "random",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 0.4,
+    "estimated_savings": 0.7207792207792207,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 2150.0,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "tester",
+      "planner"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "degree",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 0.8,
+    "estimated_savings": 0.40194805194805194,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 4605.0,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "coder",
+      "reviewer"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "pagerank",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2025974025974026,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6140.0,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "coder",
+      "planner"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "betweenness",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 0.8,
+    "estimated_savings": 0.46525974025974026,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 4117.5,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "reviewer",
+      "tester"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "greedy",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2025974025974026,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6140.0,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "coder",
+      "planner"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "celf",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2025974025974026,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6140.0,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "coder",
+      "planner"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "cost-aware-greedy",
+    "broadcast_cost": 7700,
+    "budget": 2,
+    "coverage": 0.8,
+    "estimated_savings": 0.46525974025974026,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 4117.5,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "reviewer",
+      "tester"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "random",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 0.8333333333333334,
+    "estimated_savings": 0.3971264367816092,
+    "expected_propagation_time": 3.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 5245.0,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "researcher_b",
+      "researcher_a"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "degree",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.28390804597701147,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6230.0,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "writer",
+      "planner"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "pagerank",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.28390804597701147,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6230.0,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "planner",
+      "writer"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "betweenness",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 0.5,
+    "estimated_savings": 0.6316091954022989,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3205.0,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "writer",
+      "verifier"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "greedy",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.28390804597701147,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6230.0,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "planner",
+      "writer"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "celf",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.32873563218390806,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5840.0,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "planner",
+      "verifier"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "cost-aware-greedy",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.32873563218390806,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5840.0,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "planner",
+      "verifier"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "random",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 0.8333333333333334,
+    "estimated_savings": 0.3971264367816092,
+    "expected_propagation_time": 3.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 5245.0,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "researcher_b",
+      "researcher_a"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "degree",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.28390804597701147,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6230.0,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "writer",
+      "planner"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "pagerank",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.28390804597701147,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6230.0,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "planner",
+      "writer"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "betweenness",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 0.5,
+    "estimated_savings": 0.6316091954022989,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3205.0,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "writer",
+      "verifier"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "greedy",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.28390804597701147,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6230.0,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "planner",
+      "writer"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "celf",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.32873563218390806,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5840.0,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "planner",
+      "verifier"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "cost-aware-greedy",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.32873563218390806,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5840.0,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "planner",
+      "verifier"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "random",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 0.5,
+    "estimated_savings": 0.5258620689655172,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 4125.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "researcher_b",
+      "researcher_a"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "degree",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 0.3333333333333333,
+    "estimated_savings": 0.7241379310344828,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 2400.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "writer",
+      "planner"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "pagerank",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 0.3333333333333333,
+    "estimated_savings": 0.7241379310344828,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 2400.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "planner",
+      "writer"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "betweenness",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 0.3333333333333333,
+    "estimated_savings": 0.6724137931034483,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 2850.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "writer",
+      "verifier"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "greedy",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 0.3333333333333333,
+    "estimated_savings": 0.7011494252873564,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 2600.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "planner",
+      "researcher_a"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "celf",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 0.3333333333333333,
+    "estimated_savings": 0.7011494252873564,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 2600.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "planner",
+      "researcher_a"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "cost-aware-greedy",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 0.3333333333333333,
+    "estimated_savings": 0.7931034482758621,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 1800.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "planner",
+      "verifier"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "random",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 0.8333333333333334,
+    "estimated_savings": 0.3971264367816092,
+    "expected_propagation_time": 3.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 5245.0,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "researcher_b",
+      "researcher_a"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "degree",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.28390804597701147,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6230.0,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "writer",
+      "planner"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "pagerank",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.28390804597701147,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6230.0,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "planner",
+      "writer"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "betweenness",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 0.5,
+    "estimated_savings": 0.6316091954022989,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3205.0,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "writer",
+      "verifier"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "greedy",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.28390804597701147,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6230.0,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "planner",
+      "writer"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "celf",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.32873563218390806,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5840.0,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "planner",
+      "verifier"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "cost-aware-greedy",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.32873563218390806,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5840.0,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "planner",
+      "verifier"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "random",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 0.8333333333333334,
+    "estimated_savings": 0.3971264367816092,
+    "expected_propagation_time": 3.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 5245.0,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "researcher_b",
+      "researcher_a"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "degree",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 0.6666666666666666,
+    "estimated_savings": 0.5954022988505747,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3520.0,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "writer",
+      "planner"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "pagerank",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 0.6666666666666666,
+    "estimated_savings": 0.5954022988505747,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3520.0,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "planner",
+      "writer"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "betweenness",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 0.5,
+    "estimated_savings": 0.6316091954022989,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3205.0,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "writer",
+      "verifier"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "greedy",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2988505747126437,
+    "expected_propagation_time": 3.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6100.0,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "researcher_a",
+      "planner"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "celf",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 0.8333333333333334,
+    "estimated_savings": 0.3971264367816092,
+    "expected_propagation_time": 3.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 5245.0,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "researcher_a",
+      "researcher_b"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "cost-aware-greedy",
+    "broadcast_cost": 8700,
+    "budget": 2,
+    "coverage": 0.5,
+    "estimated_savings": 0.7522988505747127,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 2155.0,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "verifier",
+      "planner"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "random",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 0.6666666666666666,
+    "estimated_savings": 0.5494350282485876,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3987.5,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "agent_b",
+      "agent_a"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "degree",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2827683615819209,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6347.5,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "judge",
+      "prompt"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "pagerank",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2827683615819209,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6347.5,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "prompt",
+      "judge"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "betweenness",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 0.5,
+    "estimated_savings": 0.6624293785310734,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 2987.5,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "judge",
+      "agent_a"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "greedy",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2827683615819209,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6347.5,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "prompt",
+      "judge"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "celf",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2827683615819209,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6347.5,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "prompt",
+      "judge"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "cost-aware-greedy",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2827683615819209,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6347.5,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "prompt",
+      "judge"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "random",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 0.6666666666666666,
+    "estimated_savings": 0.5494350282485876,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3987.5,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "agent_b",
+      "agent_a"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "degree",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2827683615819209,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6347.5,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "judge",
+      "prompt"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "pagerank",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2827683615819209,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6347.5,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "prompt",
+      "judge"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "betweenness",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 0.5,
+    "estimated_savings": 0.6624293785310734,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 2987.5,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "judge",
+      "agent_a"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "greedy",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2827683615819209,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6347.5,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "prompt",
+      "judge"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "celf",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2827683615819209,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6347.5,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "prompt",
+      "judge"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "cost-aware-greedy",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2827683615819209,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6347.5,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "prompt",
+      "judge"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "random",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 0.5,
+    "estimated_savings": 0.5875706214689266,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3650.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "agent_b",
+      "agent_a"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "degree",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 0.3333333333333333,
+    "estimated_savings": 0.7853107344632768,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 1900.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "judge",
+      "prompt"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "pagerank",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 0.3333333333333333,
+    "estimated_savings": 0.7853107344632768,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 1900.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "prompt",
+      "judge"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "betweenness",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 0.3333333333333333,
+    "estimated_savings": 0.7005649717514124,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 2650.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "judge",
+      "agent_a"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "greedy",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 0.3333333333333333,
+    "estimated_savings": 0.7062146892655368,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 2600.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "prompt",
+      "agent_a"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "celf",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 0.5,
+    "estimated_savings": 0.5875706214689266,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3650.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "agent_a",
+      "agent_b"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "cost-aware-greedy",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 0.3333333333333333,
+    "estimated_savings": 0.7853107344632768,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 1900.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "prompt",
+      "judge"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "random",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 0.6666666666666666,
+    "estimated_savings": 0.5494350282485876,
+    "expected_propagation_time": 0.9,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3987.5,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "agent_b",
+      "agent_a"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "degree",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2827683615819209,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6347.5,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "judge",
+      "prompt"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "pagerank",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2827683615819209,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6347.5,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "prompt",
+      "judge"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "betweenness",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 0.5,
+    "estimated_savings": 0.6624293785310734,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 2987.5,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "judge",
+      "agent_a"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "greedy",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2827683615819209,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6347.5,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "prompt",
+      "judge"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "celf",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2827683615819209,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6347.5,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "prompt",
+      "judge"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "cost-aware-greedy",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2827683615819209,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 6347.5,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "prompt",
+      "judge"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "random",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 0.6666666666666666,
+    "estimated_savings": 0.5494350282485876,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3987.5,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "agent_b",
+      "agent_a"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "degree",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 0.5,
+    "estimated_savings": 0.7471751412429378,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 2237.5,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "judge",
+      "prompt"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "pagerank",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 0.5,
+    "estimated_savings": 0.7471751412429378,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 2237.5,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "prompt",
+      "judge"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "betweenness",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 0.5,
+    "estimated_savings": 0.6624293785310734,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 2987.5,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "judge",
+      "agent_a"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "greedy",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 0.6666666666666666,
+    "estimated_savings": 0.577683615819209,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3737.5,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "agent_a",
+      "prompt"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "celf",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 0.6666666666666666,
+    "estimated_savings": 0.5494350282485876,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3987.5,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "agent_a",
+      "agent_b"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "cost-aware-greedy",
+    "broadcast_cost": 8850,
+    "budget": 2,
+    "coverage": 0.5,
+    "estimated_savings": 0.7471751412429378,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 2237.5,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "judge",
+      "prompt"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "algorithm": "random",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 0.8333333333333334,
+    "estimated_savings": 0.3298611111111111,
+    "expected_propagation_time": 3.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 4825.0,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "summarizer",
+      "retriever"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "degree",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 0.8333333333333334,
+    "estimated_savings": 0.29375,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 5085.0,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "reasoner",
+      "retriever"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "pagerank",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.3159722222222222,
+    "expected_propagation_time": 3.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 4925.0,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "query",
+      "retriever"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "betweenness",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 0.8333333333333334,
+    "estimated_savings": 0.29375,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 5085.0,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "reasoner",
+      "retriever"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "greedy",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.25277777777777777,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5380.0,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "query",
+      "reasoner"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "celf",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.25277777777777777,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5380.0,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "query",
+      "reasoner"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "cost-aware-greedy",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.3159722222222222,
+    "expected_propagation_time": 3.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 4925.0,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "query",
+      "retriever"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "random",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 0.8333333333333334,
+    "estimated_savings": 0.3298611111111111,
+    "expected_propagation_time": 3.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 4825.0,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "summarizer",
+      "retriever"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "degree",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 0.8333333333333334,
+    "estimated_savings": 0.29375,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 5085.0,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "reasoner",
+      "retriever"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "pagerank",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.3159722222222222,
+    "expected_propagation_time": 4.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 4925.0,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "query",
+      "retriever"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "betweenness",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 0.8333333333333334,
+    "estimated_savings": 0.29375,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 5085.0,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "reasoner",
+      "retriever"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "greedy",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.25277777777777777,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5380.0,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "query",
+      "reasoner"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "celf",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.25277777777777777,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5380.0,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "query",
+      "reasoner"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "cost-aware-greedy",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.3159722222222222,
+    "expected_propagation_time": 4.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 4925.0,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "query",
+      "retriever"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "random",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 0.5,
+    "estimated_savings": 0.48055555555555557,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3740.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "summarizer",
+      "retriever"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "degree",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 0.3333333333333333,
+    "estimated_savings": 0.6527777777777778,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 2500.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "reasoner",
+      "retriever"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "pagerank",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 0.3333333333333333,
+    "estimated_savings": 0.7986111111111112,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 1450.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "query",
+      "retriever"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "betweenness",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 0.3333333333333333,
+    "estimated_savings": 0.6527777777777778,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 2500.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "reasoner",
+      "retriever"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "greedy",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 0.3333333333333333,
+    "estimated_savings": 0.7986111111111112,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 1450.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "query",
+      "retriever"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "celf",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 0.3333333333333333,
+    "estimated_savings": 0.7361111111111112,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 1900.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "query",
+      "reasoner"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "cost-aware-greedy",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 0.3333333333333333,
+    "estimated_savings": 0.7986111111111112,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 1450.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "query",
+      "retriever"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "random",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 0.8333333333333334,
+    "estimated_savings": 0.3298611111111111,
+    "expected_propagation_time": 3.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 4825.0,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "summarizer",
+      "retriever"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "degree",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 0.8333333333333334,
+    "estimated_savings": 0.29375,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 5085.0,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "reasoner",
+      "retriever"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "pagerank",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.3159722222222222,
+    "expected_propagation_time": 3.35,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 4925.0,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "query",
+      "retriever"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "betweenness",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 0.8333333333333334,
+    "estimated_savings": 0.29375,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 5085.0,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "reasoner",
+      "retriever"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "greedy",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.25277777777777777,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5380.0,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "query",
+      "reasoner"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "celf",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.25277777777777777,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5380.0,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "query",
+      "reasoner"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "cost-aware-greedy",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.3159722222222222,
+    "expected_propagation_time": 3.75,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 4925.0,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "query",
+      "retriever"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "random",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 0.8333333333333334,
+    "estimated_savings": 0.3298611111111111,
+    "expected_propagation_time": 3.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 4825.0,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "summarizer",
+      "retriever"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "degree",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 0.8333333333333334,
+    "estimated_savings": 0.29375,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 5085.0,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "reasoner",
+      "retriever"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "pagerank",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 0.3333333333333333,
+    "estimated_savings": 0.7986111111111112,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 1450.0,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "query",
+      "retriever"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "betweenness",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 0.8333333333333334,
+    "estimated_savings": 0.29375,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 5085.0,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "reasoner",
+      "retriever"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "greedy",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.28888888888888886,
+    "expected_propagation_time": 3.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5120.0,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "summarizer",
+      "query"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "celf",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.28888888888888886,
+    "expected_propagation_time": 3.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5120.0,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "summarizer",
+      "query"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "cost-aware-greedy",
+    "broadcast_cost": 7200,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.28888888888888886,
+    "expected_propagation_time": 3.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5120.0,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "query",
+      "summarizer"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "random",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 0.8333333333333334,
+    "estimated_savings": 0.4340425531914894,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3990.0,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "code_tool",
+      "search_tool"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "degree",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 0.5,
+    "estimated_savings": 0.6046099290780141,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 2787.5,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "code_tool",
+      "tester"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "pagerank",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2673758865248227,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5165.0,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "planner",
+      "code_tool"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "betweenness",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 0.6666666666666666,
+    "estimated_savings": 0.4723404255319149,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3720.0,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "analyst",
+      "code_tool"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "greedy",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.28120567375886524,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5067.5,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "planner",
+      "search_tool"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "celf",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.21666666666666667,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5522.5,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "planner",
+      "analyst"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "cost-aware-greedy",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.28120567375886524,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5067.5,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "planner",
+      "search_tool"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "random",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 0.8333333333333334,
+    "estimated_savings": 0.4340425531914894,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3990.0,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "code_tool",
+      "search_tool"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "degree",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 0.5,
+    "estimated_savings": 0.6046099290780141,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 2787.5,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "code_tool",
+      "tester"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "pagerank",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2673758865248227,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5165.0,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "planner",
+      "code_tool"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "betweenness",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 0.6666666666666666,
+    "estimated_savings": 0.4723404255319149,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3720.0,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "analyst",
+      "code_tool"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "greedy",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.28120567375886524,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5067.5,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "planner",
+      "search_tool"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "celf",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.21666666666666667,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5522.5,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "planner",
+      "analyst"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "cost-aware-greedy",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.28120567375886524,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5067.5,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "planner",
+      "search_tool"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "random",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 0.3333333333333333,
+    "estimated_savings": 0.8368794326241135,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 1150.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "code_tool",
+      "search_tool"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "degree",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 0.3333333333333333,
+    "estimated_savings": 0.6666666666666666,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 2350.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "code_tool",
+      "tester"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "pagerank",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 0.3333333333333333,
+    "estimated_savings": 0.7375886524822695,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 1850.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "planner",
+      "code_tool"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "betweenness",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 0.3333333333333333,
+    "estimated_savings": 0.7375886524822695,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 1850.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "analyst",
+      "code_tool"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "greedy",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 0.5,
+    "estimated_savings": 0.5563829787234043,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3127.5,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "planner",
+      "tester"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "celf",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 0.3333333333333333,
+    "estimated_savings": 0.7375886524822695,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 1850.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "analyst",
+      "code_tool"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "cost-aware-greedy",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 0.3333333333333333,
+    "estimated_savings": 0.8368794326241135,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 1150.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "search_tool",
+      "code_tool"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "random",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 0.8333333333333334,
+    "estimated_savings": 0.4340425531914894,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3990.0,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "code_tool",
+      "search_tool"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "degree",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 0.5,
+    "estimated_savings": 0.6046099290780141,
+    "expected_propagation_time": 0.35,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 2787.5,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "code_tool",
+      "tester"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "pagerank",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2673758865248227,
+    "expected_propagation_time": 2.5,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5165.0,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "planner",
+      "code_tool"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "betweenness",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 0.6666666666666666,
+    "estimated_savings": 0.4723404255319149,
+    "expected_propagation_time": 1.55,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3720.0,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "analyst",
+      "code_tool"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "greedy",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.21666666666666667,
+    "expected_propagation_time": 2.65,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5522.5,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "planner",
+      "analyst"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "celf",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.21666666666666667,
+    "expected_propagation_time": 2.2,
+    "full_activation_probability": 0.85,
+    "optimized_cost": 5522.5,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "planner",
+      "analyst"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "cost-aware-greedy",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.28120567375886524,
+    "expected_propagation_time": 2.6,
+    "full_activation_probability": 0.8,
+    "optimized_cost": 5067.5,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "planner",
+      "search_tool"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "random",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 0.8333333333333334,
+    "estimated_savings": 0.4340425531914894,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3990.0,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "code_tool",
+      "search_tool"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "degree",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 0.5,
+    "estimated_savings": 0.6046099290780141,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 2787.5,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "code_tool",
+      "tester"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "pagerank",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2673758865248227,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5165.0,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "planner",
+      "code_tool"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "betweenness",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 0.6666666666666666,
+    "estimated_savings": 0.4723404255319149,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3720.0,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "analyst",
+      "code_tool"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "greedy",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.28120567375886524,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 5067.5,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "search_tool",
+      "planner"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "celf",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 0.8333333333333334,
+    "estimated_savings": 0.4340425531914894,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3990.0,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "code_tool",
+      "search_tool"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "cost-aware-greedy",
+    "broadcast_cost": 7050,
+    "budget": 2,
+    "coverage": 0.8333333333333334,
+    "estimated_savings": 0.4340425531914894,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3990.0,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "search_tool",
+      "code_tool"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "algorithm": "random",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2816666666666667,
+    "expected_propagation_time": 3.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 7542.5,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "summarizer",
+      "coder"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "degree",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2661904761904762,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 7705.0,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "supervisor",
+      "coder"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "pagerank",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2661904761904762,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 7705.0,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "supervisor",
+      "coder"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "betweenness",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2754761904761905,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 7607.5,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "supervisor",
+      "verifier"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "greedy",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2754761904761905,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 7607.5,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "supervisor",
+      "verifier"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "celf",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2754761904761905,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 7607.5,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "supervisor",
+      "verifier"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "cost-aware-greedy",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.29095238095238096,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 7445.0,
+    "propagation_model": "independent-cascade",
+    "seeds": [
+      "researcher",
+      "verifier"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "random",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2816666666666667,
+    "expected_propagation_time": 3.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 7542.5,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "summarizer",
+      "coder"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "degree",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2661904761904762,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 7705.0,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "supervisor",
+      "coder"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "pagerank",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2661904761904762,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 7705.0,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "supervisor",
+      "coder"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "betweenness",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2754761904761905,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 7607.5,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "supervisor",
+      "verifier"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "greedy",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2754761904761905,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 7607.5,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "supervisor",
+      "verifier"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "celf",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2754761904761905,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 7607.5,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "supervisor",
+      "verifier"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "cost-aware-greedy",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2754761904761905,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 7607.5,
+    "propagation_model": "linear-threshold",
+    "seeds": [
+      "supervisor",
+      "verifier"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "random",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 0.42857142857142855,
+    "estimated_savings": 0.6042857142857143,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 4155.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "summarizer",
+      "coder"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "degree",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 0.2857142857142857,
+    "estimated_savings": 0.7,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3150.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "supervisor",
+      "coder"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "pagerank",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 0.2857142857142857,
+    "estimated_savings": 0.7,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3150.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "supervisor",
+      "coder"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "betweenness",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 0.2857142857142857,
+    "estimated_savings": 0.7523809523809524,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 2600.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "supervisor",
+      "verifier"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "greedy",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 0.2857142857142857,
+    "estimated_savings": 0.7,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3150.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "supervisor",
+      "researcher"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "celf",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 0.42857142857142855,
+    "estimated_savings": 0.6042857142857143,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 4155.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "coder",
+      "critic"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "cost-aware-greedy",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 0.2857142857142857,
+    "estimated_savings": 0.8142857142857143,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 1950.0,
+    "propagation_model": "bootstrap-percolation",
+    "seeds": [
+      "verifier",
+      "researcher"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "random",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2816666666666667,
+    "expected_propagation_time": 1.65,
+    "full_activation_probability": 0.55,
+    "optimized_cost": 7542.5,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "summarizer",
+      "coder"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "degree",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2661904761904762,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 7705.0,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "supervisor",
+      "coder"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "pagerank",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2661904761904762,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 7705.0,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "supervisor",
+      "coder"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "betweenness",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2754761904761905,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 1.0,
+    "optimized_cost": 7607.5,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "supervisor",
+      "verifier"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "greedy",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2816666666666667,
+    "expected_propagation_time": 1.8,
+    "full_activation_probability": 0.6,
+    "optimized_cost": 7542.5,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "coder",
+      "researcher"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "celf",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.2816666666666667,
+    "expected_propagation_time": 1.2,
+    "full_activation_probability": 0.4,
+    "optimized_cost": 7542.5,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "critic",
+      "summarizer"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "cost-aware-greedy",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 1.0,
+    "estimated_savings": 0.29095238095238096,
+    "expected_propagation_time": 2.0,
+    "full_activation_probability": 0.55,
+    "optimized_cost": 7445.0,
+    "propagation_model": "randomized-zero-forcing",
+    "seeds": [
+      "researcher",
+      "verifier"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "random",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 0.42857142857142855,
+    "estimated_savings": 0.6042857142857143,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 4155.0,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "summarizer",
+      "coder"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "degree",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 0.2857142857142857,
+    "estimated_savings": 0.7,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3150.0,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "supervisor",
+      "coder"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "pagerank",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 0.2857142857142857,
+    "estimated_savings": 0.7,
+    "expected_propagation_time": 0.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3150.0,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "supervisor",
+      "coder"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "betweenness",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 0.42857142857142855,
+    "estimated_savings": 0.7202380952380952,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 2937.5,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "supervisor",
+      "verifier"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "greedy",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 0.5714285714285714,
+    "estimated_savings": 0.6245238095238095,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3942.5,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "researcher",
+      "verifier"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "celf",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 0.5714285714285714,
+    "estimated_savings": 0.6245238095238095,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3942.5,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "coder",
+      "verifier"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "algorithm": "cost-aware-greedy",
+    "broadcast_cost": 10500,
+    "budget": 2,
+    "coverage": 0.5714285714285714,
+    "estimated_savings": 0.6245238095238095,
+    "expected_propagation_time": 1.0,
+    "full_activation_probability": 0.0,
+    "optimized_cost": 3942.5,
+    "propagation_model": "zero-forcing",
+    "seeds": [
+      "verifier",
+      "researcher"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  }
+]

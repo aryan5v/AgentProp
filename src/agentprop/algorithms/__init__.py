@@ -1,6 +1,11 @@
 """Classical graph optimization algorithms."""
 
 from agentprop.algorithms.bottlenecks import bottleneck_nodes
+from agentprop.algorithms.observability import (
+    observability_coverage,
+    observability_scores,
+    verifier_observability_placement,
+)
 from agentprop.algorithms.pruning import low_weight_edges
 from agentprop.algorithms.seed_selection import (
     betweenness_seed_selection,
@@ -21,7 +26,10 @@ __all__ = [
     "degree_seed_selection",
     "greedy_seed_selection",
     "low_weight_edges",
+    "observability_coverage",
+    "observability_scores",
     "pagerank_seed_selection",
     "random_seed_selection",
     "risk_aware_verifier_placement",
+    "verifier_observability_placement",
 ]

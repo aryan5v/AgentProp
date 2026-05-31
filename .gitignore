@@ -18,3 +18,7 @@ results/
 reports/
 *.csv
 *.jsonl
+
+!docs/results/
+!docs/results/**
+!docs/results/**/*.csv

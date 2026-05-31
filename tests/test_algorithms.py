@@ -3,8 +3,11 @@ from agentprop.algorithms import (
     celf_seed_selection,
     cost_aware_greedy_seed_selection,
     greedy_seed_selection,
+    observability_coverage,
+    observability_scores,
     pagerank_seed_selection,
     risk_aware_verifier_placement,
+    verifier_observability_placement,
 )
 from agentprop.propagation import IndependentCascade
 from agentprop.workflows import planner_coder_tester_reviewer
@@ -53,3 +56,15 @@ def test_diagnostics_return_ranked_candidates() -> None:
 
     assert bottleneck_nodes(graph)
     assert risk_aware_verifier_placement(graph, 2)
+
+
+def test_observability_metrics_rank_and_cover_workflow_nodes() -> None:
+    graph = planner_coder_tester_reviewer()
+
+    scores = observability_scores(graph)
+    observers = verifier_observability_placement(graph, 2)
+    coverage = observability_coverage(graph, observers)
+
+    assert set(scores) == {node.id for node in graph.nodes()}
+    assert len(observers) == 2
+    assert coverage >= 0.8

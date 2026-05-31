@@ -9,8 +9,8 @@ AgentProp is not v1-complete until every required item below has evidence.
 - [x] README explains the core differentiation.
 - [x] Workflow JSON schema is documented.
 - [x] Reports can be written as Markdown or JSON.
-- [ ] Public documentation site or equivalent docs index exists.
-- [ ] At least one notebook-style tutorial exists.
+- [x] Public documentation site or equivalent docs index exists.
+- [x] At least one notebook-style tutorial exists.
 
 ## Core Graph Framework
 
@@ -20,8 +20,8 @@ AgentProp is not v1-complete until every required item below has evidence.
 - [x] NetworkX conversion.
 - [x] Workflow validation.
 - [x] Built-in workflow templates.
-- [ ] Trace ingestion from message logs.
-- [ ] Graph visualization export.
+- [x] Trace ingestion from message logs.
+- [x] Graph visualization export.
 
 ## Propagation and Algorithms
 
@@ -36,8 +36,8 @@ AgentProp is not v1-complete until every required item below has evidence.
 - [x] Bottleneck detection.
 - [x] Pruning candidates.
 - [x] Verifier placement.
-- [ ] Classical zero forcing completeness model.
-- [ ] More rigorous pruning evaluation.
+- [x] Classical zero forcing completeness model.
+- [x] More rigorous pruning evaluation.
 
 ## ML / DL / RL
 
@@ -58,7 +58,7 @@ AgentProp is not v1-complete until every required item below has evidence.
 - [x] Benchmark runner.
 - [x] Benchmark fixtures.
 - [x] Result artifact scripts.
-- [ ] First saved benchmark result table committed or attached to release.
+- [x] First saved benchmark result table committed or attached to release.
 - [ ] Real LLM case-study protocol.
 - [ ] Paper outline / research memo.
 

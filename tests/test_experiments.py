@@ -22,6 +22,7 @@ def test_run_benchmark_experiment_writes_artifacts(tmp_path: Path) -> None:
     assert exit_code == 0
     assert (output_dir / "results.json").exists()
     assert (output_dir / "results.csv").exists()
+    assert (output_dir / "savings_by_algorithm.svg").exists()
 
 
 def test_train_seed_scorer_experiment_writes_model(tmp_path: Path) -> None:

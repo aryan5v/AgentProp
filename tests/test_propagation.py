@@ -1,4 +1,10 @@
-from agentprop.propagation import IndependentCascade, LinearThreshold, RandomizedZeroForcing
+from agentprop.core import AgentGraph
+from agentprop.propagation import (
+    IndependentCascade,
+    LinearThreshold,
+    RandomizedZeroForcing,
+    ZeroForcing,
+)
 from agentprop.workflows import planner_coder_tester_reviewer
 
 
@@ -26,3 +32,18 @@ def test_linear_threshold_activates_when_weight_share_is_high_enough() -> None:
 
     assert "coder" in result.activated_nodes
     assert result.coverage >= 0.8
+
+
+def test_zero_forcing_deterministically_forces_path() -> None:
+    graph = AgentGraph()
+    for node_id in ("a", "b", "c"):
+        graph.add_agent(node_id)
+    graph.add_edge("a", "b")
+    graph.add_edge("b", "c")
+
+    result = ZeroForcing().simulate(graph, ["a"])
+
+    assert result.coverage == 1.0
+    assert result.full_activation_probability == 1.0
+    assert result.expected_propagation_time == 2.0
+    assert result.coverage_by_round == [1 / 3, 2 / 3, 1.0]

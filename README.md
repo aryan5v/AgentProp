@@ -111,6 +111,8 @@ print(seeds)
 
 AgentProp studies whether training-free graph algorithms and learned GNN/RL policies can reduce communication cost in multi-agent LLM workflows while preserving task success, consistency, and reliability.
 
+- [docs/index.md](docs/index.md) for the documentation index.
+- [docs/tutorial.md](docs/tutorial.md) for the first full walkthrough.
 - [docs/PRD.md](docs/PRD.md) for the cleaned product and research plan.
 - [docs/research/literature_review.md](docs/research/literature_review.md) for the academic framing and related-work map.
 - [docs/trace_ingestion.md](docs/trace_ingestion.md) for converting message logs into workflow graphs.

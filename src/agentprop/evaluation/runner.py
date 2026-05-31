@@ -21,6 +21,7 @@ from agentprop.propagation import (
     LinearThreshold,
     PropagationModel,
     RandomizedZeroForcing,
+    ZeroForcing,
 )
 
 
@@ -94,6 +95,8 @@ def make_propagation_model(name: str) -> PropagationModel:
         return BootstrapPercolation()
     if name in {"rzf", "randomized-zero-forcing"}:
         return RandomizedZeroForcing(seed=0)
+    if name in {"zero-forcing", "zf"}:
+        return ZeroForcing()
     raise ValueError(f"Unknown propagation model: {name}")
 
 
