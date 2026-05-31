@@ -265,16 +265,22 @@ Goal: prove AgentProp helps real workflows, not only simulations.
 
 Run the protocol in `docs/research/case_study_protocol.md`.
 
+Progress:
+
+- Added `benchmarks/case_study_tasks.json` with the 20-task study set described
+  in the protocol.
+- Added `experiments/run_case_study.py`, an offline accounting harness that
+  compares broadcast, optimized-greedy, ML message-passing, and PPO routing
+  arms and writes JSON, CSV, summary, quality, cost, and trace artifacts.
+
 Still needed:
 
-- 20 real tasks.
-- Broadcast vs optimized vs GNN vs RL routing.
-- Saved traces.
-- Saved token costs.
-- Saved latency.
-- Saved verifier corrections.
-- Saved final answer quality scores.
-- Result table and plots.
+- Run the 20 tasks with real LLM calls.
+- Connect the runner to a real execution adapter or token router.
+- Save real prompt/output token counts instead of simulated graph costs.
+- Save final LLM outputs and verification command logs.
+- Save real verifier corrections and interception events.
+- Write the final analysis and plots.
 
 ### API Notes
 

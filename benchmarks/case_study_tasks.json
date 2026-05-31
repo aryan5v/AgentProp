@@ -1,0 +1,164 @@
+{
+  "tasks": [
+    {
+      "id": "bugfix_cli_json",
+      "category": "bugfix",
+      "prompt": "Fix a CLI JSON output regression and verify the command returns parseable JSON.",
+      "expected": "CLI emits parseable JSON.",
+      "verification_command": "pytest tests/test_cli.py",
+      "min_coverage": 0.7
+    },
+    {
+      "id": "bugfix_empty_graph",
+      "category": "bugfix",
+      "prompt": "Handle empty workflow graphs without crashing centrality calculations.",
+      "expected": "Empty graph analysis returns a stable result.",
+      "verification_command": "pytest tests/test_algorithms.py",
+      "min_coverage": 0.7
+    },
+    {
+      "id": "bugfix_trace_missing_source",
+      "category": "bugfix",
+      "prompt": "Validate trace events with missing source fields and report a clear error.",
+      "expected": "Trace ingestion rejects malformed events.",
+      "verification_command": "pytest tests/test_integrations.py",
+      "min_coverage": 0.75
+    },
+    {
+      "id": "bugfix_prune_budget",
+      "category": "bugfix",
+      "prompt": "Fix pruning evaluation when the target token reduction is near zero.",
+      "expected": "Pruning returns no-op results for zero reduction.",
+      "verification_command": "pytest tests/test_pruning_evaluation.py",
+      "min_coverage": 0.7
+    },
+    {
+      "id": "bugfix_quality_threshold",
+      "category": "bugfix",
+      "prompt": "Fix quality scoring threshold handling at exact boundary values.",
+      "expected": "Boundary scores pass when equal to threshold.",
+      "verification_command": "pytest tests/test_quality.py",
+      "min_coverage": 0.75
+    },
+    {
+      "id": "bugfix_rl_stop",
+      "category": "bugfix",
+      "prompt": "Ensure RL routing stops cleanly when the budget has been exhausted.",
+      "expected": "RL environment returns done at budget.",
+      "verification_command": "pytest tests/test_rl.py",
+      "min_coverage": 0.75
+    },
+    {
+      "id": "bugfix_report_paths",
+      "category": "bugfix",
+      "prompt": "Fix report writing when the output directory does not exist.",
+      "expected": "Report command creates parent directories.",
+      "verification_command": "pytest tests/test_reporting.py",
+      "min_coverage": 0.7
+    },
+    {
+      "id": "bugfix_visualization_escape",
+      "category": "bugfix",
+      "prompt": "Escape special characters in Graphviz labels.",
+      "expected": "DOT export remains valid with punctuation.",
+      "verification_command": "pytest tests/test_visualization.py",
+      "min_coverage": 0.7
+    },
+    {
+      "id": "feature_html_report",
+      "category": "feature",
+      "prompt": "Add an HTML report option next to Markdown and JSON reports.",
+      "expected": "Report artifacts include an HTML summary.",
+      "verification_command": "pytest tests/test_reporting.py",
+      "min_coverage": 0.8
+    },
+    {
+      "id": "feature_langgraph_adapter",
+      "category": "feature",
+      "prompt": "Add a small LangGraph adapter that converts workflow nodes and edges.",
+      "expected": "Adapter emits a graph-compatible structure.",
+      "verification_command": "pytest tests/test_integrations.py",
+      "min_coverage": 0.8
+    },
+    {
+      "id": "feature_case_study_runner",
+      "category": "feature",
+      "prompt": "Add a reproducible case-study runner for routing policies.",
+      "expected": "Runner writes JSON, CSV, and trace artifacts.",
+      "verification_command": "pytest tests/test_experiments.py",
+      "min_coverage": 0.8
+    },
+    {
+      "id": "feature_replay_cli",
+      "category": "feature",
+      "prompt": "Add a CLI path for replaying exported RL trajectories.",
+      "expected": "Replay command writes final state metrics.",
+      "verification_command": "pytest tests/test_rl.py",
+      "min_coverage": 0.75
+    },
+    {
+      "id": "feature_torch_architectures",
+      "category": "feature",
+      "prompt": "Expose graph transformer and edge-conditioned torch GNN architectures.",
+      "expected": "Training script accepts advanced architectures.",
+      "verification_command": "pytest tests/test_dl.py",
+      "min_coverage": 0.8
+    },
+    {
+      "id": "feature_trace_propagation",
+      "category": "feature",
+      "prompt": "Train a learned propagation model from trace outcomes.",
+      "expected": "Learned propagation emits calibrated edge probabilities.",
+      "verification_command": "pytest tests/test_learned_propagation.py",
+      "min_coverage": 0.8
+    },
+    {
+      "id": "docs_quickstart",
+      "category": "docs",
+      "prompt": "Improve the quickstart with analyze, optimize, simulate, and report commands.",
+      "expected": "Docs include end-to-end CLI commands.",
+      "verification_command": "pytest tests/test_cli.py",
+      "min_coverage": 0.65
+    },
+    {
+      "id": "docs_quality_scoring",
+      "category": "docs",
+      "prompt": "Document exact-match, human-label, rubric, and LLM judge scoring.",
+      "expected": "Quality scoring docs explain all scorer modes.",
+      "verification_command": "pytest tests/test_quality.py",
+      "min_coverage": 0.65
+    },
+    {
+      "id": "docs_release_alpha",
+      "category": "docs",
+      "prompt": "Clarify the private alpha release decision and limitations.",
+      "expected": "Release notes mark real LLM validation as pending.",
+      "verification_command": "pytest tests/test_reporting.py",
+      "min_coverage": 0.65
+    },
+    {
+      "id": "refactor_seed_selectors",
+      "category": "refactor",
+      "prompt": "Refactor seed selector dispatch without changing benchmark results.",
+      "expected": "Benchmark tests continue to pass.",
+      "verification_command": "pytest tests/test_benchmark.py",
+      "min_coverage": 0.7
+    },
+    {
+      "id": "refactor_rl_state_key",
+      "category": "refactor",
+      "prompt": "Consolidate RL state key formatting across Q-learning, REINFORCE, and PPO.",
+      "expected": "RL policies still train and replay.",
+      "verification_command": "pytest tests/test_rl.py",
+      "min_coverage": 0.75
+    },
+    {
+      "id": "refactor_workflow_templates",
+      "category": "refactor",
+      "prompt": "Refactor workflow template exports while preserving fixture JSON.",
+      "expected": "Workflow fixtures remain stable.",
+      "verification_command": "pytest tests/test_graph.py",
+      "min_coverage": 0.7
+    }
+  ]
+}

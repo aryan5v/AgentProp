@@ -89,6 +89,19 @@ agentprop report planner_coder_tester_reviewer --budget 2 --out docs/results/cas
 agentprop benchmark planner_coder_tester_reviewer --budget 2 --trials 50 --json
 ```
 
+Offline accounting dry run:
+
+```bash
+PYTHONPATH=src:. python experiments/run_case_study.py \
+  --tasks benchmarks/case_study_tasks.json \
+  --workflow planner_coder_tester_reviewer \
+  --out-dir docs/results/case_study_offline
+```
+
+The offline runner does not call an LLM. It validates the study schema by
+writing `results.json`, `results.csv`, `summary.json`, and `traces.jsonl` for
+the broadcast, optimized-greedy, ML message-passing, and PPO routing arms.
+
 ## Public-Release Gate
 
 Do not make the repository public until this protocol has at least one completed

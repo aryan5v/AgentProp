@@ -6,6 +6,7 @@ from experiments import (
     evaluate_routing_baselines,
     replay_rl_trajectory,
     run_benchmark,
+    run_case_study,
     run_rl_routing,
     train_edge_pruning_scorer,
     train_learned_propagation,
@@ -33,6 +34,69 @@ def test_run_benchmark_experiment_writes_artifacts(tmp_path: Path) -> None:
     assert (output_dir / "results.json").exists()
     assert (output_dir / "results.csv").exists()
     assert (output_dir / "savings_by_algorithm.svg").exists()
+
+
+def test_run_case_study_writes_offline_artifacts(tmp_path: Path) -> None:
+    tasks = tmp_path / "tasks.json"
+    tasks.write_text(
+        json.dumps(
+            {
+                "tasks": [
+                    {
+                        "id": "demo_bug",
+                        "category": "bugfix",
+                        "prompt": "Fix a demo bug.",
+                        "expected": "Bug fixed.",
+                        "verification_command": "pytest",
+                        "min_coverage": 0.7,
+                    },
+                    {
+                        "id": "demo_feature",
+                        "category": "feature",
+                        "prompt": "Add a demo feature.",
+                        "expected": "Feature added.",
+                        "verification_command": "pytest",
+                        "min_coverage": 0.7,
+                    },
+                ]
+            }
+        )
+    )
+    output_dir = tmp_path / "case_study"
+
+    exit_code = run_case_study.main(
+        [
+            "--tasks",
+            str(tasks),
+            "--trials",
+            "2",
+            "--episodes",
+            "2",
+            "--epochs",
+            "2",
+            "--out-dir",
+            str(output_dir),
+        ]
+    )
+    payload = json.loads((output_dir / "results.json").read_text())
+    trace_lines = (output_dir / "traces.jsonl").read_text().strip().splitlines()
+
+    assert exit_code == 0
+    assert (output_dir / "results.json").exists()
+    assert (output_dir / "results.csv").exists()
+    assert (output_dir / "summary.json").exists()
+    assert (output_dir / "traces.jsonl").exists()
+    assert payload["mode"] == "offline-simulated"
+    assert payload["task_count"] == 2
+    assert {"broadcast", "optimized_greedy", "ml_message_passing", "rl_ppo"}.issubset(
+        payload["summary"]
+    )
+    assert len(trace_lines) == 8
+    assert all(
+        "final" not in row["selected_seeds"]
+        for row in payload["rows"]
+        if row["policy"] == "broadcast"
+    )
 
 
 def test_train_seed_scorer_experiment_writes_model(tmp_path: Path) -> None:
