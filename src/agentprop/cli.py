@@ -177,12 +177,15 @@ def _report(args: argparse.Namespace) -> int:
 
 def _analyze(args: argparse.Namespace) -> int:
     graph = AgentGraph.from_json(args.workflow)
+    bottlenecks = bottleneck_nodes(graph)
+    pruning_candidates = low_weight_edges(graph)
+    verifier_candidates = risk_aware_verifier_placement(graph, min(3, graph.node_count))
     payload = {
         "nodes": graph.node_count,
         "edges": graph.edge_count,
-        "bottlenecks": bottleneck_nodes(graph),
-        "pruning_candidates": low_weight_edges(graph),
-        "verifier_candidates": risk_aware_verifier_placement(graph, min(3, graph.node_count)),
+        "bottlenecks": bottlenecks,
+        "pruning_candidates": pruning_candidates,
+        "verifier_candidates": verifier_candidates,
     }
     if args.json:
         print(json.dumps(payload, indent=2, sort_keys=True))
@@ -190,13 +193,13 @@ def _analyze(args: argparse.Namespace) -> int:
         print(f"Nodes: {payload['nodes']}")
         print(f"Edges: {payload['edges']}")
         print("Bottlenecks:")
-        for node_id, score in payload["bottlenecks"]:
+        for node_id, score in bottlenecks:
             print(f"  - {node_id}: {score:.3f}")
         print("Pruning candidates:")
-        for source, target in payload["pruning_candidates"]:
+        for source, target in pruning_candidates:
             print(f"  - {source} -> {target}")
         print("Verifier candidates:")
-        for node_id in payload["verifier_candidates"]:
+        for node_id in verifier_candidates:
             print(f"  - {node_id}")
     return 0
 

@@ -21,11 +21,11 @@ class AgentGraph:
 
     @property
     def node_count(self) -> int:
-        return self._graph.number_of_nodes()
+        return int(self._graph.number_of_nodes())
 
     @property
     def edge_count(self) -> int:
-        return self._graph.number_of_edges()
+        return int(self._graph.number_of_edges())
 
     def add_node(
         self,

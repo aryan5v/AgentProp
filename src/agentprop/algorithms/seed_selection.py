@@ -22,6 +22,13 @@ class SeedSelectionTrace:
     marginal_gains: dict[str, float]
 
 
+@dataclass(slots=True)
+class _CelfQueueItem:
+    node: str
+    gain: float
+    last_updated: int
+
+
 def random_seed_selection(graph: AgentGraph, k: int, *, seed: int | None = None) -> list[str]:
     """Select `k` random nodes as a baseline."""
 
@@ -143,27 +150,27 @@ def celf_seed_selection(
     candidates = _seed_eligible_nodes(graph)
     selected: list[str] = []
     queue = [
-        {
-            "node": node_id,
-            "gain": _seed_set_score(graph, [node_id], model, trials),
-            "last_updated": 0,
-        }
+        _CelfQueueItem(
+            node=node_id,
+            gain=_seed_set_score(graph, [node_id], model, trials),
+            last_updated=0,
+        )
         for node_id in candidates
     ]
 
     while len(selected) < min(k, len(candidates)) and queue:
-        queue.sort(key=lambda item: (-float(item["gain"]), str(item["node"])))
+        queue.sort(key=lambda item: (-item.gain, item.node))
         best = queue.pop(0)
-        if int(best["last_updated"]) == len(selected):
-            selected.append(str(best["node"]))
-            queue = [item for item in queue if item["node"] != best["node"]]
+        if best.last_updated == len(selected):
+            selected.append(best.node)
+            queue = [item for item in queue if item.node != best.node]
             continue
 
-        candidate = str(best["node"])
+        candidate = best.node
         current_score = _seed_set_score(graph, selected, model, trials)
         updated_score = _seed_set_score(graph, [*selected, candidate], model, trials)
-        best["gain"] = updated_score - current_score
-        best["last_updated"] = len(selected)
+        best.gain = updated_score - current_score
+        best.last_updated = len(selected)
         queue.append(best)
 
     return selected
