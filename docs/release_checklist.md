@@ -48,7 +48,7 @@ AgentProp is not v1-complete until every required item below has evidence.
 - [x] Sequential routing environment.
 - [x] Reproducible ML/RL experiment scripts.
 - [x] Optional deep-learning backend interface.
-- [ ] Optional torch-based GNN implementation.
+- [x] Optional torch-based GNN implementation.
 - [ ] RL training loop beyond greedy one-step policy.
 
 ## Research Readiness

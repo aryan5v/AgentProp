@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 
 class TorchBackendUnavailable(ImportError):
@@ -21,7 +22,7 @@ class GraphEncoderConfig:
     architecture: str = "graphsage"
 
 
-def require_torch() -> object:
+def require_torch() -> Any:
     """Import torch or raise a clear optional-dependency error."""
 
     try:
@@ -33,19 +34,3 @@ def require_torch() -> object:
         ) from exc
     return torch
 
-
-class TorchGNNSeedScorer:
-    """Placeholder wrapper for torch-backed GNN seed scorers.
-
-    The class intentionally gates torch import so core users can import
-    `agentprop.dl` without installing a deep-learning stack.
-    """
-
-    def __init__(self, config: GraphEncoderConfig) -> None:
-        self.config = config
-        self.torch = require_torch()
-
-    def score_nodes(self) -> None:
-        """Reserve the public method name for the torch implementation."""
-
-        raise NotImplementedError("Torch-backed GNN scoring is not implemented yet.")

@@ -1,7 +1,11 @@
 import pytest
 
-from agentprop.dl import GraphEncoderConfig, TorchBackendUnavailable
+from agentprop.core import NodeType
+from agentprop.dl import GraphEncoderConfig, TorchBackendUnavailable, TorchGNNSeedScorer
 from agentprop.dl.encoders import require_torch
+from agentprop.dl.torch_gnn import train_torch_seed_scorer
+from agentprop.ml import build_seed_selection_example
+from agentprop.workflows import planner_coder_tester_reviewer
 
 
 def test_graph_encoder_config_has_research_defaults() -> None:
@@ -18,3 +22,30 @@ def test_require_torch_raises_clear_error_without_torch() -> None:
         assert "dependency-light" in str(exc)
     except ImportError:
         pytest.fail("torch import failures should use TorchBackendUnavailable")
+
+
+def test_torch_gnn_scorer_uses_optional_backend_boundary() -> None:
+    config = GraphEncoderConfig(input_dim=9, architecture="gcn")
+
+    try:
+        scorer = TorchGNNSeedScorer(config)
+    except TorchBackendUnavailable as exc:
+        assert "agentprop[dl]" in str(exc)
+    else:
+        assert scorer.config.architecture == "gcn"
+
+
+def test_torch_gnn_training_loop_when_torch_is_installed() -> None:
+    pytest.importorskip("torch")
+    graph = planner_coder_tester_reviewer()
+    example = build_seed_selection_example(graph, budget=2, trials=3)
+
+    scorer, result = train_torch_seed_scorer(
+        [example],
+        config=GraphEncoderConfig(input_dim=9, hidden_dim=8, architecture="graphsage"),
+        epochs=2,
+    )
+    scores = scorer.score_nodes(graph)
+
+    assert result.epochs == 2
+    assert set(scores) == {node.id for node in graph.nodes() if node.type != NodeType.OUTPUT}

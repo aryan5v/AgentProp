@@ -18,6 +18,7 @@ class SeedSelectionExample:
     labels: dict[str, float]
     positive_seeds: list[str]
     budget: int
+    neighbors: dict[str, list[str]]
 
 
 def build_seed_selection_example(
@@ -39,9 +40,14 @@ def build_seed_selection_example(
     positives = set(positive_seeds)
     features = extract_graph_features(graph)
     labels = {node_id: 1.0 if node_id in positives else 0.0 for node_id in features.node_features}
+    neighbors = {
+        node_id: sorted({*graph.predecessors(node_id), *graph.successors(node_id)})
+        for node_id in features.node_features
+    }
     return SeedSelectionExample(
         features=features,
         labels=labels,
         positive_seeds=positive_seeds,
         budget=budget,
+        neighbors=neighbors,
     )
