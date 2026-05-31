@@ -111,10 +111,10 @@ Acceptance evidence:
 
 Implement scorer interfaces for:
 
-- human labels
-- LLM-as-judge
-- unit-test / exact-match scoring
-- task-specific rubrics
+- human labels: added
+- LLM-as-judge: added through injected judge adapter
+- unit-test / exact-match scoring: added
+- task-specific rubrics: added
 
 Acceptance evidence:
 

@@ -52,6 +52,9 @@ Record these fields per task and study arm:
 - whether the final answer missed required behavior
 - whether reviewer/tester caught a real issue
 
+Use [../quality_scoring.md](../quality_scoring.md) to record exact-match,
+human-label, rubric, or LLM-as-judge quality scores with method metadata.
+
 ## Acceptance Criteria
 
 AgentProp is considered successful if, relative to broadcast:
