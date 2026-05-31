@@ -7,6 +7,7 @@ AgentProp is a graph optimization framework for multi-agent LLM workflows.
 - [Tutorial walkthrough](tutorial.md)
 - [Workflow JSON schema](workflow_schema.md)
 - [Trace ingestion](trace_ingestion.md)
+- [Learned propagation](learned_propagation.md)
 - [Visualization](visualization.md)
 - [Reinforcement learning routing](reinforcement_learning.md)
 - [Verifier semantics](verifier_semantics.md)

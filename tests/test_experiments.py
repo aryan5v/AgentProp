@@ -5,6 +5,7 @@ from experiments import (
     run_benchmark,
     run_rl_routing,
     train_edge_pruning_scorer,
+    train_learned_propagation,
     train_seed_scorer,
 )
 
@@ -47,6 +48,28 @@ def test_train_edge_pruning_scorer_experiment_writes_model(tmp_path: Path) -> No
 
     exit_code = train_edge_pruning_scorer.main(
         ["--epochs", "3", "--out", str(output)]
+    )
+
+    assert exit_code == 0
+    assert output.exists()
+
+
+def test_train_learned_propagation_experiment_writes_model(tmp_path: Path) -> None:
+    trace = tmp_path / "trace.json"
+    trace.write_text(
+        """
+        {
+          "events": [
+            {"source": "planner", "target": "coder", "success": true, "token_cost": 10},
+            {"source": "coder", "target": "tester", "success": true, "token_cost": 10}
+          ]
+        }
+        """
+    )
+    output = tmp_path / "learned.json"
+
+    exit_code = train_learned_propagation.main(
+        ["--trace", str(trace), "--trials", "2", "--out", str(output)]
     )
 
     assert exit_code == 0

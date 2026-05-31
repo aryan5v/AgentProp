@@ -168,6 +168,11 @@ Acceptance evidence:
 Goal: train learned policies that can be compared honestly against classical
 graph algorithms.
 
+Progress:
+
+- Added trace-calibrated learned propagation model.
+- Added learned propagation training script for trace JSON.
+
 ### Immediate DL Additions
 
 - MLP node-scoring baseline: added.

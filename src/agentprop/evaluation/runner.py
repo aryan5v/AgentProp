@@ -20,6 +20,7 @@ from agentprop.evaluation.metrics import compare_routing
 from agentprop.propagation import (
     BootstrapPercolation,
     IndependentCascade,
+    LearnedPropagation,
     LinearThreshold,
     PropagationModel,
     RandomizedZeroForcing,
@@ -99,6 +100,8 @@ def make_propagation_model(name: str) -> PropagationModel:
         return RandomizedZeroForcing(seed=0)
     if name in {"zero-forcing", "zf"}:
         return ZeroForcing()
+    if name in {"learned", "trace-learned"}:
+        return LearnedPropagation(seed=0)
     raise ValueError(f"Unknown propagation model: {name}")
 
 

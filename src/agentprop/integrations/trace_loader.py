@@ -91,6 +91,7 @@ def graph_from_trace_dict(data: dict[str, Any]) -> TraceLoadResult:
             activation_probability=min(1.0, message_count / max(len(events), 1)),
             weight=message_count,
             trace_message_count=message_count,
+            trace_success_count=stats["successes"],
         )
 
     return TraceLoadResult(

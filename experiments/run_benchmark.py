@@ -42,7 +42,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--models",
         nargs="+",
-        default=["independent-cascade", "linear-threshold", "bootstrap", "rzf", "zero-forcing"],
+        default=[
+            "independent-cascade",
+            "linear-threshold",
+            "bootstrap",
+            "rzf",
+            "zero-forcing",
+            "learned",
+        ],
     )
     parser.add_argument("--out-dir", type=Path, default=Path("results/benchmark"))
     args = parser.parse_args(argv)

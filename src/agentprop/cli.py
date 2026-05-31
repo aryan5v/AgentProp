@@ -76,7 +76,14 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     optimize.add_argument(
         "--model",
-        choices=["independent-cascade", "linear-threshold", "bootstrap", "rzf", "zero-forcing"],
+        choices=[
+            "independent-cascade",
+            "linear-threshold",
+            "bootstrap",
+            "rzf",
+            "zero-forcing",
+            "learned",
+        ],
         default="independent-cascade",
     )
     optimize.add_argument("--trials", type=int, default=100)
@@ -100,7 +107,14 @@ def _build_parser() -> argparse.ArgumentParser:
         "--models",
         nargs="+",
         default=["independent-cascade", "rzf"],
-        choices=["independent-cascade", "linear-threshold", "bootstrap", "rzf", "zero-forcing"],
+        choices=[
+            "independent-cascade",
+            "linear-threshold",
+            "bootstrap",
+            "rzf",
+            "zero-forcing",
+            "learned",
+        ],
     )
     benchmark.add_argument("--json", action="store_true")
 
@@ -114,7 +128,14 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     report.add_argument(
         "--model",
-        choices=["independent-cascade", "linear-threshold", "bootstrap", "rzf", "zero-forcing"],
+        choices=[
+            "independent-cascade",
+            "linear-threshold",
+            "bootstrap",
+            "rzf",
+            "zero-forcing",
+            "learned",
+        ],
         default="independent-cascade",
     )
     report.add_argument("--trials", type=int, default=100)
@@ -125,7 +146,14 @@ def _build_parser() -> argparse.ArgumentParser:
     simulate.add_argument("--seeds", nargs="+", required=True)
     simulate.add_argument(
         "--model",
-        choices=["independent-cascade", "linear-threshold", "bootstrap", "rzf", "zero-forcing"],
+        choices=[
+            "independent-cascade",
+            "linear-threshold",
+            "bootstrap",
+            "rzf",
+            "zero-forcing",
+            "learned",
+        ],
         default="independent-cascade",
     )
     simulate.add_argument("--trials", type=int, default=100)
@@ -142,7 +170,14 @@ def _build_parser() -> argparse.ArgumentParser:
     prune.add_argument("--budget", "-k", type=int, default=2)
     prune.add_argument(
         "--model",
-        choices=["independent-cascade", "linear-threshold", "bootstrap", "rzf", "zero-forcing"],
+        choices=[
+            "independent-cascade",
+            "linear-threshold",
+            "bootstrap",
+            "rzf",
+            "zero-forcing",
+            "learned",
+        ],
         default="independent-cascade",
     )
     prune.add_argument("--trials", type=int, default=100)
