@@ -41,5 +41,8 @@ PYTHONPATH=src:. python experiments/train_torch_gnn.py --architecture graphsage 
 
 - Real LLM case-study results are not yet attached.
 - Learned policies are v1 baselines, not tuned production optimizers.
+- Remaining PRD work is archived in `docs/remaining_prd_archive.md`, with the
+  next emphasis on graph-theory depth, ML/DL policies, RL control, and real LLM
+  validation.
 - The public-release recommendation is to stay private until the first real LLM
   case study is complete, or publish as alpha with this limitation explicit.
