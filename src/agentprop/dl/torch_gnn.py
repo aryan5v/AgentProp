@@ -1,4 +1,4 @@
-"""Torch-backed GNN seed-selection models."""
+"""Torch-backed GNN graph-policy models."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from typing import Any
 
 from agentprop.core import AgentGraph, NodeType
 from agentprop.dl.encoders import GraphEncoderConfig, require_torch
-from agentprop.ml.datasets import SeedSelectionExample
+from agentprop.ml.datasets import SeedSelectionExample, VerifierPlacementExample
 from agentprop.ml.features import extract_graph_features
 
 
@@ -22,7 +22,7 @@ class TorchTrainingResult:
 
 
 class TorchGNNSeedScorer:
-    """Torch-backed GCN, GraphSAGE, or GAT node scorer."""
+    """Torch-backed GCN, GraphSAGE, GAT, or GIN node scorer."""
 
     def __init__(self, config: GraphEncoderConfig) -> None:
         self.config = config
@@ -30,16 +30,14 @@ class TorchGNNSeedScorer:
         self.model = _build_model(self.torch, config)
 
     def score_nodes(self, graph: AgentGraph) -> dict[str, float]:
-        """Return node seed probabilities for a graph."""
+        """Return node probabilities for the configured graph-policy task."""
 
         batch = _graph_to_tensors(self.torch, graph)
         self.model.eval()
         with self.torch.no_grad():
             logits = self.model(batch["x"], batch["adjacency"])
             probabilities = self.torch.sigmoid(logits).detach().cpu().tolist()
-        seed_candidates = {
-            node.id for node in graph.nodes() if node.type != NodeType.OUTPUT
-        }
+        seed_candidates = _eligible_nodes_for_task(graph, self.config.task)
         return {
             node_id: float(probability)
             for node_id, probability in zip(batch["node_ids"], probabilities, strict=True)
@@ -48,7 +46,7 @@ class TorchGNNSeedScorer:
 
 
 def train_torch_seed_scorer(
-    examples: list[SeedSelectionExample],
+    examples: list[SeedSelectionExample | VerifierPlacementExample],
     *,
     config: GraphEncoderConfig | None = None,
     epochs: int = 100,
@@ -104,7 +102,10 @@ def _graph_to_tensors(torch: Any, graph: AgentGraph) -> dict[str, Any]:
     return {"node_ids": node_ids, "x": x, "adjacency": adjacency}
 
 
-def _example_to_tensors(torch: Any, example: SeedSelectionExample) -> dict[str, Any]:
+def _example_to_tensors(
+    torch: Any,
+    example: SeedSelectionExample | VerifierPlacementExample,
+) -> dict[str, Any]:
     node_ids = list(example.features.node_features)
     index = {node_id: position for position, node_id in enumerate(node_ids)}
     x = torch.tensor(
@@ -131,7 +132,17 @@ def _build_model(torch: Any, config: GraphEncoderConfig) -> Any:
         return _GraphSAGE(torch, config)
     if architecture == "gat":
         return _GAT(torch, config)
-    raise ValueError("architecture must be one of: gcn, graphsage, gat")
+    if architecture == "gin":
+        return _GIN(torch, config)
+    raise ValueError("architecture must be one of: gcn, graphsage, gat, gin")
+
+
+def _eligible_nodes_for_task(graph: AgentGraph, task: str) -> set[str]:
+    if task == "verifier":
+        return {node.id for node in graph.nodes() if node.type != NodeType.OUTPUT}
+    if task == "seed":
+        return {node.id for node in graph.nodes() if node.type != NodeType.OUTPUT}
+    raise ValueError("task must be one of: seed, verifier")
 
 
 def _activation(torch: Any, x: Any, dropout: Any, training: bool) -> Any:
@@ -215,5 +226,33 @@ class _GAT:
                 attended = attention @ h
                 attended = self.dropout(torch.relu(attended))
                 return self.output(attended).squeeze(-1)
+
+        return Model()
+
+
+class _GIN:
+    def __new__(cls, torch: Any, config: GraphEncoderConfig) -> Any:
+        class Model(torch.nn.Module):  # type: ignore[misc]
+            def __init__(self) -> None:
+                super().__init__()
+                self.epsilon = torch.nn.Parameter(torch.tensor(0.0))
+                self.input = torch.nn.Linear(config.input_dim, config.hidden_dim)
+                self.hidden = torch.nn.ModuleList(
+                    torch.nn.Linear(config.hidden_dim, config.hidden_dim)
+                    for _ in range(max(config.layers - 1, 0))
+                )
+                self.output = torch.nn.Linear(config.hidden_dim, config.output_dim)
+                self.dropout = torch.nn.Dropout(config.dropout)
+
+            def forward(self, x: Any, adjacency: Any) -> Any:
+                h = self._gin_layer(x, adjacency, self.input)
+                for layer in self.hidden:
+                    h = self._gin_layer(h, adjacency, layer)
+                return self.output(h).squeeze(-1)
+
+            def _gin_layer(self, h: Any, adjacency: Any, layer: Any) -> Any:
+                neighbor_sum = adjacency @ h
+                mixed = (1.0 + self.epsilon) * h + neighbor_sum
+                return _activation(torch, layer(mixed), self.dropout, self.training)
 
         return Model()

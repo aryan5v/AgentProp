@@ -20,6 +20,7 @@ class GraphEncoderConfig:
     layers: int = 2
     dropout: float = 0.0
     architecture: str = "graphsage"
+    task: str = "seed"
 
 
 def require_torch() -> Any:
@@ -33,4 +34,3 @@ def require_torch() -> Any:
             "`pip install agentprop[dl]`. The core package stays dependency-light by design."
         ) from exc
     return torch
-

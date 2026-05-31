@@ -19,6 +19,7 @@ The optional torch backend includes:
 - GCN seed scorer
 - GraphSAGE seed scorer
 - GAT seed scorer
+- GIN seed scorer
 - training loops that consume `SeedSelectionExample`
 
 Run it with:
@@ -32,11 +33,29 @@ The base training loop imitates greedy influence-maximization labels and scores
 nodes as seed candidates. It is intentionally small enough to inspect while
 still using real `torch.nn.Module` models and gradient descent.
 
+Dependency-light ML baselines include:
+
+- linear node scorer
+- MLP node scorer
+- linear edge-pruning scorer
+- verifier-placement labels from risk-aware verifier placement
+- held-out workflow generalization evaluation
+
+Run them with:
+
+```bash
+PYTHONPATH=src:. python experiments/train_seed_scorer.py --model mlp --task seed
+PYTHONPATH=src:. python experiments/train_seed_scorer.py --model mlp --task verifier
+PYTHONPATH=src:. python experiments/train_edge_pruning_scorer.py
+PYTHONPATH=src:. python experiments/evaluate_ml_generalization.py --model mlp
+```
+
 ## Still Planned
 
-- edge-pruning scorer
-- verifier-placement scorer
 - benchmark comparison between training-free, GNN, and RL policies
+- pairwise ranking loss
+- propagation-time or marginal-gain regression targets
+- learned propagation from traces
 
 ## Dependency Policy
 

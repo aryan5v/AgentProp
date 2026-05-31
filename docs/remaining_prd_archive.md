@@ -170,13 +170,14 @@ graph algorithms.
 
 ### Immediate DL Additions
 
-- MLP node-scoring baseline.
-- GIN seed scorer.
-- Edge-pruning scorer.
-- Verifier-placement scorer.
+- MLP node-scoring baseline: added.
+- GIN seed scorer: added to optional torch backend.
+- Edge-pruning scorer: added as a dependency-light linear scorer.
+- Verifier-placement scorer: added through verifier-placement labels and node scorers.
 - Pairwise ranking loss.
 - Regression target for propagation time or marginal gain.
-- Generalization tests on unseen workflow graphs.
+- Generalization tests on unseen workflow graphs: added as a lightweight
+  leave-one-workflow-out experiment.
 
 ### Later DL Additions
 

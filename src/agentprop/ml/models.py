@@ -5,8 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import exp
 
-from agentprop.ml.datasets import SeedSelectionExample
-from agentprop.ml.features import GraphFeatures
+from agentprop.ml.datasets import EdgePruningExample, SeedSelectionExample, VerifierPlacementExample
+from agentprop.ml.features import EdgeFeatures, GraphFeatures
 
 
 @dataclass(slots=True)
@@ -32,7 +32,7 @@ class LinearNodeScorer:
 
     def train(
         self,
-        examples: list[SeedSelectionExample],
+        examples: list[SeedSelectionExample | VerifierPlacementExample],
         *,
         epochs: int = 200,
         learning_rate: float = 0.1,
@@ -43,6 +43,107 @@ class LinearNodeScorer:
             for example in examples:
                 for node_id, values in example.features.node_features.items():
                     label = example.labels[node_id]
+                    prediction = _sigmoid(_dot(self.weights, values) + self.bias)
+                    error = prediction - label
+                    for index, value in enumerate(values):
+                        self.weights[index] -= learning_rate * error * value
+                    self.bias -= learning_rate * error
+
+
+@dataclass(slots=True)
+class MLPNodeScorer:
+    """Small dependency-light one-hidden-layer MLP node scorer."""
+
+    input_weights: list[list[float]]
+    output_weights: list[float]
+    hidden_bias: list[float]
+    output_bias: float = 0.0
+
+    @classmethod
+    def initialize(cls, feature_count: int, *, hidden_dim: int = 8) -> MLPNodeScorer:
+        """Create a deterministic small MLP scorer."""
+
+        input_weights = [
+            [0.01 * ((row + column) % 5 - 2) for column in range(feature_count)]
+            for row in range(hidden_dim)
+        ]
+        return cls(
+            input_weights=input_weights,
+            output_weights=[0.0] * hidden_dim,
+            hidden_bias=[0.0] * hidden_dim,
+        )
+
+    def score_nodes(self, features: GraphFeatures) -> dict[str, float]:
+        """Return probability-like node scores."""
+
+        return {
+            node_id: _sigmoid(_dot(self.output_weights, self._hidden(values)) + self.output_bias)
+            for node_id, values in features.node_features.items()
+        }
+
+    def train(
+        self,
+        examples: list[SeedSelectionExample | VerifierPlacementExample],
+        *,
+        epochs: int = 200,
+        learning_rate: float = 0.05,
+    ) -> None:
+        """Train only the output layer for a stable tiny MLP baseline."""
+
+        for _ in range(epochs):
+            for example in examples:
+                for node_id, values in example.features.node_features.items():
+                    label = example.labels[node_id]
+                    hidden = self._hidden(values)
+                    prediction = _sigmoid(_dot(self.output_weights, hidden) + self.output_bias)
+                    error = prediction - label
+                    for index, value in enumerate(hidden):
+                        self.output_weights[index] -= learning_rate * error * value
+                    self.output_bias -= learning_rate * error
+
+    def _hidden(self, values: list[float]) -> list[float]:
+        return [
+            _relu(_dot(weights, values) + bias)
+            for weights, bias in zip(self.input_weights, self.hidden_bias, strict=True)
+        ]
+
+
+@dataclass(slots=True)
+class LinearEdgeScorer:
+    """Logistic edge scorer for pruning policies."""
+
+    weights: list[float]
+    bias: float = 0.0
+
+    @classmethod
+    def initialize(cls, feature_count: int) -> LinearEdgeScorer:
+        """Create a zero-initialized edge scorer."""
+
+        return cls(weights=[0.0] * feature_count)
+
+    def score_edges(self, features: EdgeFeatures) -> dict[tuple[str, str], float]:
+        """Return probability-like edge scores."""
+
+        return {
+            edge_id: _sigmoid(_dot(self.weights, values) + self.bias)
+            for edge_id, values in features.edge_features.items()
+        }
+
+    def train(
+        self,
+        examples: list[EdgePruningExample],
+        *,
+        epochs: int = 200,
+        learning_rate: float = 0.1,
+    ) -> None:
+        """Train from examples with edge features and labels."""
+
+        for _ in range(epochs):
+            for example in examples:
+                features = example.features
+                labels = example.labels
+                for edge_id, values in features.edge_features.items():
+                    label = labels[edge_id]
                     prediction = _sigmoid(_dot(self.weights, values) + self.bias)
                     error = prediction - label
                     for index, value in enumerate(values):
@@ -88,3 +189,7 @@ def _sigmoid(value: float) -> float:
         return 1.0 / (1.0 + z)
     z = exp(value)
     return z / (1.0 + z)
+
+
+def _relu(value: float) -> float:
+    return max(value, 0.0)

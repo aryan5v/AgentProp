@@ -16,6 +16,14 @@ class GraphFeatures:
     feature_names: list[str]
 
 
+@dataclass(slots=True)
+class EdgeFeatures:
+    """Feature matrix keyed by directed edge."""
+
+    edge_features: dict[tuple[str, str], list[float]]
+    feature_names: list[str]
+
+
 def extract_graph_features(graph: AgentGraph) -> GraphFeatures:
     """Extract normalized node features for seed/pruning/verifier policies."""
 
@@ -52,3 +60,37 @@ def extract_graph_features(graph: AgentGraph) -> GraphFeatures:
         ]
 
     return GraphFeatures(node_features=node_features, feature_names=feature_names)
+
+
+def extract_edge_features(graph: AgentGraph) -> EdgeFeatures:
+    """Extract normalized edge features for pruning policies."""
+
+    max_message_cost = max((edge.message_cost for edge in graph.edges()), default=1.0) or 1.0
+    max_latency = max((edge.latency for edge in graph.edges()), default=1.0) or 1.0
+    max_weight = max((edge.weight for edge in graph.edges()), default=1.0) or 1.0
+    nx_graph = graph.to_networkx()
+    feature_names = [
+        "message_cost_norm",
+        "latency_norm",
+        "relevance",
+        "reliability",
+        "activation_probability",
+        "dependency_strength",
+        "weight_norm",
+        "source_out_degree",
+        "target_in_degree",
+    ]
+    edge_features: dict[tuple[str, str], list[float]] = {}
+    for edge in graph.edges():
+        edge_features[(edge.source, edge.target)] = [
+            edge.message_cost / max_message_cost,
+            edge.latency / max_latency,
+            edge.relevance,
+            edge.reliability,
+            edge.activation_probability,
+            edge.dependency_strength,
+            edge.weight / max_weight,
+            float(nx_graph.out_degree(edge.source)) / max(graph.edge_count, 1),
+            float(nx_graph.in_degree(edge.target)) / max(graph.edge_count, 1),
+        ]
+    return EdgeFeatures(edge_features=edge_features, feature_names=feature_names)

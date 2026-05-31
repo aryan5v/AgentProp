@@ -11,13 +11,18 @@ from agentprop.dl import (
     TorchBackendUnavailable,
     train_torch_seed_scorer,
 )
-from agentprop.ml import build_seed_selection_example
+from agentprop.ml import build_seed_selection_example, build_verifier_placement_example
 from agentprop.workflows import WORKFLOW_TEMPLATES
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Train a torch GNN seed-selection scorer.")
-    parser.add_argument("--architecture", choices=["gcn", "graphsage", "gat"], default="graphsage")
+    parser.add_argument(
+        "--architecture",
+        choices=["gcn", "graphsage", "gat", "gin"],
+        default="graphsage",
+    )
+    parser.add_argument("--task", choices=["seed", "verifier"], default="seed")
     parser.add_argument("--budget", type=int, default=2)
     parser.add_argument("--trials", type=int, default=30)
     parser.add_argument("--epochs", type=int, default=100)
@@ -26,14 +31,21 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", type=Path, default=Path("results/dl/torch_gnn_seed_scorer.json"))
     args = parser.parse_args(argv)
 
-    examples = [
-        build_seed_selection_example(builder(), budget=args.budget, trials=args.trials)
-        for builder in WORKFLOW_TEMPLATES.values()
-    ]
+    if args.task == "verifier":
+        examples = [
+            build_verifier_placement_example(builder(), budget=args.budget)
+            for builder in WORKFLOW_TEMPLATES.values()
+        ]
+    else:
+        examples = [
+            build_seed_selection_example(builder(), budget=args.budget, trials=args.trials)
+            for builder in WORKFLOW_TEMPLATES.values()
+        ]
     config = GraphEncoderConfig(
         input_dim=len(examples[0].features.feature_names),
         hidden_dim=args.hidden_dim,
         architecture=args.architecture,
+        task=args.task,
     )
 
     try:

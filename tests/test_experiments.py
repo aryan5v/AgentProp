@@ -1,6 +1,12 @@
 from pathlib import Path
 
-from experiments import run_benchmark, run_rl_routing, train_seed_scorer
+from experiments import (
+    evaluate_ml_generalization,
+    run_benchmark,
+    run_rl_routing,
+    train_edge_pruning_scorer,
+    train_seed_scorer,
+)
 
 
 def test_run_benchmark_experiment_writes_artifacts(tmp_path: Path) -> None:
@@ -30,6 +36,28 @@ def test_train_seed_scorer_experiment_writes_model(tmp_path: Path) -> None:
 
     exit_code = train_seed_scorer.main(
         ["--trials", "3", "--epochs", "3", "--out", str(output)]
+    )
+
+    assert exit_code == 0
+    assert output.exists()
+
+
+def test_train_edge_pruning_scorer_experiment_writes_model(tmp_path: Path) -> None:
+    output = tmp_path / "edge_model.json"
+
+    exit_code = train_edge_pruning_scorer.main(
+        ["--epochs", "3", "--out", str(output)]
+    )
+
+    assert exit_code == 0
+    assert output.exists()
+
+
+def test_evaluate_ml_generalization_writes_results(tmp_path: Path) -> None:
+    output = tmp_path / "generalization.json"
+
+    exit_code = evaluate_ml_generalization.main(
+        ["--trials", "2", "--epochs", "2", "--out", str(output)]
     )
 
     assert exit_code == 0

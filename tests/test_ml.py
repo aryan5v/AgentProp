@@ -1,4 +1,13 @@
-from agentprop.ml import LinearNodeScorer, build_seed_selection_example, extract_graph_features
+from agentprop.ml import (
+    LinearEdgeScorer,
+    LinearNodeScorer,
+    MLPNodeScorer,
+    build_edge_pruning_example,
+    build_seed_selection_example,
+    build_verifier_placement_example,
+    extract_edge_features,
+    extract_graph_features,
+)
 from agentprop.workflows import planner_coder_tester_reviewer
 
 
@@ -21,3 +30,35 @@ def test_linear_node_scorer_trains_on_seed_example() -> None:
 
     assert set(example.positive_seeds)
     assert all(0.0 <= score <= 1.0 for score in scores.values())
+
+
+def test_mlp_node_scorer_trains_on_seed_example() -> None:
+    graph = planner_coder_tester_reviewer()
+    example = build_seed_selection_example(graph, budget=2, trials=5)
+    scorer = MLPNodeScorer.initialize(len(example.features.feature_names), hidden_dim=4)
+
+    scorer.train([example], epochs=5, learning_rate=0.05)
+    scores = scorer.score_nodes(example.features)
+
+    assert all(0.0 <= score <= 1.0 for score in scores.values())
+
+
+def test_edge_features_and_scorer_train_on_pruning_example() -> None:
+    graph = planner_coder_tester_reviewer()
+    features = extract_edge_features(graph)
+    example = build_edge_pruning_example(graph, fraction=0.3)
+    scorer = LinearEdgeScorer.initialize(len(features.feature_names))
+
+    scorer.train([example], epochs=5, learning_rate=0.05)
+    scores = scorer.score_edges(features)
+
+    assert example.positive_edges
+    assert all(0.0 <= score <= 1.0 for score in scores.values())
+
+
+def test_verifier_placement_example_labels_nodes() -> None:
+    graph = planner_coder_tester_reviewer()
+    example = build_verifier_placement_example(graph, budget=2)
+
+    assert len(example.positive_verifiers) == 2
+    assert set(example.labels) == {node.id for node in graph.nodes()}

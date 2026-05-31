@@ -13,6 +13,7 @@ def test_graph_encoder_config_has_research_defaults() -> None:
 
     assert config.architecture == "graphsage"
     assert config.hidden_dim == 64
+    assert config.task == "seed"
 
 
 def test_require_torch_raises_clear_error_without_torch() -> None:
@@ -25,14 +26,14 @@ def test_require_torch_raises_clear_error_without_torch() -> None:
 
 
 def test_torch_gnn_scorer_uses_optional_backend_boundary() -> None:
-    config = GraphEncoderConfig(input_dim=9, architecture="gcn")
+    config = GraphEncoderConfig(input_dim=9, architecture="gin")
 
     try:
         scorer = TorchGNNSeedScorer(config)
     except TorchBackendUnavailable as exc:
         assert "agentprop[dl]" in str(exc)
     else:
-        assert scorer.config.architecture == "gcn"
+        assert scorer.config.architecture == "gin"
 
 
 def test_torch_gnn_training_loop_when_torch_is_installed() -> None:
