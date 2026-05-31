@@ -75,10 +75,10 @@ Define what a verifier can:
 
 Then implement:
 
-- Betweenness verifier placement.
-- PageRank verifier placement.
-- Error-propagation centrality.
-- Greedy correction-coverage placement.
+- Betweenness verifier placement: added.
+- PageRank verifier placement: added.
+- Error-propagation centrality: added.
+- Greedy correction-coverage placement: added.
 
 Acceptance evidence:
 
@@ -92,14 +92,14 @@ Goal: evaluate routing with graph metrics and task-quality metrics.
 
 ### Graph Metrics
 
-- Robustness under node failure.
-- Robustness under edge failure.
+- Robustness under node failure: added.
+- Robustness under edge failure: added.
 - Correction propagation delay.
 - Error persistence.
 - Verifier interception rate.
 - Failure recovery rate.
-- Cost-adjusted success.
-- Efficiency score.
+- Cost-adjusted success: added.
+- Efficiency score: added.
 
 Acceptance evidence:
 

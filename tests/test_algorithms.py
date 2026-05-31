@@ -1,5 +1,6 @@
 from agentprop.algorithms import (
     articulation_bottlenecks,
+    betweenness_verifier_placement,
     bottleneck_nodes,
     bridge_bottlenecks,
     celf_seed_selection,
@@ -7,13 +8,17 @@ from agentprop.algorithms import (
     cost_aware_greedy_seed_selection,
     degree_seed_selection,
     edge_bottlenecks,
+    error_propagation_centrality,
+    error_propagation_verifier_placement,
     failure_sensitive_nodes,
+    greedy_correction_coverage_placement,
     greedy_seed_selection,
     k_core_seed_selection,
     low_reliability_cut_points,
     observability_coverage,
     observability_scores,
     pagerank_seed_selection,
+    pagerank_verifier_placement,
     risk_aware_verifier_placement,
     verifier_observability_placement,
 )
@@ -97,3 +102,13 @@ def test_observability_metrics_rank_and_cover_workflow_nodes() -> None:
     assert set(scores) == {node.id for node in graph.nodes()}
     assert len(observers) == 2
     assert coverage >= 0.8
+
+
+def test_richer_verifier_placement_methods_return_budgeted_nodes() -> None:
+    graph = planner_coder_tester_reviewer()
+
+    assert len(betweenness_verifier_placement(graph, 2)) == 2
+    assert len(pagerank_verifier_placement(graph, 2)) == 2
+    assert len(error_propagation_verifier_placement(graph, 2)) == 2
+    assert len(greedy_correction_coverage_placement(graph, 2)) == 2
+    assert set(error_propagation_centrality(graph)) == {node.id for node in graph.nodes()}
