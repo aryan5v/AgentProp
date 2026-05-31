@@ -76,6 +76,39 @@ def betweenness_seed_selection(graph: AgentGraph, k: int) -> list[str]:
     return _top_k(filtered_scores, k)
 
 
+def closeness_seed_selection(graph: AgentGraph, k: int) -> list[str]:
+    """Select nodes with high downstream closeness.
+
+    NetworkX computes directed closeness over incoming paths by default. Agent
+    workflows propagate along outgoing edges, so this uses the reversed graph to
+    score how close each seed is to the nodes it can reach downstream.
+    """
+
+    _validate_budget(k)
+    nx_graph = graph.to_networkx()
+    scores = nx.closeness_centrality(nx_graph.reverse(copy=True)) if graph.node_count else {}
+    filtered_scores = _filter_scores_to_seed_eligible_nodes(
+        graph,
+        {str(node): float(score) for node, score in scores.items()},
+    )
+    return _top_k(filtered_scores, k)
+
+
+def k_core_seed_selection(graph: AgentGraph, k: int) -> list[str]:
+    """Select nodes from the highest undirected core numbers."""
+
+    _validate_budget(k)
+    nx_graph = graph.to_networkx().to_undirected()
+    if not graph.node_count:
+        return []
+    core_numbers = nx.core_number(nx_graph)
+    scores = _filter_scores_to_seed_eligible_nodes(
+        graph,
+        {str(node): float(score) for node, score in core_numbers.items()},
+    )
+    return _top_k(scores, k)
+
+
 def greedy_seed_selection(
     graph: AgentGraph,
     k: int,
@@ -184,8 +217,18 @@ def centrality_scores(graph: AgentGraph) -> dict[str, ScoreMap]:
     degree = dict(nx_graph.degree())
     return {
         "degree": {str(node): float(score) for node, score in degree.items()},
+        "in_degree": {str(node): float(score) for node, score in nx_graph.in_degree()},
+        "out_degree": {str(node): float(score) for node, score in nx_graph.out_degree()},
         "pagerank": _pagerank_scores(graph, reverse=True),
         "betweenness": {str(node): float(score) for node, score in betweenness.items()},
+        "closeness": {
+            str(node): float(score)
+            for node, score in nx.closeness_centrality(nx_graph.reverse(copy=True)).items()
+        } if graph.node_count else {},
+        "k_core": {
+            str(node): float(score)
+            for node, score in nx.core_number(nx_graph.to_undirected()).items()
+        } if graph.node_count else {},
     }
 
 

@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import random
+from typing import Any
+
 from agentprop.core import AgentGraph, NodeType
 
 
@@ -155,11 +158,187 @@ def hub_and_spoke_supervisor() -> AgentGraph:
     return graph
 
 
+def chain_workflow(length: int = 6) -> AgentGraph:
+    """Synthetic chain workflow for propagation and cut-point tests."""
+
+    graph = AgentGraph()
+    for index in range(length):
+        node_id = f"node_{index}"
+        node_type = NodeType.OUTPUT if index == length - 1 else NodeType.AGENT
+        graph.add_node(node_id, type=node_type, **_synthetic_node_metrics(index))
+        if index > 0:
+            graph.add_edge(
+                f"node_{index - 1}",
+                node_id,
+                message_cost=220 + 25 * index,
+                latency=0.2,
+                weight=0.85,
+            )
+    return graph
+
+
+def star_workflow(spokes: int = 5) -> AgentGraph:
+    """Synthetic star workflow with a central supervisor."""
+
+    graph = AgentGraph()
+    graph.add_node("hub", type=NodeType.PLANNER, **_synthetic_node_metrics(0))
+    graph.add_node("final", type=NodeType.OUTPUT, **_synthetic_node_metrics(spokes + 1))
+    for index in range(spokes):
+        spoke = f"spoke_{index}"
+        graph.add_agent(spoke, **_synthetic_node_metrics(index + 1))
+        graph.add_edge("hub", spoke, message_cost=260, latency=0.2, weight=0.8)
+        graph.add_edge(spoke, "final", message_cost=180, latency=0.2, weight=0.75)
+    return graph
+
+
+def tree_workflow(branching: int = 2, depth: int = 3) -> AgentGraph:
+    """Synthetic rooted tree workflow."""
+
+    graph = AgentGraph()
+    graph.add_node("root", type=NodeType.PLANNER, **_synthetic_node_metrics(0))
+    current_layer = ["root"]
+    counter = 1
+    for _ in range(depth):
+        next_layer = []
+        for parent in current_layer:
+            for branch in range(branching):
+                node_id = f"{parent}_{branch}"
+                graph.add_agent(node_id, **_synthetic_node_metrics(counter))
+                graph.add_edge(parent, node_id, message_cost=240, latency=0.2, weight=0.8)
+                next_layer.append(node_id)
+                counter += 1
+        current_layer = next_layer
+    graph.add_node("final", type=NodeType.OUTPUT, **_synthetic_node_metrics(counter))
+    for leaf in current_layer:
+        graph.add_edge(leaf, "final", message_cost=160, latency=0.2, weight=0.75)
+    return graph
+
+
+def dense_workflow(size: int = 6) -> AgentGraph:
+    """Synthetic dense directed workflow."""
+
+    graph = AgentGraph()
+    node_ids = [f"node_{index}" for index in range(size)]
+    for index, node_id in enumerate(node_ids):
+        graph.add_agent(node_id, **_synthetic_node_metrics(index))
+    graph.add_node("final", type=NodeType.OUTPUT, **_synthetic_node_metrics(size))
+    for source_index, source in enumerate(node_ids):
+        for target_index, target in enumerate(node_ids):
+            if source_index < target_index:
+                graph.add_edge(source, target, message_cost=180, latency=0.15, weight=0.65)
+        graph.add_edge(source, "final", message_cost=120, latency=0.1, weight=0.55)
+    return graph
+
+
+def small_world_workflow(size: int = 8, neighborhood: int = 2) -> AgentGraph:
+    """Deterministic small-world-style workflow with local and shortcut edges."""
+
+    graph = AgentGraph()
+    node_ids = [f"node_{index}" for index in range(size)]
+    for index, node_id in enumerate(node_ids):
+        graph.add_agent(node_id, **_synthetic_node_metrics(index))
+    graph.add_node("final", type=NodeType.OUTPUT, **_synthetic_node_metrics(size))
+
+    for index, source in enumerate(node_ids):
+        for offset in range(1, neighborhood + 1):
+            target = node_ids[(index + offset) % size]
+            graph.add_edge(source, target, message_cost=180, latency=0.2, weight=0.7)
+        shortcut = node_ids[(index * 3 + 1) % size]
+        if shortcut != source:
+            graph.add_edge(source, shortcut, message_cost=260, latency=0.25, weight=0.45)
+        if index % 2 == 0:
+            graph.add_edge(source, "final", message_cost=130, latency=0.1, weight=0.6)
+    return graph
+
+
+def random_directed_workflow(
+    size: int = 8,
+    edge_probability: float = 0.25,
+    seed: int = 0,
+) -> AgentGraph:
+    """Deterministic random directed graph workflow."""
+
+    rng = random.Random(seed)
+    graph = AgentGraph()
+    node_ids = [f"node_{index}" for index in range(size)]
+    for index, node_id in enumerate(node_ids):
+        graph.add_agent(node_id, **_synthetic_node_metrics(index))
+    graph.add_node("final", type=NodeType.OUTPUT, **_synthetic_node_metrics(size))
+
+    for source in node_ids:
+        for target in node_ids:
+            if source != target and rng.random() < edge_probability:
+                graph.add_edge(source, target, message_cost=180, latency=0.2, weight=0.5)
+    for node_id in node_ids[-3:]:
+        graph.add_edge(node_id, "final", message_cost=140, latency=0.1, weight=0.65)
+    return graph
+
+
+def generic_dag_workflow(layers: int = 3, width: int = 3) -> AgentGraph:
+    """Synthetic layered DAG workflow."""
+
+    graph = AgentGraph()
+    previous_layer: list[str] = []
+    counter = 0
+    for layer in range(layers):
+        current_layer = []
+        for position in range(width):
+            node_id = f"layer_{layer}_node_{position}"
+            node_type = NodeType.PLANNER if layer == 0 and position == 0 else NodeType.AGENT
+            graph.add_node(node_id, type=node_type, **_synthetic_node_metrics(counter))
+            current_layer.append(node_id)
+            counter += 1
+        for source in previous_layer:
+            for target in current_layer:
+                graph.add_edge(source, target, message_cost=210, latency=0.2, weight=0.72)
+        previous_layer = current_layer
+
+    graph.add_node("final", type=NodeType.OUTPUT, **_synthetic_node_metrics(counter))
+    for node_id in previous_layer:
+        graph.add_edge(node_id, "final", message_cost=130, latency=0.1, weight=0.8)
+    return graph
+
+
+def layered_pipeline_workflow() -> AgentGraph:
+    """Synthetic layered workflow with planner, workers, verifiers, and output."""
+
+    graph = AgentGraph()
+    graph.add_node("planner", type=NodeType.PLANNER, **_synthetic_node_metrics(0))
+    for worker in ("worker_a", "worker_b", "worker_c"):
+        graph.add_agent(worker, **_synthetic_node_metrics(1))
+        graph.add_edge("planner", worker, message_cost=260, latency=0.25, weight=0.82)
+    for verifier in ("verifier_a", "verifier_b"):
+        graph.add_verifier(verifier, **_synthetic_node_metrics(2))
+        for worker in ("worker_a", "worker_b", "worker_c"):
+            graph.add_edge(worker, verifier, message_cost=190, latency=0.2, weight=0.7)
+    graph.add_node("final", type=NodeType.OUTPUT, **_synthetic_node_metrics(3))
+    graph.add_edge("verifier_a", "final", message_cost=140, latency=0.1, weight=0.8)
+    graph.add_edge("verifier_b", "final", message_cost=140, latency=0.1, weight=0.8)
+    return graph
+
+
+def _synthetic_node_metrics(index: int) -> dict[str, Any]:
+    return {
+        "token_cost": 650.0 + 75.0 * (index % 5),
+        "latency": 0.6 + 0.15 * (index % 4),
+        "reliability": 0.9 - 0.02 * (index % 4),
+        "error_rate": 0.04 + 0.02 * (index % 4),
+    }
+
+
 WORKFLOW_TEMPLATES = {
+    "chain": chain_workflow,
     "planner_coder_tester_reviewer": planner_coder_tester_reviewer,
     "research_writer_verifier": research_writer_verifier,
     "debate_judge": debate_judge,
+    "dense_graph": dense_workflow,
+    "generic_dag": generic_dag_workflow,
     "rag_pipeline": rag_pipeline,
+    "random_directed_graph": random_directed_workflow,
     "tool_use_pipeline": tool_use_pipeline,
     "hub_and_spoke_supervisor": hub_and_spoke_supervisor,
+    "layered_pipeline": layered_pipeline_workflow,
+    "small_world_graph": small_world_workflow,
+    "star": star_workflow,
+    "tree": tree_workflow,
 }

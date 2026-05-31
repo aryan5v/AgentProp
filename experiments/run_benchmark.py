@@ -28,8 +28,12 @@ def main(argv: list[str] | None = None) -> int:
         default=[
             "random",
             "degree",
+            "in-degree",
+            "out-degree",
             "pagerank",
             "betweenness",
+            "closeness",
+            "k-core",
             "greedy",
             "celf",
             "cost-aware-greedy",

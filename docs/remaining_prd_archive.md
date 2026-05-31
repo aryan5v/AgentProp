@@ -27,6 +27,12 @@ auditable.
 Goal: make training-free graph analysis strong enough that ML/RL must beat a
 credible baseline.
 
+Progress:
+
+- Added closeness, in-degree, out-degree, and k-core seed-selection baselines.
+- Added articulation-point, bridge, edge-bottleneck, low-reliability cut-point,
+  and failure-sensitive-node diagnostics.
+
 ### Classical Algorithms
 
 - Closeness centrality seed selection.
@@ -121,14 +127,14 @@ Goal: separate graph-family benchmarks from agent-inspired benchmarks.
 
 Add synthetic templates:
 
-- chain
-- star
-- tree
-- dense graph
-- small-world graph
-- random directed graph
-- generic DAG
-- layered pipeline
+- chain: added
+- star: added
+- tree: added
+- dense graph: added
+- small-world graph: added
+- random directed graph: added
+- generic DAG: added
+- layered pipeline: added
 
 Acceptance evidence:
 

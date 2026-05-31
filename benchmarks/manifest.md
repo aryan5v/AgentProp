@@ -2,6 +2,26 @@
 
 ## Workflow Fixtures
 
+## Synthetic Graph Families
+
+These fixtures stress the graph-theory backbone separately from agent-specific
+workflow semantics:
+
+- `workflows/chain.json`: propagation path, cut points, and bridge detection.
+- `workflows/star.json`: hub dominance and supervisor-style bottlenecks.
+- `workflows/tree.json`: branching propagation and articulation structure.
+- `workflows/dense_graph.json`: redundant paths and centrality ties.
+- `workflows/small_world_graph.json`: local neighborhoods plus shortcuts.
+- `workflows/random_directed_graph.json`: deterministic random directed stress case.
+- `workflows/generic_dag.json`: layered directed acyclic propagation.
+- `workflows/layered_pipeline.json`: planner, worker, verifier, output layers.
+
+Recommended graph-family smoke test:
+
+```bash
+agentprop benchmark chain --algorithms closeness k-core in-degree out-degree --models zero-forcing --trials 1
+```
+
 ### `workflows/planner_coder_tester_reviewer.json`
 
 The first end-to-end demo workflow. It models a common software-agent loop:

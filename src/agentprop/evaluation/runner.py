@@ -7,9 +7,11 @@ from dataclasses import asdict, dataclass
 from agentprop.algorithms import (
     betweenness_seed_selection,
     celf_seed_selection,
+    closeness_seed_selection,
     cost_aware_greedy_seed_selection,
     degree_seed_selection,
     greedy_seed_selection,
+    k_core_seed_selection,
     pagerank_seed_selection,
     random_seed_selection,
 )
@@ -113,10 +115,18 @@ def select_seeds(
         return random_seed_selection(graph, budget, seed=0)
     if algorithm == "degree":
         return degree_seed_selection(graph, budget)
+    if algorithm == "in-degree":
+        return degree_seed_selection(graph, budget, direction="in")
+    if algorithm == "out-degree":
+        return degree_seed_selection(graph, budget, direction="out")
     if algorithm == "pagerank":
         return pagerank_seed_selection(graph, budget)
     if algorithm == "betweenness":
         return betweenness_seed_selection(graph, budget)
+    if algorithm == "closeness":
+        return closeness_seed_selection(graph, budget)
+    if algorithm == "k-core":
+        return k_core_seed_selection(graph, budget)
     if algorithm == "greedy":
         return greedy_seed_selection(graph, budget, propagation_model=model, trials=trials)
     if algorithm == "celf":
