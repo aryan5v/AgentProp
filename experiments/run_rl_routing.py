@@ -24,6 +24,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--episodes", type=int, default=100)
     parser.add_argument("--learning-rate", type=float, default=0.3)
     parser.add_argument("--epsilon", type=float, default=0.2)
+    parser.add_argument("--expanded-actions", action="store_true")
     parser.add_argument("--out", type=Path, default=Path("results/rl/routing_policy.json"))
     args = parser.parse_args(argv)
 
@@ -38,6 +39,7 @@ def main(argv: list[str] | None = None) -> int:
                     episodes=args.episodes,
                     learning_rate=args.learning_rate,
                     epsilon=args.epsilon,
+                    expanded_actions=args.expanded_actions,
                 ),
             )
             env.reset()
@@ -56,12 +58,17 @@ def main(argv: list[str] | None = None) -> int:
                 {
                     "action": action,
                     "reward": reward,
-                    "coverage": state.coverage,
-                    "token_cost": state.token_cost,
-                    "message_cost": state.message_cost,
-                    "done": done,
-                    "info": dict(info),
-                }
+                "coverage": state.coverage,
+                "token_cost": state.token_cost,
+                "message_cost": state.message_cost,
+                "activated_verifiers": list(state.activated_verifiers),
+                "used_edges": [list(edge) for edge in state.used_edges],
+                "pruned_edges": [list(edge) for edge in state.pruned_edges],
+                "called_tools": list(state.called_tools),
+                "summary_nodes": list(state.summary_nodes),
+                "done": done,
+                "info": dict(info),
+            }
             )
         row = {"workflow": workflow_name, "policy": args.policy, "trajectory": trajectory}
         if training is not None:

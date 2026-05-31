@@ -222,8 +222,10 @@ Goal: move beyond seed-selection Q-learning toward real workflow control.
 
 ### Environment
 
-- Make `AgentRoutingEnv` Gymnasium-compatible.
-- Add trajectory export/import.
+- Make `AgentRoutingEnv` Gymnasium-compatible: added dependency-light
+  `reset_gymnasium()` and `step_gymnasium()` adapter methods.
+- Add trajectory export/import: trajectory export is present in
+  `experiments/run_rl_routing.py`; import remains.
 - Add deterministic evaluation mode.
 
 ### Algorithms
@@ -234,13 +236,13 @@ Goal: move beyond seed-selection Q-learning toward real workflow control.
 
 ### Expanded Actions
 
-- `SEND_CONTEXT(node)`
-- `ACTIVATE_VERIFIER(node)`
-- `SEND_MESSAGE(edge)`
-- `PRUNE_EDGE(edge)`
-- `CALL_TOOL(node)`
-- `REQUEST_SUMMARY(node)`
-- `STOP`
+- `SEND_CONTEXT(node)`: added.
+- `ACTIVATE_VERIFIER(node)`: added.
+- `SEND_MESSAGE(edge)`: added.
+- `PRUNE_EDGE(edge)`: added.
+- `CALL_TOOL(node)`: added.
+- `REQUEST_SUMMARY(node)`: added.
+- `STOP`: added.
 
 Acceptance evidence:
 

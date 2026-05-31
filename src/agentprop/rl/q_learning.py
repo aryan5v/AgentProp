@@ -17,6 +17,7 @@ class QLearningConfig:
     discount: float = 0.9
     epsilon: float = 0.2
     seed: int = 0
+    expanded_actions: bool = False
 
 
 @dataclass(slots=True)
@@ -33,11 +34,12 @@ class TabularQPolicy:
     """Policy backed by learned state-action values."""
 
     q_values: dict[tuple[str, str], float] = field(default_factory=dict)
+    expanded_actions: bool = False
 
     def act(self, env: AgentRoutingEnv) -> str:
         """Choose the highest-value action for the current environment state."""
 
-        return self._best_action(env.state, _routing_actions(env))
+        return self._best_action(env.state, _routing_actions(env, expanded=self.expanded_actions))
 
     def to_dict(self) -> dict[str, float]:
         """Serialize q-values with stable string keys."""
@@ -66,7 +68,7 @@ def train_q_policy(
 
     cfg = config or QLearningConfig()
     rng = random.Random(cfg.seed)
-    policy = TabularQPolicy()
+    policy = TabularQPolicy(expanded_actions=cfg.expanded_actions)
     episode_rewards: list[float] = []
 
     for _ in range(cfg.episodes):
@@ -75,14 +77,15 @@ def train_q_policy(
         total_reward = 0.0
 
         while not done:
-            actions = _routing_actions(env)
+            actions = _routing_actions(env, expanded=cfg.expanded_actions)
             action = _epsilon_greedy(policy, state, actions, cfg.epsilon, rng)
             next_state, reward, done, _ = env.step(action)
             total_reward += reward
 
             state_key = _state_key(state)
             old_value = policy.q_values.get((state_key, action), 0.0)
-            next_value = 0.0 if done else _max_q(policy, next_state, _routing_actions(env))
+            next_actions = _routing_actions(env, expanded=cfg.expanded_actions)
+            next_value = 0.0 if done else _max_q(policy, next_state, next_actions)
             target = reward + cfg.discount * next_value
             policy.q_values[(state_key, action)] = old_value + cfg.learning_rate * (
                 target - old_value
@@ -119,7 +122,9 @@ def _max_q(policy: TabularQPolicy, state: RoutingState, actions: list[str]) -> f
     return max(policy.q_values.get((state_key, action), 0.0) for action in actions)
 
 
-def _routing_actions(env: AgentRoutingEnv) -> list[str]:
+def _routing_actions(env: AgentRoutingEnv, *, expanded: bool = False) -> list[str]:
+    if expanded:
+        return env.available_control_actions()
     seed_actions = env.available_seed_actions()
     return seed_actions if seed_actions else [RoutingAction.STOP.value]
 
