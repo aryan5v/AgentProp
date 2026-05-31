@@ -46,8 +46,8 @@ def graph_from_trace_dict(data: dict[str, Any]) -> TraceLoadResult:
         target = _required_str(event, "target")
         source_type = _node_type(event.get("source_type"))
         target_type = _node_type(event.get("target_type"))
-        token_cost = float(event.get("token_cost", event.get("tokens", 0.0)))
-        latency = float(event.get("latency", 0.0))
+        token_cost = _float_field(event, "token_cost", fallback_key="tokens")
+        latency = _float_field(event, "latency")
         success = bool(event.get("success", True))
 
         node_types.setdefault(source, source_type)
@@ -112,3 +112,19 @@ def _node_type(value: Any) -> NodeType:
     if value is None:
         return NodeType.AGENT
     return NodeType(str(value))
+
+
+def _float_field(
+    event: dict[str, Any],
+    key: str,
+    *,
+    fallback_key: str | None = None,
+) -> float:
+    value = event.get(key)
+    if value is None and fallback_key is not None:
+        value = event.get(fallback_key)
+    if value is None:
+        return 0.0
+    if not isinstance(value, int | float | str):
+        raise ValueError(f"trace event field {key} must be numeric")
+    return float(value)

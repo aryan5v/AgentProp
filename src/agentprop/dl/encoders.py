@@ -25,7 +25,7 @@ def require_torch() -> object:
     """Import torch or raise a clear optional-dependency error."""
 
     try:
-        import torch  # type: ignore[import-not-found]
+        import torch
     except ImportError as exc:
         raise TorchBackendUnavailable(
             "Install AgentProp with the optional deep-learning extra once it is enabled: "
