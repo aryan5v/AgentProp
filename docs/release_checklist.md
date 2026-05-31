@@ -59,8 +59,8 @@ AgentProp is not v1-complete until every required item below has evidence.
 - [x] Benchmark fixtures.
 - [x] Result artifact scripts.
 - [x] First saved benchmark result table committed or attached to release.
-- [ ] Real LLM case-study protocol.
-- [ ] Paper outline / research memo.
+- [x] Real LLM case-study protocol.
+- [x] Paper outline / research memo.
 
 ## Open Source Readiness
 
@@ -69,6 +69,6 @@ AgentProp is not v1-complete until every required item below has evidence.
 - [x] Contributing guide.
 - [x] CI runs lint, type-check, and tests.
 - [x] Current `main` has green CI.
-- [ ] Version tag.
-- [ ] Release notes.
-- [ ] Repository visibility decision.
+- [x] Version tag.
+- [x] Release notes.
+- [x] Repository visibility decision.

@@ -14,9 +14,12 @@ AgentProp is a graph optimization framework for multi-agent LLM workflows.
 
 - [Product requirements](PRD.md)
 - [Literature review](research/literature_review.md)
+- [Real LLM case-study protocol](research/case_study_protocol.md)
+- [Paper outline](research/paper_outline.md)
 - [v1 benchmark artifacts](results/v1/README.md)
 - [v1 release checklist](release_checklist.md)
 - [Deep learning roadmap](deep_learning.md)
+- [Public release decision](public_release_decision.md)
 
 ## Common Commands
 
