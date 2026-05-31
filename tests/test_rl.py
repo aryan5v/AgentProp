@@ -1,6 +1,8 @@
 from agentprop.rl import (
     AgentRoutingEnv,
     GreedyCoveragePolicy,
+    PPOConfig,
+    PPOPolicy,
     QLearningConfig,
     ReinforceConfig,
     ReinforcePolicy,
@@ -8,6 +10,7 @@ from agentprop.rl import (
     TabularQPolicy,
     format_routing_action,
     parse_routing_action,
+    train_ppo_policy,
     train_q_policy,
     train_reinforce_policy,
 )
@@ -145,3 +148,42 @@ def test_reinforce_can_train_with_expanded_actions() -> None:
 
     assert policy.expanded_actions
     assert result.preference_count > 0
+
+
+def test_ppo_trains_preferences_and_values() -> None:
+    graph = planner_coder_tester_reviewer()
+    env = AgentRoutingEnv(graph, budget=2, trials=3)
+
+    policy, result = train_ppo_policy(
+        env,
+        config=PPOConfig(episodes=8, learning_rate=0.05, seed=1, max_steps=5),
+    )
+    env.reset()
+    action = policy.act(env)
+
+    assert isinstance(policy, PPOPolicy)
+    assert result.episodes == 8
+    assert result.preference_count > 0
+    assert result.value_count > 0
+    assert action in env.action_space
+    assert action != RoutingAction.STOP.value
+
+
+def test_ppo_can_train_with_expanded_actions() -> None:
+    graph = planner_coder_tester_reviewer()
+    env = AgentRoutingEnv(graph, budget=2, trials=2)
+
+    policy, result = train_ppo_policy(
+        env,
+        config=PPOConfig(
+            episodes=3,
+            learning_rate=0.05,
+            seed=2,
+            expanded_actions=True,
+            max_steps=5,
+        ),
+    )
+
+    assert policy.expanded_actions
+    assert result.preference_count > 0
+    assert result.value_count > 0

@@ -234,11 +234,12 @@ Goal: move beyond seed-selection Q-learning toward real workflow control.
 
 - REINFORCE baseline: added dependency-light tabular policy-gradient trainer
   with seed-selection and expanded-action support.
-- PPO baseline.
+- PPO baseline: added dependency-light clipped policy-gradient trainer with
+  tabular actor preferences and value baseline.
 - Evaluation against greedy, CELF, GNN, and broadcast: added
   `experiments/evaluate_routing_baselines.py` for synthetic workflow
   comparisons across broadcast, classical, ML/GNN-style, Q-learning, and
-  REINFORCE policies.
+  REINFORCE/PPO policies.
 
 ### Expanded Actions
 

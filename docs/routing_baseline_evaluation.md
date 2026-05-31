@@ -30,7 +30,7 @@ Included policy families:
 - ML baselines: `mlp`, `message_passing_gnn`, `pairwise_ranker`, and
   `marginal_gain_regressor`, trained with leave-one-workflow-out greedy labels,
   seed preference pairs, or marginal utility targets.
-- RL baselines: `q_learning` and `reinforce`.
+- RL baselines: `q_learning`, `reinforce`, and `ppo`.
 
 The `message_passing_gnn` baseline is dependency-light and CPU-only. It is not a
 torch model; it is meant to provide a stable GNN-style comparison path in core

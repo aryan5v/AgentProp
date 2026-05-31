@@ -9,6 +9,12 @@ from agentprop.rl.env import (
     parse_routing_action,
 )
 from agentprop.rl.policies import GreedyCoveragePolicy
+from agentprop.rl.ppo import (
+    PPOConfig,
+    PPOPolicy,
+    PPOTrainingResult,
+    train_ppo_policy,
+)
 from agentprop.rl.q_learning import (
     QLearningConfig,
     QLearningTrainingResult,
@@ -26,6 +32,9 @@ from agentprop.rl.rewards import propagation_reward
 __all__ = [
     "AgentRoutingEnv",
     "GreedyCoveragePolicy",
+    "PPOConfig",
+    "PPOPolicy",
+    "PPOTrainingResult",
     "QLearningConfig",
     "QLearningTrainingResult",
     "ReinforceConfig",
@@ -38,6 +47,7 @@ __all__ = [
     "parse_routing_action",
     "TabularQPolicy",
     "propagation_reward",
+    "train_ppo_policy",
     "train_q_policy",
     "train_reinforce_policy",
 ]

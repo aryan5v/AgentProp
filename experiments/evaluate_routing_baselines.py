@@ -38,9 +38,11 @@ from agentprop.ml import (
 from agentprop.propagation import IndependentCascade
 from agentprop.rl import (
     AgentRoutingEnv,
+    PPOConfig,
     QLearningConfig,
     ReinforceConfig,
     RoutingAction,
+    train_ppo_policy,
     train_q_policy,
     train_reinforce_policy,
 )
@@ -267,6 +269,16 @@ def _rl_seed_sets(
             max_steps=max_steps,
         ),
     )
+    ppo_env = AgentRoutingEnv(graph, budget=budget, trials=trials)
+    ppo_policy, _ = train_ppo_policy(
+        ppo_env,
+        config=PPOConfig(
+            episodes=episodes,
+            learning_rate=learning_rate,
+            seed=seed,
+            max_steps=max_steps,
+        ),
+    )
     return {
         "q_learning": _rollout_seed_policy(q_env, q_policy.act, max_steps=max_steps),
         "reinforce": _rollout_seed_policy(
@@ -274,6 +286,7 @@ def _rl_seed_sets(
             reinforce_policy.act,
             max_steps=max_steps,
         ),
+        "ppo": _rollout_seed_policy(ppo_env, ppo_policy.act, max_steps=max_steps),
     }
 
 

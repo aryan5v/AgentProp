@@ -162,7 +162,7 @@ def test_evaluate_routing_baselines_writes_comparison(tmp_path: Path) -> None:
 
     assert exit_code == 0
     assert output.exists()
-    assert {"broadcast", "greedy", "celf", "message_passing_gnn", "reinforce"}.issubset(
+    assert {"broadcast", "greedy", "celf", "message_passing_gnn", "reinforce", "ppo"}.issubset(
         policies
     )
     assert {"pairwise_ranker", "marginal_gain_regressor"}.issubset(policies)
@@ -208,3 +208,29 @@ def test_rl_routing_experiment_writes_reinforce_trajectory(tmp_path: Path) -> No
 
     assert exit_code == 0
     assert output.exists()
+
+
+def test_rl_routing_experiment_writes_ppo_trajectory(tmp_path: Path) -> None:
+    output = tmp_path / "rl_ppo.json"
+
+    exit_code = run_rl_routing.main(
+        [
+            "--policy",
+            "ppo",
+            "--episodes",
+            "3",
+            "--trials",
+            "2",
+            "--max-steps",
+            "5",
+            "--out",
+            str(output),
+        ]
+    )
+
+    payload = json.loads(output.read_text())
+
+    assert exit_code == 0
+    assert output.exists()
+    assert payload[0]["policy"] == "ppo"
+    assert "values" in payload[0]

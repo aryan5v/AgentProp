@@ -9,9 +9,11 @@ from pathlib import Path
 from agentprop.rl import (
     AgentRoutingEnv,
     GreedyCoveragePolicy,
+    PPOConfig,
     QLearningConfig,
     ReinforceConfig,
     RoutingAction,
+    train_ppo_policy,
     train_q_policy,
     train_reinforce_policy,
 )
@@ -22,7 +24,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Run AgentProp sequential routing policies.")
     parser.add_argument(
         "--policy",
-        choices=["q-learning", "reinforce", "greedy"],
+        choices=["q-learning", "reinforce", "ppo", "greedy"],
         default="q-learning",
     )
     parser.add_argument("--budget", type=int, default=2)
@@ -30,6 +32,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--episodes", type=int, default=100)
     parser.add_argument("--learning-rate", type=float, default=0.3)
     parser.add_argument("--epsilon", type=float, default=0.2)
+    parser.add_argument("--clip-epsilon", type=float, default=0.2)
     parser.add_argument("--expanded-actions", action="store_true")
     parser.add_argument("--max-steps", type=int, default=20)
     parser.add_argument("--out", type=Path, default=Path("results/rl/routing_policy.json"))
@@ -56,6 +59,18 @@ def main(argv: list[str] | None = None) -> int:
                 config=ReinforceConfig(
                     episodes=args.episodes,
                     learning_rate=args.learning_rate,
+                    expanded_actions=args.expanded_actions,
+                    max_steps=args.max_steps,
+                ),
+            )
+            env.reset()
+        elif args.policy == "ppo":
+            policy, training = train_ppo_policy(
+                env,
+                config=PPOConfig(
+                    episodes=args.episodes,
+                    learning_rate=args.learning_rate,
+                    clip_epsilon=args.clip_epsilon,
                     expanded_actions=args.expanded_actions,
                     max_steps=args.max_steps,
                 ),
@@ -103,6 +118,12 @@ def main(argv: list[str] | None = None) -> int:
                 row["training"]["preference_count"] = training.preference_count
                 row["training"]["truncated_episodes"] = training.truncated_episodes
                 row["preferences"] = policy.to_dict()
+            if args.policy == "ppo":
+                row["training"]["preference_count"] = training.preference_count
+                row["training"]["value_count"] = training.value_count
+                row["training"]["truncated_episodes"] = training.truncated_episodes
+                row["preferences"] = policy.to_dict()
+                row["values"] = policy.values_to_dict()
         rows.append(row)
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
