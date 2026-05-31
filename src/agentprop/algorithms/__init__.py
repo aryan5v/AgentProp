@@ -13,7 +13,7 @@ from agentprop.algorithms.observability import (
     observability_scores,
     verifier_observability_placement,
 )
-from agentprop.algorithms.pruning import low_weight_edges
+from agentprop.algorithms.pruning import high_cost_low_relevance_edges, low_weight_edges
 from agentprop.algorithms.seed_selection import (
     betweenness_seed_selection,
     celf_seed_selection,
@@ -40,6 +40,7 @@ __all__ = [
     "failure_sensitive_nodes",
     "greedy_seed_selection",
     "k_core_seed_selection",
+    "high_cost_low_relevance_edges",
     "low_reliability_cut_points",
     "low_weight_edges",
     "observability_coverage",

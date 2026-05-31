@@ -7,9 +7,14 @@ import json
 from pathlib import Path
 from typing import Any
 
-from agentprop.algorithms import bottleneck_nodes, low_weight_edges, risk_aware_verifier_placement
+from agentprop.algorithms import (
+    bottleneck_nodes,
+    high_cost_low_relevance_edges,
+    low_weight_edges,
+    risk_aware_verifier_placement,
+)
 from agentprop.core import AgentGraph
-from agentprop.evaluation import compare_routing
+from agentprop.evaluation import compare_routing, evaluate_pruning
 from agentprop.evaluation.reporting import report_to_dict, write_report
 from agentprop.evaluation.runner import make_propagation_model, run_benchmark, select_seeds
 from agentprop.integrations import graph_from_trace
@@ -31,6 +36,10 @@ def main(argv: list[str] | None = None) -> int:
         return _benchmark(args)
     if args.command == "report":
         return _report(args)
+    if args.command == "simulate":
+        return _simulate(args)
+    if args.command == "prune":
+        return _prune(args)
     if args.command == "trace":
         return _trace(args)
     if args.command == "viz":
@@ -111,6 +120,34 @@ def _build_parser() -> argparse.ArgumentParser:
     report.add_argument("--trials", type=int, default=100)
     report.add_argument("--out", type=Path, default=Path("reports/agentprop_report.md"))
 
+    simulate = subparsers.add_parser("simulate", help="simulate propagation from seed nodes")
+    simulate.add_argument("workflow", help="workflow JSON path or built-in workflow name")
+    simulate.add_argument("--seeds", nargs="+", required=True)
+    simulate.add_argument(
+        "--model",
+        choices=["independent-cascade", "linear-threshold", "bootstrap", "rzf", "zero-forcing"],
+        default="independent-cascade",
+    )
+    simulate.add_argument("--trials", type=int, default=100)
+    simulate.add_argument("--json", action="store_true")
+
+    prune = subparsers.add_parser("prune", help="recommend and evaluate edge pruning")
+    prune.add_argument("workflow", help="workflow JSON path or built-in workflow name")
+    prune.add_argument("--target-token-reduction", type=float, default=0.3)
+    prune.add_argument(
+        "--strategy",
+        choices=["low-weight", "high-cost-low-relevance"],
+        default="low-weight",
+    )
+    prune.add_argument("--budget", "-k", type=int, default=2)
+    prune.add_argument(
+        "--model",
+        choices=["independent-cascade", "linear-threshold", "bootstrap", "rzf", "zero-forcing"],
+        default="independent-cascade",
+    )
+    prune.add_argument("--trials", type=int, default=100)
+    prune.add_argument("--json", action="store_true")
+
     trace = subparsers.add_parser("trace", help="convert a trace JSON file into workflow JSON")
     trace.add_argument("trace_file", type=Path)
     trace.add_argument("--out", type=Path, default=Path("results/trace_workflow.json"))
@@ -175,6 +212,88 @@ def _report(args: argparse.Namespace) -> int:
     )
     output_path = write_report(report, args.out, workflow_name=workflow_name)
     print(f"Wrote {output_path}")
+    return 0
+
+
+def _simulate(args: argparse.Namespace) -> int:
+    workflow_name, graph = _load_workflow(args.workflow)
+    model = make_propagation_model(args.model)
+    result = model.simulate(graph, args.seeds, trials=args.trials)
+    payload = {
+        "workflow": workflow_name,
+        "model": model.name,
+        "seeds": args.seeds,
+        "activated_nodes": sorted(result.activated_nodes),
+        "coverage": result.coverage,
+        "propagation_time": result.propagation_time,
+        "expected_propagation_time": result.expected_propagation_time,
+        "full_activation_probability": result.full_activation_probability,
+        "coverage_by_round": result.coverage_by_round,
+    }
+    if args.json:
+        print(json.dumps(payload, indent=2, sort_keys=True))
+    else:
+        print(f"Workflow: {workflow_name}")
+        print(f"Model: {model.name}")
+        print(f"Seeds: {', '.join(args.seeds)}")
+        print(f"Coverage: {result.coverage:.1%}")
+        print(f"Expected propagation time: {result.expected_propagation_time}")
+        print(f"Full activation probability: {result.full_activation_probability}")
+        print(f"Activated nodes: {', '.join(sorted(result.activated_nodes))}")
+    return 0
+
+
+def _prune(args: argparse.Namespace) -> int:
+    workflow_name, graph = _load_workflow(args.workflow)
+    if not 0 <= args.target_token_reduction <= 1:
+        raise ValueError("--target-token-reduction must be between 0 and 1")
+    model = make_propagation_model(args.model)
+    seeds = select_seeds(graph, "cost-aware-greedy", args.budget, model, args.trials)
+    candidate_edges = _rank_pruning_edges(graph, args.strategy)
+    selected_edges = _edges_to_reduction_target(
+        graph,
+        candidate_edges,
+        target_reduction=args.target_token_reduction,
+    )
+    evaluation = evaluate_pruning(
+        graph,
+        selected_edges,
+        seeds=seeds,
+        propagation_model=model,
+        trials=args.trials,
+    )
+    payload = {
+        "workflow": workflow_name,
+        "strategy": args.strategy,
+        "target_token_reduction": args.target_token_reduction,
+        "seeds": seeds,
+        "removed_edges": [
+            {"source": source, "target": target} for source, target in evaluation.removed_edges
+        ],
+        "baseline_coverage": evaluation.baseline_coverage,
+        "pruned_coverage": evaluation.pruned_coverage,
+        "coverage_delta": evaluation.coverage_delta,
+        "baseline_cost": evaluation.baseline_cost,
+        "pruned_cost": evaluation.pruned_cost,
+        "cost_delta": evaluation.cost_delta,
+        "achieved_cost_reduction": (
+            0.0
+            if evaluation.baseline_cost == 0
+            else (evaluation.baseline_cost - evaluation.pruned_cost) / evaluation.baseline_cost
+        ),
+    }
+    if args.json:
+        print(json.dumps(payload, indent=2, sort_keys=True))
+    else:
+        print(f"Workflow: {workflow_name}")
+        print(f"Strategy: {args.strategy}")
+        print(f"Seeds used for evaluation: {', '.join(seeds)}")
+        print("Removed edges:")
+        for source, target in evaluation.removed_edges:
+            print(f"  - {source} -> {target}")
+        print(f"Coverage delta: {evaluation.coverage_delta:.3f}")
+        print(f"Cost delta: {evaluation.cost_delta:.0f}")
+        print(f"Achieved cost reduction: {payload['achieved_cost_reduction']:.1%}")
     return 0
 
 
@@ -253,6 +372,33 @@ def _build_recommendation_report(
         pruning_candidates=low_weight_edges(graph),
         verifier_candidates=risk_aware_verifier_placement(graph, min(budget, graph.node_count)),
     )
+
+
+def _rank_pruning_edges(graph: AgentGraph, strategy: str) -> list[tuple[str, str]]:
+    if strategy == "low-weight":
+        return low_weight_edges(graph, fraction=1.0)
+    if strategy == "high-cost-low-relevance":
+        return high_cost_low_relevance_edges(graph, limit=graph.edge_count)
+    raise ValueError(f"Unknown pruning strategy: {strategy}")
+
+
+def _edges_to_reduction_target(
+    graph: AgentGraph,
+    ranked_edges: list[tuple[str, str]],
+    *,
+    target_reduction: float,
+) -> list[tuple[str, str]]:
+    baseline_cost = sum(edge.message_cost for edge in graph.edges())
+    if baseline_cost == 0:
+        return []
+    selected: list[tuple[str, str]] = []
+    removed_cost = 0.0
+    for source, target in ranked_edges:
+        selected.append((source, target))
+        removed_cost += graph.edge(source, target).message_cost
+        if removed_cost / baseline_cost >= target_reduction:
+            break
+    return selected
 
 
 def _print_report(report: Any) -> None:

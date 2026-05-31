@@ -57,3 +57,45 @@ def test_cli_trace_and_viz_write_artifacts(tmp_path: Path) -> None:
     assert viz_exit == 0
     assert workflow.exists()
     assert "digraph" in dot.read_text()
+
+
+def test_cli_simulate_emits_json(capsys) -> None:  # type: ignore[no-untyped-def]
+    exit_code = main(
+        [
+            "simulate",
+            "chain",
+            "--seeds",
+            "node_0",
+            "--model",
+            "zero-forcing",
+            "--trials",
+            "1",
+            "--json",
+        ]
+    )
+
+    assert exit_code == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["coverage"] == 1.0
+    assert payload["activated_nodes"]
+
+
+def test_cli_prune_emits_json(capsys) -> None:  # type: ignore[no-untyped-def]
+    exit_code = main(
+        [
+            "prune",
+            "planner_coder_tester_reviewer",
+            "--target-token-reduction",
+            "0.2",
+            "--model",
+            "zero-forcing",
+            "--trials",
+            "1",
+            "--json",
+        ]
+    )
+
+    assert exit_code == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["removed_edges"]
+    assert payload["achieved_cost_reduction"] >= 0.2

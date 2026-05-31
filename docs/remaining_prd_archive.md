@@ -148,8 +148,8 @@ Goal: make the framework useful without writing Python.
 
 Add CLI commands:
 
-- `agentprop simulate workflow.json --model independent-cascade`
-- `agentprop prune workflow.json --target-token-reduction 0.3`
+- `agentprop simulate workflow.json --model independent-cascade`: added
+- `agentprop prune workflow.json --target-token-reduction 0.3`: added
 
 Extend reports:
 
@@ -160,7 +160,7 @@ Extend reports:
 
 Acceptance evidence:
 
-- CLI tests cover `simulate` and `prune`.
+- CLI tests cover `simulate` and `prune`: added.
 - Tutorial uses the CLI-only path end to end.
 
 ## Workstream 5: ML / DL
