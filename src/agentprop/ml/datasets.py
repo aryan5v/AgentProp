@@ -9,7 +9,7 @@ from agentprop.algorithms import (
     low_weight_edges,
     risk_aware_verifier_placement,
 )
-from agentprop.core import AgentGraph
+from agentprop.core import AgentGraph, NodeType
 from agentprop.ml.features import (
     EdgeFeatures,
     GraphFeatures,
@@ -28,6 +28,17 @@ class SeedSelectionExample:
     positive_seeds: list[str]
     budget: int
     neighbors: dict[str, list[str]]
+
+
+@dataclass(slots=True)
+class SeedRankingExample:
+    """Preference and regression targets for seed-ranking policies."""
+
+    features: GraphFeatures
+    utility_targets: dict[str, float]
+    preference_pairs: list[tuple[str, str]]
+    budget: int
+    seed_candidates: list[str]
 
 
 @dataclass(slots=True)
@@ -82,6 +93,43 @@ def build_seed_selection_example(
     )
 
 
+def build_seed_ranking_example(
+    graph: AgentGraph,
+    *,
+    budget: int,
+    propagation_model: PropagationModel | None = None,
+    trials: int = 50,
+    margin: float = 0.01,
+) -> SeedRankingExample:
+    """Build marginal-gain and pairwise-preference targets for seed policies."""
+
+    model = propagation_model or IndependentCascade(seed=0)
+    features = extract_graph_features(graph)
+    seed_candidates = _seed_eligible_nodes(graph)
+    utility_targets = {
+        node_id: _single_seed_utility(graph, node_id, model, trials)
+        for node_id in seed_candidates
+    }
+    for node_id in features.node_features:
+        utility_targets.setdefault(node_id, 0.0)
+
+    preference_pairs = []
+    for winner in seed_candidates:
+        for loser in seed_candidates:
+            if winner == loser:
+                continue
+            if utility_targets[winner] > utility_targets[loser] + margin:
+                preference_pairs.append((winner, loser))
+
+    return SeedRankingExample(
+        features=features,
+        utility_targets=utility_targets,
+        preference_pairs=preference_pairs,
+        budget=budget,
+        seed_candidates=seed_candidates,
+    )
+
+
 def build_edge_pruning_example(
     graph: AgentGraph,
     *,
@@ -128,3 +176,18 @@ def build_verifier_placement_example(
         budget=budget,
         neighbors=neighbors,
     )
+
+
+def _seed_eligible_nodes(graph: AgentGraph) -> list[str]:
+    return [node.id for node in graph.nodes() if node.type != NodeType.OUTPUT]
+
+
+def _single_seed_utility(
+    graph: AgentGraph,
+    node_id: str,
+    model: PropagationModel,
+    trials: int,
+) -> float:
+    result = model.simulate(graph, [node_id], trials=trials)
+    propagation_time = result.expected_propagation_time or result.propagation_time
+    return result.coverage - 0.02 * float(propagation_time)

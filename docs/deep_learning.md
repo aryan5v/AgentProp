@@ -6,6 +6,8 @@ The core package exposes:
 
 - graph feature extraction
 - greedy-labeled seed-selection examples
+- pairwise seed-ranking examples
+- marginal-gain regression targets
 - a lightweight trainable scorer
 - a message-passing-style scorer
 - `agentprop.dl.GraphEncoderConfig`
@@ -37,6 +39,8 @@ Dependency-light ML baselines include:
 
 - linear node scorer
 - MLP node scorer
+- pairwise node ranker
+- marginal-gain node regressor
 - linear edge-pruning scorer
 - verifier-placement labels from risk-aware verifier placement
 - held-out workflow generalization evaluation
@@ -45,6 +49,8 @@ Run them with:
 
 ```bash
 PYTHONPATH=src:. python experiments/train_seed_scorer.py --model mlp --task seed
+PYTHONPATH=src:. python experiments/train_seed_scorer.py --model pairwise --task seed
+PYTHONPATH=src:. python experiments/train_seed_scorer.py --model regression --task seed
 PYTHONPATH=src:. python experiments/train_seed_scorer.py --model mlp --task verifier
 PYTHONPATH=src:. python experiments/train_edge_pruning_scorer.py
 PYTHONPATH=src:. python experiments/evaluate_ml_generalization.py --model mlp
@@ -52,10 +58,8 @@ PYTHONPATH=src:. python experiments/evaluate_ml_generalization.py --model mlp
 
 ## Still Planned
 
-- benchmark comparison between training-free, GNN, and RL policies
-- pairwise ranking loss
-- propagation-time or marginal-gain regression targets
-- learned propagation from traces
+- larger torch experiments that compare ranking/regression heads with GNN/RL
+  policies
 
 ## Dependency Policy
 

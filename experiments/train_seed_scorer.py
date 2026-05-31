@@ -7,8 +7,11 @@ import json
 from pathlib import Path
 
 from agentprop.ml import (
+    LinearNodeRegressor,
     LinearNodeScorer,
     MLPNodeScorer,
+    PairwiseNodeRanker,
+    build_seed_ranking_example,
     build_seed_selection_example,
     build_verifier_placement_example,
     extract_graph_features,
@@ -18,7 +21,11 @@ from agentprop.workflows import WORKFLOW_TEMPLATES
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Train a lightweight node-policy scorer.")
-    parser.add_argument("--model", choices=["linear", "mlp"], default="linear")
+    parser.add_argument(
+        "--model",
+        choices=["linear", "mlp", "pairwise", "regression"],
+        default="linear",
+    )
     parser.add_argument("--task", choices=["seed", "verifier"], default="seed")
     parser.add_argument("--budget", type=int, default=2)
     parser.add_argument("--trials", type=int, default=30)
@@ -27,7 +34,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", type=Path, default=Path("results/ml/linear_seed_scorer.json"))
     args = parser.parse_args(argv)
 
-    if args.task == "verifier":
+    if args.task == "verifier" and args.model in {"pairwise", "regression"}:
+        parser.error("pairwise and regression models are currently seed-task only")
+
+    if args.model in {"pairwise", "regression"}:
+        examples = [
+            build_seed_ranking_example(builder(), budget=args.budget, trials=args.trials)
+            for builder in WORKFLOW_TEMPLATES.values()
+        ]
+    elif args.task == "verifier":
         examples = [
             build_verifier_placement_example(builder(), budget=args.budget)
             for builder in WORKFLOW_TEMPLATES.values()
@@ -40,6 +55,10 @@ def main(argv: list[str] | None = None) -> int:
     feature_count = len(examples[0].features.feature_names)
     if args.model == "mlp":
         scorer = MLPNodeScorer.initialize(feature_count)
+    elif args.model == "pairwise":
+        scorer = PairwiseNodeRanker.initialize(feature_count)
+    elif args.model == "regression":
+        scorer = LinearNodeRegressor.initialize(feature_count)
     else:
         scorer = LinearNodeScorer.initialize(feature_count)
     scorer.train(examples, epochs=args.epochs, learning_rate=args.learning_rate)
@@ -66,9 +85,11 @@ def main(argv: list[str] | None = None) -> int:
         "task": args.task,
         "evaluations": evaluations,
     }
-    if isinstance(scorer, LinearNodeScorer):
+    if isinstance(scorer, LinearNodeScorer | LinearNodeRegressor):
         payload["weights"] = scorer.weights
         payload["bias"] = scorer.bias
+    if isinstance(scorer, PairwiseNodeRanker):
+        payload["weights"] = scorer.weights
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
     print(f"Wrote {args.out}")

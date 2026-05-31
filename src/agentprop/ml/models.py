@@ -5,7 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import exp
 
-from agentprop.ml.datasets import EdgePruningExample, SeedSelectionExample, VerifierPlacementExample
+from agentprop.ml.datasets import (
+    EdgePruningExample,
+    SeedRankingExample,
+    SeedSelectionExample,
+    VerifierPlacementExample,
+)
 from agentprop.ml.features import EdgeFeatures, GraphFeatures
 
 
@@ -109,6 +114,89 @@ class MLPNodeScorer:
 
 
 @dataclass(slots=True)
+class PairwiseNodeRanker:
+    """Linear node ranker trained from pairwise seed preferences."""
+
+    weights: list[float]
+
+    @classmethod
+    def initialize(cls, feature_count: int) -> PairwiseNodeRanker:
+        """Create a zero-initialized pairwise ranker."""
+
+        return cls(weights=[0.0] * feature_count)
+
+    def score_nodes(self, features: GraphFeatures) -> dict[str, float]:
+        """Return unbounded node ranking scores."""
+
+        return {
+            node_id: _dot(self.weights, values)
+            for node_id, values in features.node_features.items()
+        }
+
+    def train(
+        self,
+        examples: list[SeedRankingExample],
+        *,
+        epochs: int = 200,
+        learning_rate: float = 0.05,
+    ) -> None:
+        """Train with a logistic pairwise ranking loss."""
+
+        for _ in range(epochs):
+            for example in examples:
+                for winner, loser in example.preference_pairs:
+                    winner_values = example.features.node_features[winner]
+                    loser_values = example.features.node_features[loser]
+                    difference = _subtract(winner_values, loser_values)
+                    probability = _sigmoid(_dot(self.weights, difference))
+                    gradient_scale = 1.0 - probability
+                    for index, value in enumerate(difference):
+                        self.weights[index] += learning_rate * gradient_scale * value
+
+
+@dataclass(slots=True)
+class LinearNodeRegressor:
+    """Linear node scorer trained to predict marginal seed utility."""
+
+    weights: list[float]
+    bias: float = 0.0
+
+    @classmethod
+    def initialize(cls, feature_count: int) -> LinearNodeRegressor:
+        """Create a zero-initialized regressor."""
+
+        return cls(weights=[0.0] * feature_count)
+
+    def score_nodes(self, features: GraphFeatures) -> dict[str, float]:
+        """Return predicted marginal utility for each node."""
+
+        return {
+            node_id: _dot(self.weights, values) + self.bias
+            for node_id, values in features.node_features.items()
+        }
+
+    def train(
+        self,
+        examples: list[SeedRankingExample],
+        *,
+        epochs: int = 200,
+        learning_rate: float = 0.05,
+    ) -> None:
+        """Train with squared error on marginal-utility targets."""
+
+        for _ in range(epochs):
+            for example in examples:
+                for node_id in example.seed_candidates:
+                    values = example.features.node_features[node_id]
+                    target = example.utility_targets[node_id]
+                    prediction = _dot(self.weights, values) + self.bias
+                    error = prediction - target
+                    for index, value in enumerate(values):
+                        self.weights[index] -= learning_rate * error * value
+                    self.bias -= learning_rate * error
+
+
+@dataclass(slots=True)
 class LinearEdgeScorer:
     """Logistic edge scorer for pruning policies."""
 
@@ -181,6 +269,10 @@ class MessagePassingNodeScorer:
 
 def _dot(weights: list[float], values: list[float]) -> float:
     return sum(weight * value for weight, value in zip(weights, values, strict=True))
+
+
+def _subtract(left: list[float], right: list[float]) -> list[float]:
+    return [left_value - right_value for left_value, right_value in zip(left, right, strict=True)]
 
 
 def _sigmoid(value: float) -> float:

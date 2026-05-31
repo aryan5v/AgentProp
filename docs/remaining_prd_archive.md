@@ -179,8 +179,10 @@ Progress:
 - GIN seed scorer: added to optional torch backend.
 - Edge-pruning scorer: added as a dependency-light linear scorer.
 - Verifier-placement scorer: added through verifier-placement labels and node scorers.
-- Pairwise ranking loss.
-- Regression target for propagation time or marginal gain.
+- Pairwise ranking loss: added dependency-light `PairwiseNodeRanker` trained
+  from seed preference pairs.
+- Regression target for propagation time or marginal gain: added
+  `LinearNodeRegressor` trained on single-seed marginal utility targets.
 - Generalization tests on unseen workflow graphs: added as a lightweight
   leave-one-workflow-out experiment.
 

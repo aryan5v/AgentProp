@@ -45,6 +45,54 @@ def test_train_seed_scorer_experiment_writes_model(tmp_path: Path) -> None:
     assert output.exists()
 
 
+def test_train_seed_scorer_experiment_writes_pairwise_model(tmp_path: Path) -> None:
+    output = tmp_path / "pairwise_model.json"
+
+    exit_code = train_seed_scorer.main(
+        [
+            "--model",
+            "pairwise",
+            "--trials",
+            "2",
+            "--epochs",
+            "2",
+            "--out",
+            str(output),
+        ]
+    )
+
+    payload = json.loads(output.read_text())
+
+    assert exit_code == 0
+    assert output.exists()
+    assert payload["model"] == "pairwise"
+    assert payload["weights"]
+
+
+def test_train_seed_scorer_experiment_writes_regression_model(tmp_path: Path) -> None:
+    output = tmp_path / "regression_model.json"
+
+    exit_code = train_seed_scorer.main(
+        [
+            "--model",
+            "regression",
+            "--trials",
+            "2",
+            "--epochs",
+            "2",
+            "--out",
+            str(output),
+        ]
+    )
+
+    payload = json.loads(output.read_text())
+
+    assert exit_code == 0
+    assert output.exists()
+    assert payload["model"] == "regression"
+    assert payload["weights"]
+
+
 def test_train_edge_pruning_scorer_experiment_writes_model(tmp_path: Path) -> None:
     output = tmp_path / "edge_model.json"
 
@@ -117,6 +165,7 @@ def test_evaluate_routing_baselines_writes_comparison(tmp_path: Path) -> None:
     assert {"broadcast", "greedy", "celf", "message_passing_gnn", "reinforce"}.issubset(
         policies
     )
+    assert {"pairwise_ranker", "marginal_gain_regressor"}.issubset(policies)
     assert payload["summary"]["greedy"]["workflows"] == 2.0
     assert all(
         "final" not in row["seeds"]

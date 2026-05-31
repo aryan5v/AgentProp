@@ -27,8 +27,9 @@ Included policy families:
 - `broadcast`: full-context routing reference cost.
 - Classical graph baselines: `random`, `degree`, `pagerank`, `betweenness`,
   `closeness`, `k_core`, `greedy`, and `celf`.
-- ML baselines: `mlp` and `message_passing_gnn`, trained with
-  leave-one-workflow-out greedy seed labels.
+- ML baselines: `mlp`, `message_passing_gnn`, `pairwise_ranker`, and
+  `marginal_gain_regressor`, trained with leave-one-workflow-out greedy labels,
+  seed preference pairs, or marginal utility targets.
 - RL baselines: `q_learning` and `reinforce`.
 
 The `message_passing_gnn` baseline is dependency-light and CPU-only. It is not a

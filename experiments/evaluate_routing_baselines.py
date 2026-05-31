@@ -26,9 +26,12 @@ from agentprop.evaluation.metrics import (
     seeded_routing_cost,
 )
 from agentprop.ml import (
+    LinearNodeRegressor,
     LinearNodeScorer,
     MessagePassingNodeScorer,
     MLPNodeScorer,
+    PairwiseNodeRanker,
+    build_seed_ranking_example,
     build_seed_selection_example,
     extract_graph_features,
 )
@@ -190,6 +193,11 @@ def _learned_seed_sets(
         for name, builder in WORKFLOW_TEMPLATES.items()
         if name != workflow_name
     ]
+    ranking_examples = [
+        build_seed_ranking_example(builder(), budget=budget, trials=trials)
+        for name, builder in WORKFLOW_TEMPLATES.items()
+        if name != workflow_name
+    ]
     if not examples:
         return {}
 
@@ -203,6 +211,10 @@ def _learned_seed_sets(
     linear = LinearNodeScorer.initialize(feature_count)
     linear.train(examples, epochs=epochs, learning_rate=learning_rate)
     message_passing = MessagePassingNodeScorer(linear)
+    ranker = PairwiseNodeRanker.initialize(feature_count)
+    ranker.train(ranking_examples, epochs=epochs, learning_rate=learning_rate)
+    regressor = LinearNodeRegressor.initialize(feature_count)
+    regressor.train(ranking_examples, epochs=epochs, learning_rate=learning_rate)
 
     neighbors = {
         node_id: sorted({*graph.predecessors(node_id), *graph.successors(node_id)})
@@ -212,6 +224,14 @@ def _learned_seed_sets(
         "mlp": _top_k(_seed_eligible_scores(graph, mlp.score_nodes(features)), budget),
         "message_passing_gnn": _top_k(
             _seed_eligible_scores(graph, message_passing.score_nodes(features, neighbors)),
+            budget,
+        ),
+        "pairwise_ranker": _top_k(
+            _seed_eligible_scores(graph, ranker.score_nodes(features)),
+            budget,
+        ),
+        "marginal_gain_regressor": _top_k(
+            _seed_eligible_scores(graph, regressor.score_nodes(features)),
             budget,
         ),
     }

@@ -2,9 +2,11 @@
 
 from agentprop.ml.datasets import (
     EdgePruningExample,
+    SeedRankingExample,
     SeedSelectionExample,
     VerifierPlacementExample,
     build_edge_pruning_example,
+    build_seed_ranking_example,
     build_seed_selection_example,
     build_verifier_placement_example,
 )
@@ -16,9 +18,11 @@ from agentprop.ml.features import (
 )
 from agentprop.ml.models import (
     LinearEdgeScorer,
+    LinearNodeRegressor,
     LinearNodeScorer,
     MessagePassingNodeScorer,
     MLPNodeScorer,
+    PairwiseNodeRanker,
 )
 
 __all__ = [
@@ -27,11 +31,15 @@ __all__ = [
     "GraphFeatures",
     "LinearEdgeScorer",
     "LinearNodeScorer",
+    "LinearNodeRegressor",
     "MLPNodeScorer",
     "MessagePassingNodeScorer",
+    "PairwiseNodeRanker",
+    "SeedRankingExample",
     "SeedSelectionExample",
     "VerifierPlacementExample",
     "build_edge_pruning_example",
+    "build_seed_ranking_example",
     "build_seed_selection_example",
     "build_verifier_placement_example",
     "extract_edge_features",
