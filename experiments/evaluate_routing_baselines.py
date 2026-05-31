@@ -1,0 +1,404 @@
+"""Compare classical, ML, and RL routing baselines on workflow graphs."""
+
+from __future__ import annotations
+
+import argparse
+import json
+from collections.abc import Callable
+from pathlib import Path
+from typing import Any
+
+from agentprop.algorithms import (
+    betweenness_seed_selection,
+    celf_seed_selection,
+    closeness_seed_selection,
+    degree_seed_selection,
+    greedy_seed_selection,
+    k_core_seed_selection,
+    pagerank_seed_selection,
+    random_seed_selection,
+)
+from agentprop.core import AgentGraph, NodeType
+from agentprop.evaluation.metrics import (
+    CostSummary,
+    broadcast_cost,
+    quality_cost_summary,
+    seeded_routing_cost,
+)
+from agentprop.ml import (
+    LinearNodeScorer,
+    MessagePassingNodeScorer,
+    MLPNodeScorer,
+    build_seed_selection_example,
+    extract_graph_features,
+)
+from agentprop.propagation import IndependentCascade
+from agentprop.rl import (
+    AgentRoutingEnv,
+    QLearningConfig,
+    ReinforceConfig,
+    RoutingAction,
+    train_q_policy,
+    train_reinforce_policy,
+)
+from agentprop.workflows import WORKFLOW_TEMPLATES
+
+SeedSelector = Callable[[AgentGraph], list[str]]
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Evaluate classical, ML, and RL routing baselines."
+    )
+    parser.add_argument("--budget", type=int, default=2)
+    parser.add_argument("--trials", type=int, default=20)
+    parser.add_argument("--episodes", type=int, default=40)
+    parser.add_argument("--epochs", type=int, default=40)
+    parser.add_argument("--learning-rate", type=float, default=0.05)
+    parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--max-steps", type=int, default=20)
+    parser.add_argument(
+        "--workflows",
+        default=",".join(WORKFLOW_TEMPLATES),
+        help="Comma-separated workflow template names.",
+    )
+    parser.add_argument(
+        "--out",
+        type=Path,
+        default=Path("results/rl/routing_baseline_comparison.json"),
+    )
+    args = parser.parse_args(argv)
+
+    workflow_names = _parse_workflow_names(args.workflows)
+    rows: list[dict[str, Any]] = []
+    for workflow_name in workflow_names:
+        graph = WORKFLOW_TEMPLATES[workflow_name]()
+        rows.append(_broadcast_row(workflow_name, graph))
+        rows.extend(
+            _evaluate_policy(
+                workflow_name,
+                graph,
+                policy_name,
+                selector(graph),
+                trials=args.trials,
+                seed=args.seed,
+            )
+            for policy_name, selector in _classical_selectors(
+                budget=args.budget,
+                trials=args.trials,
+                seed=args.seed,
+            ).items()
+        )
+        rows.extend(
+            _evaluate_policy(
+                workflow_name,
+                graph,
+                policy_name,
+                seeds,
+                trials=args.trials,
+                seed=args.seed,
+            )
+            for policy_name, seeds in _learned_seed_sets(
+                workflow_name=workflow_name,
+                budget=args.budget,
+                trials=args.trials,
+                epochs=args.epochs,
+                learning_rate=args.learning_rate,
+            ).items()
+        )
+        rows.extend(
+            _evaluate_policy(
+                workflow_name,
+                graph,
+                policy_name,
+                seeds,
+                trials=args.trials,
+                seed=args.seed,
+            )
+            for policy_name, seeds in _rl_seed_sets(
+                graph,
+                budget=args.budget,
+                trials=args.trials,
+                episodes=args.episodes,
+                learning_rate=args.learning_rate,
+                seed=args.seed,
+                max_steps=args.max_steps,
+            ).items()
+        )
+
+    payload = {
+        "budget": args.budget,
+        "trials": args.trials,
+        "episodes": args.episodes,
+        "epochs": args.epochs,
+        "workflows": workflow_names,
+        "summary": _summarize(rows),
+        "rows": rows,
+    }
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    args.out.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+    print(f"Wrote {args.out}")
+    return 0
+
+
+def _parse_workflow_names(raw_names: str) -> list[str]:
+    names = [name.strip() for name in raw_names.split(",") if name.strip()]
+    unknown = sorted(name for name in names if name not in WORKFLOW_TEMPLATES)
+    if unknown:
+        raise ValueError(f"Unknown workflow templates: {', '.join(unknown)}")
+    return names
+
+
+def _classical_selectors(
+    *,
+    budget: int,
+    trials: int,
+    seed: int,
+) -> dict[str, SeedSelector]:
+    return {
+        "random": lambda graph: random_seed_selection(graph, budget, seed=seed),
+        "degree": lambda graph: degree_seed_selection(graph, budget),
+        "pagerank": lambda graph: pagerank_seed_selection(graph, budget),
+        "betweenness": lambda graph: betweenness_seed_selection(graph, budget),
+        "closeness": lambda graph: closeness_seed_selection(graph, budget),
+        "k_core": lambda graph: k_core_seed_selection(graph, budget),
+        "greedy": lambda graph: greedy_seed_selection(
+            graph,
+            budget,
+            propagation_model=IndependentCascade(seed=seed),
+            trials=trials,
+        ),
+        "celf": lambda graph: celf_seed_selection(
+            graph,
+            budget,
+            propagation_model=IndependentCascade(seed=seed),
+            trials=trials,
+        ),
+    }
+
+
+def _learned_seed_sets(
+    *,
+    workflow_name: str,
+    budget: int,
+    trials: int,
+    epochs: int,
+    learning_rate: float,
+) -> dict[str, list[str]]:
+    examples = [
+        build_seed_selection_example(builder(), budget=budget, trials=trials)
+        for name, builder in WORKFLOW_TEMPLATES.items()
+        if name != workflow_name
+    ]
+    if not examples:
+        return {}
+
+    graph = WORKFLOW_TEMPLATES[workflow_name]()
+    features = extract_graph_features(graph)
+    feature_count = len(examples[0].features.feature_names)
+
+    mlp = MLPNodeScorer.initialize(feature_count)
+    mlp.train(examples, epochs=epochs, learning_rate=learning_rate)
+
+    linear = LinearNodeScorer.initialize(feature_count)
+    linear.train(examples, epochs=epochs, learning_rate=learning_rate)
+    message_passing = MessagePassingNodeScorer(linear)
+
+    neighbors = {
+        node_id: sorted({*graph.predecessors(node_id), *graph.successors(node_id)})
+        for node_id in features.node_features
+    }
+    return {
+        "mlp": _top_k(_seed_eligible_scores(graph, mlp.score_nodes(features)), budget),
+        "message_passing_gnn": _top_k(
+            _seed_eligible_scores(graph, message_passing.score_nodes(features, neighbors)),
+            budget,
+        ),
+    }
+
+
+def _rl_seed_sets(
+    graph: AgentGraph,
+    *,
+    budget: int,
+    trials: int,
+    episodes: int,
+    learning_rate: float,
+    seed: int,
+    max_steps: int,
+) -> dict[str, list[str]]:
+    q_env = AgentRoutingEnv(graph, budget=budget, trials=trials)
+    q_policy, _ = train_q_policy(
+        q_env,
+        config=QLearningConfig(
+            episodes=episodes,
+            learning_rate=learning_rate,
+            epsilon=0.2,
+            seed=seed,
+        ),
+    )
+    reinforce_env = AgentRoutingEnv(graph, budget=budget, trials=trials)
+    reinforce_policy, _ = train_reinforce_policy(
+        reinforce_env,
+        config=ReinforceConfig(
+            episodes=episodes,
+            learning_rate=learning_rate,
+            seed=seed,
+            max_steps=max_steps,
+        ),
+    )
+    return {
+        "q_learning": _rollout_seed_policy(q_env, q_policy.act, max_steps=max_steps),
+        "reinforce": _rollout_seed_policy(
+            reinforce_env,
+            reinforce_policy.act,
+            max_steps=max_steps,
+        ),
+    }
+
+
+def _rollout_seed_policy(
+    env: AgentRoutingEnv,
+    action_fn: Callable[[AgentRoutingEnv], str],
+    *,
+    max_steps: int,
+) -> list[str]:
+    state = env.reset()
+    done = False
+    steps = 0
+    while not done and steps < max_steps:
+        action = action_fn(env)
+        state, _, done, _ = env.step(action)
+        steps += 1
+        if action == RoutingAction.STOP.value:
+            break
+    return list(state.selected_seeds)
+
+
+def _evaluate_policy(
+    workflow_name: str,
+    graph: AgentGraph,
+    policy_name: str,
+    seeds: list[str],
+    *,
+    trials: int,
+    seed: int,
+) -> dict[str, Any]:
+    model = IndependentCascade(seed=seed)
+    propagation = model.simulate(graph, seeds, trials=trials)
+    cost = seeded_routing_cost(graph, seeds, propagation.activated_nodes)
+    broadcast = broadcast_cost(graph)
+    propagation_time = propagation.expected_propagation_time or propagation.propagation_time
+    quality = quality_cost_summary(
+        success_rate=propagation.coverage,
+        token_cost=cost.total_cost,
+        latency=cost.latency,
+    )
+    return _row(
+        workflow_name=workflow_name,
+        policy_name=policy_name,
+        seeds=seeds,
+        coverage=propagation.coverage,
+        full_activation_probability=propagation.full_activation_probability,
+        propagation_time=float(propagation_time),
+        cost=cost,
+        broadcast=broadcast,
+        efficiency_score=quality.efficiency_score,
+        cost_adjusted_success=quality.cost_adjusted_success,
+    )
+
+
+def _broadcast_row(workflow_name: str, graph: AgentGraph) -> dict[str, Any]:
+    cost = broadcast_cost(graph)
+    quality = quality_cost_summary(
+        success_rate=1.0,
+        token_cost=cost.total_cost,
+        latency=cost.latency,
+    )
+    return _row(
+        workflow_name=workflow_name,
+        policy_name="broadcast",
+        seeds=[node.id for node in graph.nodes()],
+        coverage=1.0,
+        full_activation_probability=1.0,
+        propagation_time=0.0,
+        cost=cost,
+        broadcast=cost,
+        efficiency_score=quality.efficiency_score,
+        cost_adjusted_success=quality.cost_adjusted_success,
+    )
+
+
+def _row(
+    *,
+    workflow_name: str,
+    policy_name: str,
+    seeds: list[str],
+    coverage: float,
+    full_activation_probability: float | None,
+    propagation_time: float,
+    cost: CostSummary,
+    broadcast: CostSummary,
+    efficiency_score: float,
+    cost_adjusted_success: float,
+) -> dict[str, Any]:
+    estimated_savings = 0.0
+    if broadcast.total_cost > 0:
+        estimated_savings = (broadcast.total_cost - cost.total_cost) / broadcast.total_cost
+    return {
+        "workflow": workflow_name,
+        "policy": policy_name,
+        "seeds": seeds,
+        "coverage": coverage,
+        "full_activation_probability": full_activation_probability,
+        "propagation_time": propagation_time,
+        "token_cost": cost.token_cost,
+        "message_cost": cost.message_cost,
+        "total_cost": cost.total_cost,
+        "latency": cost.latency,
+        "message_count": cost.message_count,
+        "estimated_savings": estimated_savings,
+        "cost_adjusted_success": cost_adjusted_success,
+        "efficiency_score": efficiency_score,
+    }
+
+
+def _summarize(rows: list[dict[str, Any]]) -> dict[str, dict[str, float]]:
+    policies = sorted({str(row["policy"]) for row in rows})
+    summary = {}
+    for policy in policies:
+        policy_rows = [row for row in rows if row["policy"] == policy]
+        summary[policy] = {
+            "workflows": float(len(policy_rows)),
+            "mean_coverage": _mean([float(row["coverage"]) for row in policy_rows]),
+            "mean_total_cost": _mean([float(row["total_cost"]) for row in policy_rows]),
+            "mean_estimated_savings": _mean(
+                [float(row["estimated_savings"]) for row in policy_rows]
+            ),
+            "mean_efficiency_score": _mean(
+                [float(row["efficiency_score"]) for row in policy_rows]
+            ),
+        }
+    return summary
+
+
+def _top_k(scores: dict[str, float], budget: int) -> list[str]:
+    return [
+        node_id
+        for node_id, _ in sorted(scores.items(), key=lambda item: (-item[1], item[0]))[:budget]
+    ]
+
+
+def _seed_eligible_scores(graph: AgentGraph, scores: dict[str, float]) -> dict[str, float]:
+    eligible = {node.id for node in graph.nodes() if node.type != NodeType.OUTPUT}
+    return {node_id: score for node_id, score in scores.items() if node_id in eligible}
+
+
+def _mean(values: list[float]) -> float:
+    if not values:
+        return 0.0
+    return sum(values) / len(values)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

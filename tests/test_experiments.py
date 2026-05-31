@@ -1,7 +1,9 @@
+import json
 from pathlib import Path
 
 from experiments import (
     evaluate_ml_generalization,
+    evaluate_routing_baselines,
     run_benchmark,
     run_rl_routing,
     train_edge_pruning_scorer,
@@ -85,6 +87,47 @@ def test_evaluate_ml_generalization_writes_results(tmp_path: Path) -> None:
 
     assert exit_code == 0
     assert output.exists()
+
+
+def test_evaluate_routing_baselines_writes_comparison(tmp_path: Path) -> None:
+    output = tmp_path / "routing_baselines.json"
+
+    exit_code = evaluate_routing_baselines.main(
+        [
+            "--workflows",
+            "chain,star",
+            "--trials",
+            "2",
+            "--episodes",
+            "2",
+            "--epochs",
+            "2",
+            "--max-steps",
+            "4",
+            "--out",
+            str(output),
+        ]
+    )
+
+    payload = json.loads(output.read_text())
+    policies = {row["policy"] for row in payload["rows"]}
+
+    assert exit_code == 0
+    assert output.exists()
+    assert {"broadcast", "greedy", "celf", "message_passing_gnn", "reinforce"}.issubset(
+        policies
+    )
+    assert payload["summary"]["greedy"]["workflows"] == 2.0
+    assert all(
+        "final" not in row["seeds"]
+        for row in payload["rows"]
+        if row["policy"] != "broadcast"
+    )
+    assert all(
+        "node_5" not in row["seeds"]
+        for row in payload["rows"]
+        if row["workflow"] == "chain" and row["policy"] != "broadcast"
+    )
 
 
 def test_rl_routing_experiment_writes_trajectory(tmp_path: Path) -> None:

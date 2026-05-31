@@ -37,6 +37,13 @@ Run expanded-action training:
 PYTHONPATH=src:. python experiments/run_rl_routing.py --policy reinforce --expanded-actions --episodes 100
 ```
 
+Compare RL with broadcast, classical graph algorithms, and ML/GNN-style
+baselines:
+
+```bash
+PYTHONPATH=src:. python experiments/evaluate_routing_baselines.py --workflows chain,star,tree --episodes 40
+```
+
 The environment also exposes `reset_gymnasium()` and `step_gymnasium()` methods
 that return Gymnasium-style observations without making Gymnasium a required
 core dependency.
