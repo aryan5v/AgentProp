@@ -4,6 +4,16 @@ AgentProp is an open-source framework for graph optimization in multi-agent LLM 
 
 It models agents, tools, memories, documents, and verifiers as nodes in a directed weighted graph, then uses graph propagation models, classical graph algorithms, graph neural networks, and reinforcement learning to optimize context routing, verifier placement, and topology pruning.
 
+## Why AgentProp Is Different
+
+AgentProp is not another agent orchestrator. It is an analysis and optimization layer for workflows you already have or want to study.
+
+- **Training-free first:** strong graph baselines before expensive learning.
+- **Graph-theoretic grounding:** propagation time, influence maximization, randomized zero forcing, verifier placement, and bottleneck analysis.
+- **Cost-aware by design:** every recommendation compares against broadcast routing with token/message cost estimates.
+- **Research-ready:** benchmark runner, propagation models, workflow templates, and ML/RL extension points share one graph abstraction.
+- **Developer-usable:** CLI commands produce immediate seed, pruning, verifier, and savings recommendations.
+
 ## What It Helps With
 
 - Select which agents receive full context first.
@@ -14,8 +24,30 @@ It models agents, tools, memories, documents, and verifiers as nodes in a direct
 
 ## Quickstart
 
+Install locally:
+
+```bash
+python -m pip install -e .
+```
+
+Run the first optimization demo:
+
+```bash
+agentprop optimize benchmarks/workflows/planner_coder_tester_reviewer.json --budget 2
+```
+
+Compare algorithms and propagation models:
+
+```bash
+agentprop benchmark planner_coder_tester_reviewer --budget 2 --trials 50
+```
+
+Use AgentProp as a library:
+
 ```python
 from agentprop import AgentGraph
+from agentprop.algorithms import greedy_seed_selection
+from agentprop.propagation import IndependentCascade
 
 graph = AgentGraph()
 graph.add_agent("planner", token_cost=1000)
@@ -27,17 +59,55 @@ graph.add_edge("planner", "coder", message_cost=500, weight=0.9)
 graph.add_edge("coder", "tester", message_cost=400, weight=0.8)
 graph.add_edge("tester", "reviewer", message_cost=300, weight=0.7)
 
-print(graph.node_count, graph.edge_count)
+model = IndependentCascade(seed=0)
+seeds = greedy_seed_selection(graph, k=2, propagation_model=model, trials=100)
+
+print(seeds)
 ```
 
-## Current Status
+## Core Features
 
-This repository is in initial setup. The first implementation milestone is:
+- Directed weighted `AgentGraph` abstraction with JSON and NetworkX conversion.
+- Propagation models:
+  - Independent Cascade
+  - Linear Threshold
+  - Bootstrap Percolation
+  - Randomized Zero Forcing
+- Training-free seed selection:
+  - Random
+  - Degree
+  - PageRank-style influence score
+  - Betweenness
+  - Greedy influence maximization
+- Diagnostics:
+  - Bottleneck nodes
+  - Low-weight pruning candidates
+  - Risk-aware verifier placement
+- Evaluation:
+  - Broadcast vs optimized cost comparison
+  - Coverage
+  - Expected propagation time
+  - Full activation probability
+  - Estimated token/message savings
+- ML/RL foundations:
+  - Graph feature extraction
+  - Greedy-labeled seed-selection examples
+  - Lightweight linear node scorer
+  - Message-passing node scorer
+  - Sequential routing environment
 
-1. Core `AgentGraph` abstraction.
-2. JSON import/export.
-3. NetworkX conversion.
-4. Propagation model interfaces.
-5. Classical seed-selection baselines.
+## Built-In Workflow Templates
 
-See [docs/PRD.md](docs/PRD.md) for the cleaned product and research plan.
+- `planner_coder_tester_reviewer`
+- `research_writer_verifier`
+- `debate_judge`
+- `rag_pipeline`
+- `tool_use_pipeline`
+- `hub_and_spoke_supervisor`
+
+## Research Direction
+
+AgentProp studies whether training-free graph algorithms and learned GNN/RL policies can reduce communication cost in multi-agent LLM workflows while preserving task success, consistency, and reliability.
+
+- [docs/PRD.md](docs/PRD.md) for the cleaned product and research plan.
+- [docs/research/literature_review.md](docs/research/literature_review.md) for the academic framing and related-work map.
