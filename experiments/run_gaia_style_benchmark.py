@@ -153,27 +153,49 @@ def is_correct(prediction: str, gold: str) -> bool:
 # LLM client wrappers
 # ---------------------------------------------------------------------------
 class RetryingClient:
-    """Wraps OpenAICompatibleChatClient with exponential-backoff retries."""
+    """Wraps OpenAICompatibleChatClient with backoff retries resilient to 503 spikes.
 
-    def __init__(self, inner: OpenAICompatibleChatClient, retries: int = 4, base_delay: float = 4.0) -> None:
+    Gemini preview models periodically return HTTP 503/429 under high demand.
+    These are transient, so we retry many times with capped exponential backoff
+    plus jitter, and pause briefly between successful calls to avoid hammering an
+    overloaded endpoint.
+    """
+
+    def __init__(
+        self,
+        inner: OpenAICompatibleChatClient,
+        retries: int = 8,
+        base_delay: float = 3.0,
+        max_delay: float = 45.0,
+        inter_call_pause: float = 1.5,
+    ) -> None:
         self._inner = inner
         self._retries = retries
         self._base_delay = base_delay
+        self._max_delay = max_delay
+        self._inter_call_pause = inter_call_pause
 
     def chat(self, *, system_prompt: str, user_prompt: str, max_tokens: int | None = None) -> LLMExecutionResult:
+        import random
+
         last_exc: Exception | None = None
         for attempt in range(self._retries + 1):
             try:
-                return self._inner.chat(
+                result = self._inner.chat(
                     system_prompt=system_prompt,
                     user_prompt=user_prompt,
                     temperature=0.1,
                     max_tokens=max_tokens,
                 )
+                if self._inter_call_pause:
+                    time.sleep(self._inter_call_pause)
+                return result
             except Exception as exc:  # noqa: BLE001
                 last_exc = exc
                 if attempt < self._retries:
-                    time.sleep(self._base_delay * (2 ** attempt))
+                    delay = min(self._base_delay * (2 ** attempt), self._max_delay)
+                    delay += random.uniform(0, delay * 0.25)  # jitter
+                    time.sleep(delay)
         raise RuntimeError(f"LLM call failed after {self._retries + 1} attempts") from last_exc
 
 
@@ -636,6 +658,12 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--tasks", default=str(BENCHMARK_PATH))
     parser.add_argument("--fake", action="store_true", help="Use deterministic fake client (plumbing test)")
     parser.add_argument("--limit", type=int, default=0, help="Run only first N tasks (0 = all)")
+    parser.add_argument(
+        "--pause",
+        type=float,
+        default=1.5,
+        help="Seconds to pause between successful LLM calls (rate-limit safety)",
+    )
     args = parser.parse_args(argv)
 
     out_dir = Path(args.out_dir)
@@ -665,7 +693,7 @@ def main(argv: list[str] | None = None) -> None:
             base_url=GEMINI_BASE_URL,
             timeout_s=120.0,
         )
-        client = RetryingClient(inner)
+        client = RetryingClient(inner, inter_call_pause=args.pause)
 
     # Compress context once for agentprop arm
     if args.fake:
