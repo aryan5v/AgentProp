@@ -1,0 +1,127 @@
+import json
+import sys
+from pathlib import Path
+
+from agentprop.cli import main
+from agentprop.evaluation.terminal_bench import (
+    TerminalBenchLaunchConfig,
+    collect_harbor_trial_results,
+    summarize_terminal_bench_results,
+    write_terminal_bench_launch_bundle,
+    write_terminal_bench_summary_report,
+)
+from agentprop.evaluation.watchdog import run_command_with_watchdog
+
+
+def test_terminal_bench_prepare_writes_dry_run_bundle(tmp_path: Path) -> None:
+    paths = write_terminal_bench_launch_bundle(
+        tmp_path,
+        TerminalBenchLaunchConfig(task_count=3, output_root=str(tmp_path / "run")),
+        registry_root=tmp_path / "registry",
+    )
+
+    manifest = json.loads(paths["manifest"].read_text())
+    assert manifest["dataset"] == "terminal-bench/terminal-bench-2-1"
+    assert manifest["agent"] == "terminus-2"
+    assert manifest["harbor_command"][:4] == ["harbor", "run", "-d", manifest["dataset"]]
+    assert "-n" in manifest["harbor_command"]
+    assert paths["run_script"].read_text().startswith("#!/usr/bin/env bash")
+    assert (tmp_path / "registry" / "registry.json").exists()
+
+
+def test_terminal_bench_summary_reads_harbor_task_results(tmp_path: Path) -> None:
+    _write_result(tmp_path / "task-a" / "result.json", "terminal-bench/task-a", 1.0, 100, 20, 0.03)
+    _write_result(
+        tmp_path / "task-b" / "result.json",
+        "terminal-bench/task-b",
+        0.0,
+        200,
+        30,
+        0.05,
+        exception_name="AgentTimeoutError",
+    )
+    (tmp_path / "result.json").write_text(json.dumps({"aggregate": True}))
+
+    rows = collect_harbor_trial_results(tmp_path)
+    summary = summarize_terminal_bench_results(rows)
+
+    assert len(rows) == 2
+    assert summary.pass_count == 1
+    assert summary.fail_count == 1
+    assert summary.timeout_rate == 0.5
+    assert summary.input_tokens == 300
+    assert summary.output_tokens == 50
+
+
+def test_terminal_bench_summary_report_writes_artifacts(tmp_path: Path) -> None:
+    _write_result(tmp_path / "run" / "task-a" / "result.json", "terminal-bench/task-a", 1.0)
+
+    paths = write_terminal_bench_summary_report(tmp_path / "run", tmp_path / "report")
+
+    assert json.loads(paths["summary"].read_text())["summary"]["pass_count"] == 1
+    assert "Task Results" in paths["report"].read_text()
+    assert "task_name" in paths["csv"].read_text()
+
+
+def test_cli_terminal_bench_prepare_emits_json(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    exit_code = main(
+        [
+            "terminal-bench",
+            "prepare",
+            "--out-dir",
+            str(tmp_path),
+            "--task-count",
+            "2",
+            "--json",
+        ]
+    )
+
+    assert exit_code == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert Path(payload["manifest"]).exists()
+    assert Path(payload["runbook"]).exists()
+
+
+def test_watchdog_writes_status_and_log(tmp_path: Path) -> None:
+    result = run_command_with_watchdog(
+        [sys.executable, "-c", "print('ok')"],
+        log_path=tmp_path / "run.log",
+        status_path=tmp_path / "status.json",
+        timeout_s=5,
+    )
+
+    assert result.status == "completed"
+    assert result.exit_code == 0
+    assert "ok" in (tmp_path / "run.log").read_text()
+    assert json.loads((tmp_path / "status.json").read_text())["status"] == "completed"
+
+
+def _write_result(
+    path: Path,
+    task_name: str,
+    reward: float,
+    input_tokens: int = 0,
+    output_tokens: int = 0,
+    cost_usd: float = 0.0,
+    *,
+    exception_name: str | None = None,
+) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(
+            {
+                "task_name": task_name,
+                "trial_name": task_name.rsplit("/", 1)[-1],
+                "agent_result": {
+                    "n_input_tokens": input_tokens,
+                    "n_cache_tokens": input_tokens // 2,
+                    "n_output_tokens": output_tokens,
+                    "cost_usd": cost_usd,
+                },
+                "verifier_result": {"rewards": {"reward": reward}},
+                "exception_info": (
+                    {"type": exception_name} if exception_name is not None else None
+                ),
+            }
+        )
+    )

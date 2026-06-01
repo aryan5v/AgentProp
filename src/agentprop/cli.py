@@ -21,6 +21,12 @@ from agentprop.evaluation.readiness import (
 )
 from agentprop.evaluation.reporting import report_to_dict, write_report
 from agentprop.evaluation.runner import make_propagation_model, run_benchmark, select_seeds
+from agentprop.evaluation.terminal_bench import (
+    HarborWatchdogConfig,
+    TerminalBenchLaunchConfig,
+    write_terminal_bench_launch_bundle,
+    write_terminal_bench_summary_report,
+)
 from agentprop.integrations import graph_from_trace, render_coding_agent_instructions
 from agentprop.visualization import write_dot
 from agentprop.workflows import WORKFLOW_TEMPLATES
@@ -52,6 +58,8 @@ def main(argv: list[str] | None = None) -> int:
         return _agent_instructions(args)
     if args.command == "readiness":
         return _readiness(args)
+    if args.command == "terminal-bench":
+        return _terminal_bench(args)
 
     parser.print_help()
     return 1
@@ -255,6 +263,48 @@ def _build_parser() -> argparse.ArgumentParser:
     readiness.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     readiness.add_argument("--out", type=Path, help="write readiness report to a file")
 
+    terminal_bench = subparsers.add_parser(
+        "terminal-bench",
+        help="prepare or summarize external Terminal-Bench runs",
+    )
+    terminal_bench_subparsers = terminal_bench.add_subparsers(dest="terminal_bench_command")
+    terminal_bench_prepare = terminal_bench_subparsers.add_parser(
+        "prepare",
+        help="write a Terminal-Bench 2.1 + Terminus-2 launch bundle without running it",
+    )
+    terminal_bench_prepare.add_argument(
+        "--out-dir",
+        type=Path,
+        default=Path("benchmark-results/terminal-bench-2.1"),
+    )
+    terminal_bench_prepare.add_argument("--dataset", default="terminal-bench/terminal-bench-2-1")
+    terminal_bench_prepare.add_argument("--agent", default="terminus-2")
+    terminal_bench_prepare.add_argument("--model", default="google/gemini-3.1-pro-preview")
+    terminal_bench_prepare.add_argument("--environment", default="modal")
+    terminal_bench_prepare.add_argument("--run-name", default="agentprop-tbench-21-terminus2")
+    terminal_bench_prepare.add_argument("--task-count", type=int, default=None)
+    terminal_bench_prepare.add_argument(
+        "--output-root",
+        default="benchmark-results/terminal-bench-2.1/terminus-2-agentprop",
+    )
+    terminal_bench_prepare.add_argument("--timeout", type=int, default=21_600)
+    terminal_bench_prepare.add_argument("--idle-timeout", type=int, default=1_800)
+    terminal_bench_prepare.add_argument("--registry-root", type=Path, default=None)
+    terminal_bench_prepare.add_argument("--json", action="store_true")
+
+    terminal_bench_summarize = terminal_bench_subparsers.add_parser(
+        "summarize",
+        help="summarize saved Harbor result.json artifacts",
+    )
+    terminal_bench_summarize.add_argument("--results-root", type=Path, required=True)
+    terminal_bench_summarize.add_argument("--out-dir", type=Path, required=True)
+    terminal_bench_summarize.add_argument(
+        "--title",
+        default="AgentProp Terminal-Bench Result Summary",
+    )
+    terminal_bench_summarize.add_argument("--registry-root", type=Path, default=None)
+    terminal_bench_summarize.add_argument("--json", action="store_true")
+
     return parser
 
 
@@ -453,6 +503,45 @@ def _readiness(args: argparse.Namespace) -> int:
         print(f"Wrote {args.out}")
     else:
         print(content, end="")
+    return 0
+
+
+def _terminal_bench(args: argparse.Namespace) -> int:
+    if args.terminal_bench_command == "prepare":
+        config = TerminalBenchLaunchConfig(
+            dataset=args.dataset,
+            agent=args.agent,
+            model=args.model,
+            environment=args.environment,
+            run_name=args.run_name,
+            task_count=args.task_count,
+            output_root=args.output_root,
+            watchdog=HarborWatchdogConfig(
+                timeout_s=args.timeout,
+                idle_timeout_s=args.idle_timeout,
+            ),
+        )
+        paths = write_terminal_bench_launch_bundle(
+            args.out_dir,
+            config,
+            registry_root=args.registry_root,
+        )
+    elif args.terminal_bench_command == "summarize":
+        paths = write_terminal_bench_summary_report(
+            args.results_root,
+            args.out_dir,
+            title=args.title,
+            registry_root=args.registry_root,
+        )
+    else:
+        raise ValueError("terminal-bench requires a subcommand: prepare or summarize")
+
+    payload = {name: str(path) for name, path in paths.items()}
+    if args.json:
+        print(json.dumps(payload, indent=2, sort_keys=True))
+    else:
+        for name, path in payload.items():
+            print(f"{name}: {path}")
     return 0
 
 

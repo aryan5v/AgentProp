@@ -60,6 +60,17 @@ from agentprop.evaluation.routing import (
     routing_risks,
 )
 from agentprop.evaluation.runner import BenchmarkRow, run_benchmark
+from agentprop.evaluation.terminal_bench import (
+    HarborTrialSummary,
+    HarborWatchdogConfig,
+    TerminalBenchLaunchConfig,
+    TerminalBenchSummary,
+    collect_harbor_trial_results,
+    load_harbor_trial_result,
+    summarize_terminal_bench_results,
+    write_terminal_bench_launch_bundle,
+    write_terminal_bench_summary_report,
+)
 from agentprop.evaluation.verification import (
     VerificationResult,
     VerificationStatus,
@@ -67,6 +78,7 @@ from agentprop.evaluation.verification import (
     run_verification_command,
     verification_row_fields,
 )
+from agentprop.evaluation.watchdog import WatchdogResult, run_command_with_watchdog
 
 __all__ = [
     "BenchmarkRow",
@@ -75,6 +87,8 @@ __all__ = [
     "CostSummary",
     "ContextCompressionProfile",
     "ExactMatchScorer",
+    "HarborTrialSummary",
+    "HarborWatchdogConfig",
     "HumanLabelScorer",
     "LLMJudgeScorer",
     "LLMExecutionResult",
@@ -92,15 +106,20 @@ __all__ = [
     "RobustnessSummary",
     "RubricScorer",
     "RoutingRisk",
+    "TerminalBenchLaunchConfig",
+    "TerminalBenchSummary",
     "VerificationResult",
     "VerificationStatus",
+    "WatchdogResult",
     "aggregate_quality_scores",
     "build_v1_readiness_report",
     "calibrate_context_compression",
+    "collect_harbor_trial_results",
     "compare_routing",
     "estimate_expected_success",
     "evaluate_pruning",
     "graded_context_allocations",
+    "load_harbor_trial_result",
     "load_artifact_registry",
     "quality_cost_summary",
     "openai_compatible_env_status",
@@ -111,12 +130,16 @@ __all__ = [
     "report_to_dict",
     "routing_risks",
     "robustness_under_failures",
+    "run_command_with_watchdog",
     "safe_artifact_id",
     "run_python_code_tests",
     "run_verification_command",
     "run_benchmark",
     "summarize_pruning_risk",
+    "summarize_terminal_bench_results",
     "verification_row_fields",
     "write_artifact_registry",
+    "write_terminal_bench_launch_bundle",
+    "write_terminal_bench_summary_report",
     "write_report",
 ]
