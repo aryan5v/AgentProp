@@ -122,6 +122,17 @@ scores, traces, and `outputs.jsonl` with prompts and final model responses.
 Keep the result directory private until a redaction pass confirms no secrets or
 private task data are present.
 
+Analyze saved results:
+
+```bash
+PYTHONPATH=src:. python experiments/analyze_case_study.py \
+  --results docs/results/case_study_001/results.json \
+  --out-dir docs/results/case_study_001
+```
+
+The analyzer writes `analysis.json`, `policy_comparison.csv`, `analysis.md`,
+`token_savings_by_policy.svg`, and `quality_by_policy.svg`.
+
 ## Public-Release Gate
 
 Do not make the repository public until this protocol has at least one completed

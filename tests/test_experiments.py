@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 from experiments import (
+    analyze_case_study,
     evaluate_ml_generalization,
     evaluate_routing_baselines,
     replay_rl_trajectory,
@@ -147,6 +148,73 @@ def test_run_case_study_writes_offline_artifacts(tmp_path: Path) -> None:
         for row in payload["rows"]
         if row["policy"] == "broadcast"
     )
+
+
+def test_analyze_case_study_writes_tables_and_plots(tmp_path: Path) -> None:
+    results = tmp_path / "results.json"
+    out_dir = tmp_path / "analysis"
+    results.write_text(
+        json.dumps(
+            {
+                "mode": "llm",
+                "workflow": "planner_coder_tester_reviewer",
+                "task_count": 2,
+                "rows": [
+                    {
+                        "task_id": "a",
+                        "policy": "broadcast",
+                        "verification_passed": True,
+                        "quality_score": 1.0,
+                        "total_cost": 100.0,
+                        "token_cost": 100.0,
+                        "message_count": 4,
+                        "efficiency_score": 0.9,
+                    },
+                    {
+                        "task_id": "a",
+                        "policy": "optimized_greedy",
+                        "verification_passed": True,
+                        "quality_score": 0.9,
+                        "total_cost": 60.0,
+                        "token_cost": 60.0,
+                        "message_count": 2,
+                        "efficiency_score": 0.85,
+                    },
+                    {
+                        "task_id": "b",
+                        "policy": "broadcast",
+                        "verification_passed": True,
+                        "quality_score": 1.0,
+                        "total_cost": 120.0,
+                        "token_cost": 120.0,
+                        "message_count": 4,
+                        "efficiency_score": 0.9,
+                    },
+                    {
+                        "task_id": "b",
+                        "policy": "optimized_greedy",
+                        "verification_passed": True,
+                        "quality_score": 0.95,
+                        "total_cost": 72.0,
+                        "token_cost": 72.0,
+                        "message_count": 2,
+                        "efficiency_score": 0.88,
+                    },
+                ],
+            }
+        )
+    )
+
+    exit_code = analyze_case_study.main(["--results", str(results), "--out-dir", str(out_dir)])
+    analysis = json.loads((out_dir / "analysis.json").read_text())
+
+    assert exit_code == 0
+    assert (out_dir / "analysis.md").exists()
+    assert (out_dir / "policy_comparison.csv").exists()
+    assert (out_dir / "token_savings_by_policy.svg").exists()
+    assert (out_dir / "quality_by_policy.svg").exists()
+    assert analysis["acceptance"]["optimized_greedy"]["cost_reduction_at_least_20_percent"]
+    assert "optimized_greedy" in (out_dir / "analysis.md").read_text()
 
 
 def test_real_case_study_arm_records_llm_usage_and_output() -> None:
