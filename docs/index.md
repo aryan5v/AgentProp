@@ -14,6 +14,7 @@ AgentProp is a graph optimization framework for multi-agent LLM workflows.
 - [Verifier semantics](verifier_semantics.md)
 - [Quality scoring](quality_scoring.md)
 - [Framework integrations](framework_integrations.md)
+- [Coding agent integration](coding_agents.md)
 
 ## Product and Research
 
@@ -35,6 +36,7 @@ agentprop simulate chain --seeds node_0 --model zero-forcing
 agentprop prune planner_coder_tester_reviewer --target-token-reduction 0.3
 agentprop benchmark planner_coder_tester_reviewer --budget 2 --trials 50
 agentprop report planner_coder_tester_reviewer --out reports/demo.html --format html
+agentprop agent-instructions planner_coder_tester_reviewer --target codex --out reports/codex_agent_brief.md
 agentprop viz planner_coder_tester_reviewer --out reports/workflow.dot
 ```
 

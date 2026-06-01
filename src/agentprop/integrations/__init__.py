@@ -1,5 +1,9 @@
 """Integrations for importing external workflow traces and framework specs."""
 
+from agentprop.integrations.agent_instructions import (
+    CodingAgentTarget,
+    render_coding_agent_instructions,
+)
 from agentprop.integrations.framework_adapters import (
     SUPPORTED_FRAMEWORKS,
     graph_from_autogen_dict,
@@ -22,6 +26,7 @@ from agentprop.integrations.trace_loader import (
 )
 
 __all__ = [
+    "CodingAgentTarget",
     "SUPPORTED_FRAMEWORKS",
     "TraceLoadResult",
     "graph_from_autogen_dict",
@@ -32,6 +37,7 @@ __all__ = [
     "graph_from_openai_agents_dict",
     "graph_from_trace",
     "graph_from_trace_dict",
+    "render_coding_agent_instructions",
     "to_autogen_dict",
     "to_crewai_dict",
     "to_framework_dict",

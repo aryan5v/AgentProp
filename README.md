@@ -21,6 +21,7 @@ AgentProp is not another agent orchestrator. It is an analysis and optimization 
 - Place verifier agents where corrections spread quickly.
 - Simulate information and correction propagation.
 - Benchmark training-free, GNN, and RL routing policies.
+- Generate Claude Code/Codex-ready briefs for coding agents.
 
 ## Quickstart
 
@@ -40,6 +41,12 @@ Compare algorithms and propagation models:
 
 ```bash
 agentprop benchmark planner_coder_tester_reviewer --budget 2 --trials 50
+```
+
+Generate a coding-agent brief:
+
+```bash
+agentprop agent-instructions planner_coder_tester_reviewer --target codex --out reports/codex_agent_brief.md
 ```
 
 Use AgentProp as a library:
@@ -116,6 +123,7 @@ AgentProp studies whether training-free graph algorithms and learned GNN/RL poli
 - [docs/PRD.md](docs/PRD.md) for the cleaned product and research plan.
 - [docs/research/literature_review.md](docs/research/literature_review.md) for the academic framing and related-work map.
 - [docs/trace_ingestion.md](docs/trace_ingestion.md) for converting message logs into workflow graphs.
+- [docs/coding_agents.md](docs/coding_agents.md) for Claude Code, Codex, skill, plugin, and MCP integration guidance.
 - [docs/visualization.md](docs/visualization.md) for Graphviz DOT exports.
 - [docs/deep_learning.md](docs/deep_learning.md) for the optional DL roadmap.
 - [docs/release_checklist.md](docs/release_checklist.md) for the v1 readiness checklist.

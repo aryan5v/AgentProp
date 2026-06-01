@@ -17,7 +17,7 @@ from agentprop.core import AgentGraph
 from agentprop.evaluation import compare_routing, evaluate_pruning, summarize_pruning_risk
 from agentprop.evaluation.reporting import report_to_dict, write_report
 from agentprop.evaluation.runner import make_propagation_model, run_benchmark, select_seeds
-from agentprop.integrations import graph_from_trace
+from agentprop.integrations import graph_from_trace, render_coding_agent_instructions
 from agentprop.visualization import write_dot
 from agentprop.workflows import WORKFLOW_TEMPLATES
 
@@ -44,6 +44,8 @@ def main(argv: list[str] | None = None) -> int:
         return _trace(args)
     if args.command == "viz":
         return _viz(args)
+    if args.command == "agent-instructions":
+        return _agent_instructions(args)
 
     parser.print_help()
     return 1
@@ -203,6 +205,41 @@ def _build_parser() -> argparse.ArgumentParser:
     viz = subparsers.add_parser("viz", help="export a workflow graph as Graphviz DOT")
     viz.add_argument("workflow", help="workflow JSON path or built-in workflow name")
     viz.add_argument("--out", type=Path, default=Path("reports/workflow.dot"))
+
+    instructions = subparsers.add_parser(
+        "agent-instructions",
+        help="write a Claude Code/Codex-ready workflow brief",
+    )
+    instructions.add_argument("workflow", help="workflow JSON path or built-in workflow name")
+    instructions.add_argument("--budget", "-k", type=int, default=2)
+    instructions.add_argument(
+        "--algorithm",
+        choices=algorithm_choices,
+        default="greedy",
+    )
+    instructions.add_argument(
+        "--model",
+        choices=[
+            "independent-cascade",
+            "linear-threshold",
+            "bootstrap",
+            "rzf",
+            "zero-forcing",
+            "learned",
+        ],
+        default="independent-cascade",
+    )
+    instructions.add_argument("--trials", type=int, default=100)
+    instructions.add_argument(
+        "--target",
+        choices=["claude-code", "codex", "generic"],
+        default="generic",
+    )
+    instructions.add_argument(
+        "--out",
+        type=Path,
+        default=Path("reports/agent_instructions.md"),
+    )
 
     return parser
 
@@ -367,6 +404,26 @@ def _viz(args: argparse.Namespace) -> int:
     workflow_name, graph = _load_workflow(args.workflow)
     output_path = write_dot(graph, args.out, name=workflow_name)
     print(f"Wrote {output_path}")
+    return 0
+
+
+def _agent_instructions(args: argparse.Namespace) -> int:
+    workflow_name, graph = _load_workflow(args.workflow)
+    report = _build_recommendation_report(
+        graph,
+        algorithm=args.algorithm,
+        model_name=args.model,
+        budget=args.budget,
+        trials=args.trials,
+    )
+    markdown = render_coding_agent_instructions(
+        report,
+        workflow_name=workflow_name,
+        target=args.target,
+    )
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    args.out.write_text(markdown)
+    print(f"Wrote {args.out}")
     return 0
 
 

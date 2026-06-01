@@ -322,6 +322,13 @@ The case-study runner should support:
 
 Goal: analyze workflows users already have.
 
+Coding-agent integration:
+
+- Added `agentprop agent-instructions` to generate Claude Code, Codex, or
+  generic coding-agent briefs from AgentProp routing recommendations.
+- Added `docs/coding_agents.md` with Claude Code skill shape, Codex plugin
+  shape, MCP tool recommendations, and ML/DL/RL suite usage guidance.
+
 Adapters to build:
 
 - LangGraph: added dependency-light dictionary export/import adapter.

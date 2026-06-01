@@ -86,6 +86,30 @@ def test_cli_trace_and_viz_write_artifacts(tmp_path: Path) -> None:
     assert "digraph" in dot.read_text()
 
 
+def test_cli_agent_instructions_writes_markdown(tmp_path: Path) -> None:
+    output = tmp_path / "instructions.md"
+
+    exit_code = main(
+        [
+            "agent-instructions",
+            "planner_coder_tester_reviewer",
+            "--target",
+            "claude-code",
+            "--budget",
+            "2",
+            "--trials",
+            "3",
+            "--out",
+            str(output),
+        ]
+    )
+
+    assert exit_code == 0
+    markdown = output.read_text()
+    assert "AgentProp Brief For Claude Code" in markdown
+    assert "Suggested Agent Prompt" in markdown
+
+
 def test_cli_simulate_emits_json(capsys) -> None:  # type: ignore[no-untyped-def]
     exit_code = main(
         [
