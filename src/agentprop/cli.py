@@ -15,6 +15,10 @@ from agentprop.algorithms import (
 )
 from agentprop.core import AgentGraph
 from agentprop.evaluation import compare_routing, evaluate_pruning, summarize_pruning_risk
+from agentprop.evaluation.readiness import (
+    build_v1_readiness_report,
+    render_v1_readiness_markdown,
+)
 from agentprop.evaluation.reporting import report_to_dict, write_report
 from agentprop.evaluation.runner import make_propagation_model, run_benchmark, select_seeds
 from agentprop.integrations import graph_from_trace, render_coding_agent_instructions
@@ -46,6 +50,8 @@ def main(argv: list[str] | None = None) -> int:
         return _viz(args)
     if args.command == "agent-instructions":
         return _agent_instructions(args)
+    if args.command == "readiness":
+        return _readiness(args)
 
     parser.print_help()
     return 1
@@ -241,6 +247,13 @@ def _build_parser() -> argparse.ArgumentParser:
         default=Path("reports/agent_instructions.md"),
     )
 
+    readiness = subparsers.add_parser(
+        "readiness",
+        help="show evidence-backed v1 rollout readiness",
+    )
+    readiness.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    readiness.add_argument("--out", type=Path, help="write readiness report to a file")
+
     return parser
 
 
@@ -424,6 +437,21 @@ def _agent_instructions(args: argparse.Namespace) -> int:
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(markdown)
     print(f"Wrote {args.out}")
+    return 0
+
+
+def _readiness(args: argparse.Namespace) -> int:
+    report = build_v1_readiness_report()
+    if args.json:
+        content = json.dumps(report.to_dict(), indent=2, sort_keys=True) + "\n"
+    else:
+        content = render_v1_readiness_markdown(report)
+    if args.out is not None:
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        args.out.write_text(content)
+        print(f"Wrote {args.out}")
+    else:
+        print(content, end="")
     return 0
 
 

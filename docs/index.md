@@ -24,6 +24,7 @@ AgentProp is a graph optimization framework for multi-agent LLM workflows.
 - [Real LLM case-study protocol](research/case_study_protocol.md)
 - [Paper outline](research/paper_outline.md)
 - [v1 benchmark artifacts](results/v1/README.md)
+- [v1 readiness audit](v1_readiness.md)
 - [v1 release checklist](release_checklist.md)
 - [Deep learning roadmap](deep_learning.md)
 - [Public release decision](public_release_decision.md)
@@ -37,6 +38,7 @@ agentprop prune planner_coder_tester_reviewer --target-token-reduction 0.3
 agentprop benchmark planner_coder_tester_reviewer --budget 2 --trials 50
 agentprop report planner_coder_tester_reviewer --out reports/demo.html --format html
 agentprop agent-instructions planner_coder_tester_reviewer --target codex --out reports/codex_agent_brief.md
+agentprop readiness --json
 agentprop viz planner_coder_tester_reviewer --out reports/workflow.dot
 ```
 

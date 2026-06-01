@@ -2,6 +2,11 @@
 
 AgentProp is not v1-complete until every required item below has evidence.
 
+For the current evidence-backed rollout score, run `agentprop readiness` or see
+[v1_readiness.md](v1_readiness.md). The checklist below tracks feature
+completion; the readiness audit also tracks evidence quality and public-claim
+blockers.
+
 ## Product Surface
 
 - [x] Package installs locally.
@@ -72,3 +77,4 @@ AgentProp is not v1-complete until every required item below has evidence.
 - [x] Version tag.
 - [x] Release notes.
 - [x] Repository visibility decision.
+- [x] Evidence-backed readiness audit.
