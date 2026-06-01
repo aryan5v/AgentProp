@@ -205,7 +205,10 @@ def load_harbor_trial_result(path: str | Path) -> HarborTrialSummary | None:
     """Load one Harbor task result, returning None for aggregate job results."""
 
     result_path = Path(path)
-    payload = json.loads(result_path.read_text())
+    try:
+        payload = json.loads(result_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError, UnicodeDecodeError):
+        return None
     task_name = payload.get("task_name")
     trial_name = payload.get("trial_name")
     if not isinstance(task_name, str) or not isinstance(trial_name, str):
@@ -427,6 +430,30 @@ Use AgentProp routing discipline, but keep it budget-aware.
 - If a task is direct-answer or perception-heavy, avoid heavyweight process loops.
 - Preserve evidence: commands run, files changed, verification output, and any
   unresolved risk.
+
+## Regression Fixes From The First AgentProp Run
+
+The first guided run regressed on tasks where generic planner/implementer/verifier
+discipline was too heavy or too narrow. Apply these task-specific corrections:
+
+### Direct Answer / Perception Tasks
+
+- If the prompt asks for all valid answers, enumerate the full answer set before
+  writing the final file. Do not stop after the first engine/model "best" answer.
+- For chess or puzzle tasks, explicitly check whether multiple winning moves,
+  mates, or equivalent optima satisfy the prompt.
+- Keep the loop short: inspect input, compute/verify candidates, write exactly
+  the requested format, and stop.
+
+### Simulator / Numerical Tuning Tasks
+
+- Treat the provided evaluator as the source of truth; optimize against it early.
+- Limit candidate sweeps to a small fixed budget before choosing the best valid
+  candidate.
+- Stop when a candidate passes correctness and satisfies the target speed/quality
+  threshold; do not continue broad exploratory searches.
+- Do not change physical semantics, units, schemas, or coordinate conventions
+  unless the evaluator proves equivalence.
 """
 
 
@@ -472,7 +499,7 @@ def _render_summary_markdown(
 
 def _write_trial_csv(path: Path, rows: list[HarborTrialSummary]) -> None:
     fieldnames = list(HarborTrialSummary("", "", None, None, None, 0, 0, 0, 0.0, "").to_dict())
-    with path.open("w", newline="") as handle:
+    with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
         for row in rows:

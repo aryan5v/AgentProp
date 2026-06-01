@@ -534,7 +534,7 @@ def _terminal_bench(args: argparse.Namespace) -> int:
             registry_root=args.registry_root,
         )
     else:
-        raise ValueError("terminal-bench requires a subcommand: prepare or summarize")
+        raise SystemExit("Error: terminal-bench requires a subcommand: prepare or summarize")
 
     payload = {name: str(path) for name, path in paths.items()}
     if args.json:
