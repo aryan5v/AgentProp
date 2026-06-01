@@ -2,6 +2,8 @@ import json
 import sys
 from pathlib import Path
 
+from experiments.run_with_watchdog import main as watchdog_main
+
 from agentprop.cli import main
 from agentprop.evaluation.terminal_bench import (
     TerminalBenchLaunchConfig,
@@ -26,6 +28,9 @@ def test_terminal_bench_prepare_writes_dry_run_bundle(tmp_path: Path) -> None:
     assert manifest["harbor_command"][:4] == ["harbor", "run", "-d", manifest["dataset"]]
     assert "-n" in manifest["harbor_command"]
     assert paths["run_script"].read_text().startswith("#!/usr/bin/env bash")
+    instructions = paths["extra_instructions"].read_text()
+    assert "enumerate the full answer set" in instructions
+    assert "Limit candidate sweeps to a small fixed budget" in instructions
     assert (tmp_path / "registry" / "registry.json").exists()
 
 
@@ -51,6 +56,18 @@ def test_terminal_bench_summary_reads_harbor_task_results(tmp_path: Path) -> Non
     assert summary.timeout_rate == 0.5
     assert summary.input_tokens == 300
     assert summary.output_tokens == 50
+
+
+def test_terminal_bench_summary_skips_partial_json(tmp_path: Path) -> None:
+    _write_result(tmp_path / "task-a" / "result.json", "terminal-bench/task-a", 1.0)
+    partial = tmp_path / "task-b" / "result.json"
+    partial.parent.mkdir(parents=True)
+    partial.write_text("{", encoding="utf-8")
+
+    rows = collect_harbor_trial_results(tmp_path)
+
+    assert len(rows) == 1
+    assert rows[0].task_name == "terminal-bench/task-a"
 
 
 def test_terminal_bench_summary_report_writes_artifacts(tmp_path: Path) -> None:
@@ -82,6 +99,15 @@ def test_cli_terminal_bench_prepare_emits_json(tmp_path: Path, capsys) -> None: 
     assert Path(payload["runbook"]).exists()
 
 
+def test_cli_terminal_bench_requires_subcommand() -> None:
+    try:
+        main(["terminal-bench"])
+    except SystemExit as exc:
+        assert "requires a subcommand" in str(exc)
+    else:
+        raise AssertionError("expected SystemExit")
+
+
 def test_watchdog_writes_status_and_log(tmp_path: Path) -> None:
     result = run_command_with_watchdog(
         [sys.executable, "-c", "print('ok')"],
@@ -94,6 +120,44 @@ def test_watchdog_writes_status_and_log(tmp_path: Path) -> None:
     assert result.exit_code == 0
     assert "ok" in (tmp_path / "run.log").read_text()
     assert json.loads((tmp_path / "status.json").read_text())["status"] == "completed"
+
+
+def test_watchdog_script_propagates_failed_exit_code(tmp_path: Path) -> None:
+    exit_code = watchdog_main(
+        [
+            "--timeout",
+            "5",
+            "--log",
+            str(tmp_path / "failed.log"),
+            "--status-json",
+            str(tmp_path / "failed-status.json"),
+            "--",
+            sys.executable,
+            "-c",
+            "raise SystemExit(7)",
+        ]
+    )
+
+    assert exit_code == 7
+
+
+def test_watchdog_handles_partial_line_idle_timeout(tmp_path: Path) -> None:
+    result = run_command_with_watchdog(
+        [
+            sys.executable,
+            "-c",
+            "import sys, time; sys.stdout.write('partial'); sys.stdout.flush(); time.sleep(5)",
+        ],
+        log_path=tmp_path / "partial.log",
+        status_path=tmp_path / "partial-status.json",
+        timeout_s=5,
+        idle_timeout_s=0.2,
+        poll_interval_s=0.05,
+        terminate_grace_s=1,
+    )
+
+    assert result.status == "idle-timeout"
+    assert result.idle_timed_out is True
 
 
 def _write_result(

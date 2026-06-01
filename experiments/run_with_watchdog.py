@@ -36,7 +36,9 @@ def main(argv: list[str] | None = None) -> int:
         poll_interval_s=args.poll_interval,
     )
     print(json.dumps(result.to_dict(), indent=2, sort_keys=True))
-    return int(result.exit_code or 0) if result.status == "completed" else 1
+    if result.status == "completed":
+        return 0
+    return int(result.exit_code) if result.exit_code is not None else 1
 
 
 if __name__ == "__main__":

@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import json
-import selectors
 import subprocess
+import threading
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -100,10 +100,19 @@ def run_command_with_watchdog(
         except OSError as exc:
             message = str(exc)
         else:
-            selector = selectors.DefaultSelector()
             assert process.stdout is not None
-            selector.register(process.stdout, selectors.EVENT_READ)
-            last_output_at = time.time()
+            last_output_at = [time.time()]
+
+            def log_reader() -> None:
+                assert process is not None
+                assert process.stdout is not None
+                for line in process.stdout:
+                    log_handle.write(line)
+                    log_handle.flush()
+                    last_output_at[0] = time.time()
+
+            reader_thread = threading.Thread(target=log_reader, daemon=True)
+            reader_thread.start()
 
             while process.poll() is None:
                 now = time.time()
@@ -113,25 +122,15 @@ def run_command_with_watchdog(
                     message = f"wall-clock timeout after {timeout_s:.1f}s"
                     _terminate_process(process, terminate_grace_s)
                     break
-                if idle_timeout_s is not None and now - last_output_at >= idle_timeout_s:
+                if idle_timeout_s is not None and now - last_output_at[0] >= idle_timeout_s:
                     idle_timed_out = True
                     status = "idle-timeout"
                     message = f"idle timeout after {idle_timeout_s:.1f}s without output"
                     _terminate_process(process, terminate_grace_s)
                     break
+                time.sleep(min(poll_interval_s, 1.0))
 
-                events = selector.select(timeout=min(poll_interval_s, 1.0))
-                for _key, _ in events:
-                    line = process.stdout.readline()
-                    if line:
-                        log_handle.write(line)
-                        log_handle.flush()
-                        last_output_at = time.time()
-
-            remaining = process.stdout.read()
-            if remaining:
-                log_handle.write(remaining)
-                log_handle.flush()
+            reader_thread.join(timeout=terminate_grace_s)
             exit_code = process.returncode
             if not timed_out and not idle_timed_out:
                 status = "completed" if exit_code == 0 else "failed"
