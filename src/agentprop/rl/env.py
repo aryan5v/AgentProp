@@ -8,7 +8,11 @@ from enum import StrEnum
 from agentprop.core import AgentGraph, NodeType
 from agentprop.evaluation.metrics import seeded_routing_cost
 from agentprop.propagation import IndependentCascade, PropagationModel
-from agentprop.rl.rewards import propagation_reward
+from agentprop.rl.rewards import (
+    WorkflowControlReward,
+    propagation_reward,
+    workflow_control_reward,
+)
 
 
 class RoutingAction(StrEnum):
@@ -171,13 +175,18 @@ class AgentRoutingEnv:
             done = len(self._selected) >= self.budget
 
         self._state = self._evaluate(done=done)
-        reward = propagation_reward(
+        propagation_component = propagation_reward(
             coverage=self._state.coverage,
             token_cost=self._state.token_cost,
             message_cost=self._state.message_cost,
             propagation_time=self._state.propagation_time,
         )
-        return self._state, reward, done, self._info(decision)
+        control_component = self._control_reward(decision)
+        reward = propagation_component + control_component.total
+        info = self._info(decision)
+        info["propagation_reward"] = propagation_component
+        info["control_reward"] = control_component.to_dict()
+        return self._state, reward, done, info
 
     def step_gymnasium(
         self,
@@ -308,6 +317,33 @@ class AgentRoutingEnv:
             "called_tools": tuple(self._called_tools),
             "summary_nodes": tuple(self._summary_nodes),
         }
+
+    def _control_reward(self, decision: RoutingDecision) -> WorkflowControlReward:
+        if decision.action_type == RoutingAction.ACTIVATE_VERIFIER:
+            node = self.graph.node(_required_node(decision))
+            return workflow_control_reward(
+                activated_verifier_risk=(1.0 - node.reliability) + node.error_rate,
+            )
+        if decision.action_type == RoutingAction.PRUNE_EDGE:
+            edge = self.graph.edge(*_required_edge(decision))
+            safe_savings = edge.message_cost * max(1.0 - edge.relevance, 0.0)
+            risky_exposure = edge.relevance * edge.dependency_strength * edge.reliability
+            return workflow_control_reward(
+                safe_pruning_savings=safe_savings,
+                risky_pruning_exposure=risky_exposure,
+            )
+        if decision.action_type == RoutingAction.CALL_TOOL:
+            node = self.graph.node(_required_node(decision))
+            return workflow_control_reward(
+                tool_reliability_gain=max(node.reliability - node.error_rate, 0.0),
+            )
+        if decision.action_type == RoutingAction.REQUEST_SUMMARY:
+            node = self.graph.node(_required_node(decision))
+            importance = node.importance_score or 0.0
+            return workflow_control_reward(
+                summary_token_savings=0.9 * node.token_cost * max(1.0 - importance, 0.0),
+            )
+        return WorkflowControlReward()
 
 def format_routing_action(
     action_type: RoutingAction,

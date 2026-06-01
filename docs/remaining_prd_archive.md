@@ -251,8 +251,11 @@ Goal: move beyond seed-selection Q-learning toward real workflow control.
   REINFORCE/PPO policies.
 - Expanded-action RL evaluation: routing baseline comparison now emits
   `q_learning_expanded`, `reinforce_expanded`, and `ppo_expanded` rows with
-  action traces, activated verifiers, pruned edges, tool calls, and summary
-  requests preserved for audit.
+  action traces, reward traces, activated verifiers, pruned edges, tool calls,
+  and summary requests preserved for audit.
+- Expanded-action reward shaping: verifier activation, safe/risky pruning, tool
+  calls, and summary requests now add interpretable reward terms on top of
+  coverage, cost, and propagation-time reward.
 
 ### Expanded Actions
 

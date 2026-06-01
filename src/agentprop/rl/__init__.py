@@ -27,7 +27,7 @@ from agentprop.rl.reinforce import (
     ReinforceTrainingResult,
     train_reinforce_policy,
 )
-from agentprop.rl.rewards import propagation_reward
+from agentprop.rl.rewards import WorkflowControlReward, propagation_reward, workflow_control_reward
 from agentprop.rl.trajectory import (
     RoutingReplayResult,
     RoutingReplayStep,
@@ -55,9 +55,11 @@ __all__ = [
     "format_routing_action",
     "parse_routing_action",
     "TabularQPolicy",
+    "WorkflowControlReward",
     "propagation_reward",
     "replay_actions",
     "train_ppo_policy",
     "train_q_policy",
     "train_reinforce_policy",
+    "workflow_control_reward",
 ]

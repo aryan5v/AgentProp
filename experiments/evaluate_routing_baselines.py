@@ -316,7 +316,11 @@ def _evaluate_rl_policy_family(
         (f"reinforce{suffix}", reinforce_env, reinforce_policy.act),
         (f"ppo{suffix}", ppo_env, ppo_policy.act),
     ):
-        state, actions = _rollout_routing_policy(env, action_fn, max_steps=max_steps)
+        state, actions, reward_trace = _rollout_routing_policy(
+            env,
+            action_fn,
+            max_steps=max_steps,
+        )
         rows.append(
             _evaluate_rl_state(
                 workflow_name,
@@ -324,6 +328,7 @@ def _evaluate_rl_policy_family(
                 policy_name,
                 state,
                 actions,
+                reward_trace,
             )
         )
     return rows
@@ -334,19 +339,28 @@ def _rollout_routing_policy(
     action_fn: Callable[[AgentRoutingEnv], str],
     *,
     max_steps: int,
-) -> tuple[RoutingState, list[str]]:
+) -> tuple[RoutingState, list[str], list[dict[str, Any]]]:
     state = env.reset()
     actions = []
+    reward_trace = []
     done = False
     steps = 0
     while not done and steps < max_steps:
         action = action_fn(env)
         actions.append(action)
-        state, _, done, _ = env.step(action)
+        state, reward, done, info = env.step(action)
+        reward_trace.append(
+            {
+                "action": action,
+                "reward": reward,
+                "propagation_reward": info.get("propagation_reward", 0.0),
+                "control_reward": info.get("control_reward", {}),
+            }
+        )
         steps += 1
         if action == RoutingAction.STOP.value:
             break
-    return state, actions
+    return state, actions, reward_trace
 
 
 def _evaluate_rl_state(
@@ -355,6 +369,7 @@ def _evaluate_rl_state(
     policy_name: str,
     state: RoutingState,
     actions: list[str],
+    reward_trace: list[dict[str, Any]],
 ) -> dict[str, Any]:
     broadcast = broadcast_cost(graph)
     cost = CostSummary(
@@ -383,6 +398,7 @@ def _evaluate_rl_state(
     row.update(
         {
             "actions": actions,
+            "reward_trace": reward_trace,
             "activated_verifiers": list(state.activated_verifiers),
             "used_edges": [list(edge) for edge in state.used_edges],
             "pruned_edges": [list(edge) for edge in state.pruned_edges],

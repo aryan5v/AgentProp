@@ -382,6 +382,8 @@ def test_evaluate_routing_baselines_writes_comparison(tmp_path: Path) -> None:
     expanded_rows = [row for row in payload["rows"] if row["policy"].endswith("_expanded")]
     assert expanded_rows
     assert all("actions" in row for row in expanded_rows)
+    assert all("reward_trace" in row for row in expanded_rows)
+    assert all("control_reward" in row["reward_trace"][0] for row in expanded_rows)
     assert all("activated_verifiers" in row for row in expanded_rows)
     assert all("pruned_edges" in row for row in expanded_rows)
     assert all(

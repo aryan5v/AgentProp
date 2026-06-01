@@ -52,6 +52,33 @@ def test_agent_routing_env_supports_expanded_control_actions() -> None:
     assert info["action_type"] == RoutingAction.ACTIVATE_VERIFIER.value
 
 
+def test_expanded_control_actions_report_reward_terms() -> None:
+    graph = planner_coder_tester_reviewer()
+    env = AgentRoutingEnv(graph, budget=2, trials=3)
+
+    verifier_action = format_routing_action(
+        RoutingAction.ACTIVATE_VERIFIER,
+        node_id="tester",
+    )
+    prune_action = format_routing_action(
+        RoutingAction.PRUNE_EDGE,
+        edge=("planner", "reviewer"),
+    )
+
+    _, verifier_reward, _, verifier_info = env.step(verifier_action)
+    _, prune_reward, _, prune_info = env.step(prune_action)
+
+    verifier_terms = verifier_info["control_reward"]
+    prune_terms = prune_info["control_reward"]
+    assert isinstance(verifier_terms, dict)
+    assert isinstance(prune_terms, dict)
+    assert verifier_terms["verifier_bonus"] > 0
+    assert prune_terms["safe_pruning_bonus"] > 0
+    assert prune_terms["risky_pruning_penalty"] > 0
+    assert verifier_reward == verifier_info["propagation_reward"] + verifier_terms["total"]
+    assert prune_reward == prune_info["propagation_reward"] + prune_terms["total"]
+
+
 def test_agent_routing_env_has_gymnasium_style_surface() -> None:
     graph = planner_coder_tester_reviewer()
     env = AgentRoutingEnv(graph, budget=1, trials=3)
