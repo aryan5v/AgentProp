@@ -155,13 +155,14 @@ Extend reports:
 
 - HTML report output: added.
 - Visual graph embedded or linked from reports.
-- Pruning section with target reduction and risk estimate.
-- Robustness section.
+- Pruning section with target reduction and risk estimate: added.
+- Robustness section: added.
 
 Acceptance evidence:
 
 - CLI tests cover `simulate` and `prune`: added.
 - Report renderer tests cover HTML output and escaping: added.
+- Report renderer tests cover pruning risk and robustness sections: added.
 - Tutorial uses the CLI-only path end to end.
 
 ## Workstream 5: ML / DL

@@ -14,7 +14,7 @@ from agentprop.algorithms import (
     risk_aware_verifier_placement,
 )
 from agentprop.core import AgentGraph
-from agentprop.evaluation import compare_routing, evaluate_pruning
+from agentprop.evaluation import compare_routing, evaluate_pruning, summarize_pruning_risk
 from agentprop.evaluation.reporting import report_to_dict, write_report
 from agentprop.evaluation.runner import make_propagation_model, run_benchmark, select_seeds
 from agentprop.integrations import graph_from_trace
@@ -140,6 +140,12 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     report.add_argument("--trials", type=int, default=100)
     report.add_argument("--out", type=Path, default=Path("reports/agentprop_report.md"))
+    report.add_argument("--pruning-target-token-reduction", type=float, default=0.3)
+    report.add_argument(
+        "--pruning-strategy",
+        choices=["low-weight", "high-cost-low-relevance"],
+        default="low-weight",
+    )
     report.add_argument(
         "--format",
         dest="report_format",
@@ -251,6 +257,8 @@ def _report(args: argparse.Namespace) -> int:
         model_name=args.model,
         budget=args.budget,
         trials=args.trials,
+        pruning_target_token_reduction=args.pruning_target_token_reduction,
+        pruning_strategy=args.pruning_strategy,
     )
     output_path = write_report(
         report,
@@ -406,18 +414,37 @@ def _build_recommendation_report(
     model_name: str,
     budget: int,
     trials: int,
+    pruning_target_token_reduction: float = 0.3,
+    pruning_strategy: str = "low-weight",
 ) -> Any:
     model = make_propagation_model(model_name)
     seeds = select_seeds(graph, algorithm, budget, model, trials)
     propagation = model.simulate(graph, seeds, trials=trials)
+    candidate_edges = _rank_pruning_edges(graph, pruning_strategy)
+    pruning_candidates = _edges_to_reduction_target(
+        graph,
+        candidate_edges,
+        target_reduction=pruning_target_token_reduction,
+    )
+    pruning_evaluation = evaluate_pruning(
+        graph,
+        pruning_candidates,
+        seeds=seeds,
+        propagation_model=make_propagation_model(model_name),
+        trials=trials,
+    )
     return compare_routing(
         graph,
         seeds,
         model.name,
         propagation,
         bottlenecks=bottleneck_nodes(graph),
-        pruning_candidates=low_weight_edges(graph),
+        pruning_candidates=pruning_candidates,
         verifier_candidates=risk_aware_verifier_placement(graph, min(budget, graph.node_count)),
+        pruning_risk=summarize_pruning_risk(
+            pruning_evaluation,
+            target_cost_reduction=pruning_target_token_reduction,
+        ),
     )
 
 
@@ -473,6 +500,20 @@ def _print_report(report: Any) -> None:
     for source, target in report.pruning_candidates:
         print(f"- {source} -> {target}")
     print("")
+    if report.pruning_risk is not None:
+        print("Pruning risk")
+        print("------------")
+        print(f"Target cost reduction: {report.pruning_risk.target_cost_reduction:.1%}")
+        print(f"Achieved cost reduction: {report.pruning_risk.achieved_cost_reduction:.1%}")
+        print(f"Coverage delta: {report.pruning_risk.coverage_delta:.1%}")
+        print(f"Risk score: {report.pruning_risk.risk_score:.3f}")
+        print("")
+    if report.robustness is not None:
+        print("Robustness")
+        print("----------")
+        print(f"Worst node-failure loss: {report.robustness.worst_node_failure_loss:.1%}")
+        print(f"Worst edge-failure loss: {report.robustness.worst_edge_failure_loss:.1%}")
+        print("")
     print("Verifier candidates")
     print("-------------------")
     for node_id in report.verifier_candidates:

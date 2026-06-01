@@ -61,6 +61,8 @@ The report includes:
 - broadcast vs optimized cost
 - bottlenecks
 - pruning candidates
+- pruning target/risk estimate
+- robustness under node and edge failure
 - verifier candidates
 
 ## 5. Export A Graph

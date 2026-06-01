@@ -2,6 +2,7 @@
 
 from agentprop.evaluation.metrics import (
     CostSummary,
+    PruningRiskSummary,
     QualityCostSummary,
     RecommendationReport,
     RobustnessSummary,
@@ -9,7 +10,11 @@ from agentprop.evaluation.metrics import (
     quality_cost_summary,
     robustness_under_failures,
 )
-from agentprop.evaluation.pruning import PruningEvaluation, evaluate_pruning
+from agentprop.evaluation.pruning import (
+    PruningEvaluation,
+    evaluate_pruning,
+    summarize_pruning_risk,
+)
 from agentprop.evaluation.quality import (
     ExactMatchScorer,
     HumanLabelScorer,
@@ -34,6 +39,7 @@ __all__ = [
     "HumanLabelScorer",
     "LLMJudgeScorer",
     "PruningEvaluation",
+    "PruningRiskSummary",
     "QualityCostSummary",
     "QualityScore",
     "QualityScorer",
@@ -49,5 +55,6 @@ __all__ = [
     "report_to_dict",
     "robustness_under_failures",
     "run_benchmark",
+    "summarize_pruning_risk",
     "write_report",
 ]

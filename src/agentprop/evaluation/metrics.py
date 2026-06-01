@@ -39,6 +39,8 @@ class RecommendationReport:
     bottlenecks: list[tuple[str, float]]
     pruning_candidates: list[tuple[str, str]]
     verifier_candidates: list[str]
+    robustness: RobustnessSummary | None = None
+    pruning_risk: PruningRiskSummary | None = None
 
 
 @dataclass(slots=True)
@@ -50,6 +52,18 @@ class RobustnessSummary:
     worst_node_failure_loss: float
     average_edge_failure_loss: float
     worst_edge_failure_loss: float
+
+
+@dataclass(slots=True)
+class PruningRiskSummary:
+    """Risk and target-fit metrics for a proposed pruning plan."""
+
+    target_cost_reduction: float
+    achieved_cost_reduction: float
+    coverage_delta: float
+    coverage_loss: float
+    target_gap: float
+    risk_score: float
 
 
 @dataclass(slots=True)
@@ -173,6 +187,8 @@ def compare_routing(
     bottlenecks: list[tuple[str, float]] | None = None,
     pruning_candidates: list[tuple[str, str]] | None = None,
     verifier_candidates: list[str] | None = None,
+    robustness: RobustnessSummary | None = None,
+    pruning_risk: PruningRiskSummary | None = None,
 ) -> RecommendationReport:
     """Compare broadcast routing with a seed-based selective routing plan."""
 
@@ -192,6 +208,8 @@ def compare_routing(
         bottlenecks=bottlenecks or [],
         pruning_candidates=pruning_candidates or [],
         verifier_candidates=verifier_candidates or [],
+        robustness=robustness if robustness is not None else robustness_under_failures(graph),
+        pruning_risk=pruning_risk,
     )
 
 

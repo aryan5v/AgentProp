@@ -34,6 +34,8 @@ def report_to_dict(report: RecommendationReport) -> dict[str, Any]:
             {"source": source, "target": target}
             for source, target in report.pruning_candidates
         ],
+        "pruning_risk": _pruning_risk_to_dict(report.pruning_risk),
+        "robustness": _robustness_to_dict(report.robustness),
         "verifier_candidates": report.verifier_candidates,
     }
 
@@ -75,6 +77,12 @@ def render_markdown_report(
         "",
         "## Pruning Candidates",
         *_edge_lines(report.pruning_candidates),
+        "",
+        "## Pruning Risk",
+        *_pruning_risk_lines(report.pruning_risk),
+        "",
+        "## Robustness",
+        *_robustness_lines(report.robustness),
         "",
         "## Verifier Candidates",
         *_plain_lines(report.verifier_candidates),
@@ -147,6 +155,8 @@ def render_html_report(
             "</section>",
             _html_ranked_section("Bottleneck Nodes", report.bottlenecks),
             _html_edge_section("Pruning Candidates", report.pruning_candidates),
+            _html_pruning_risk_section(report.pruning_risk),
+            _html_robustness_section(report.robustness),
             _html_plain_section("Verifier Candidates", report.verifier_candidates),
             _html_plain_section("Activated Nodes", sorted(report.propagation.activated_nodes)),
             "</main>",
@@ -199,6 +209,31 @@ def _cost_to_dict(cost: Any) -> dict[str, float | int]:
     }
 
 
+def _robustness_to_dict(robustness: Any | None) -> dict[str, float] | None:
+    if robustness is None:
+        return None
+    return {
+        "baseline_reachable_pairs": robustness.baseline_reachable_pairs,
+        "average_node_failure_loss": robustness.average_node_failure_loss,
+        "worst_node_failure_loss": robustness.worst_node_failure_loss,
+        "average_edge_failure_loss": robustness.average_edge_failure_loss,
+        "worst_edge_failure_loss": robustness.worst_edge_failure_loss,
+    }
+
+
+def _pruning_risk_to_dict(pruning_risk: Any | None) -> dict[str, float] | None:
+    if pruning_risk is None:
+        return None
+    return {
+        "target_cost_reduction": pruning_risk.target_cost_reduction,
+        "achieved_cost_reduction": pruning_risk.achieved_cost_reduction,
+        "coverage_delta": pruning_risk.coverage_delta,
+        "coverage_loss": pruning_risk.coverage_loss,
+        "target_gap": pruning_risk.target_gap,
+        "risk_score": pruning_risk.risk_score,
+    }
+
+
 def _cost_row(label: str, cost: Any) -> str:
     return (
         f"| {label} | {cost.token_cost:.0f} | {cost.message_cost:.0f} | "
@@ -234,6 +269,31 @@ def _plain_lines(values: list[str]) -> list[str]:
     if not values:
         return ["None."]
     return [f"- `{value}`" for value in values]
+
+
+def _robustness_lines(robustness: Any | None) -> list[str]:
+    if robustness is None:
+        return ["No robustness summary available."]
+    return [
+        f"- Baseline reachable pairs: `{robustness.baseline_reachable_pairs:.0f}`",
+        f"- Average node-failure loss: `{robustness.average_node_failure_loss:.1%}`",
+        f"- Worst node-failure loss: `{robustness.worst_node_failure_loss:.1%}`",
+        f"- Average edge-failure loss: `{robustness.average_edge_failure_loss:.1%}`",
+        f"- Worst edge-failure loss: `{robustness.worst_edge_failure_loss:.1%}`",
+    ]
+
+
+def _pruning_risk_lines(pruning_risk: Any | None) -> list[str]:
+    if pruning_risk is None:
+        return ["No pruning risk summary available."]
+    return [
+        f"- Target cost reduction: `{pruning_risk.target_cost_reduction:.1%}`",
+        f"- Achieved cost reduction: `{pruning_risk.achieved_cost_reduction:.1%}`",
+        f"- Coverage delta: `{pruning_risk.coverage_delta:.1%}`",
+        f"- Coverage loss: `{pruning_risk.coverage_loss:.1%}`",
+        f"- Target gap: `{pruning_risk.target_gap:.1%}`",
+        f"- Risk score: `{pruning_risk.risk_score:.3f}`",
+    ]
 
 
 def _html_report_css() -> str:
@@ -389,6 +449,49 @@ def _html_edge_section(title: str, rows: list[tuple[str, str]]) -> str:
         )
         body = f"<ul>{items}</ul>"
     return f"<section><h2>{_html(title)}</h2>{body}</section>"
+
+
+def _html_pruning_risk_section(pruning_risk: Any | None) -> str:
+    if pruning_risk is None:
+        body = '<p class="empty">No pruning risk summary available.</p>'
+    else:
+        rows = [
+            ("Target cost reduction", _percent_text(pruning_risk.target_cost_reduction)),
+            ("Achieved cost reduction", _percent_text(pruning_risk.achieved_cost_reduction)),
+            ("Coverage delta", _percent_text(pruning_risk.coverage_delta)),
+            ("Coverage loss", _percent_text(pruning_risk.coverage_loss)),
+            ("Target gap", _percent_text(pruning_risk.target_gap)),
+            ("Risk score", f"{pruning_risk.risk_score:.3f}"),
+        ]
+        body = _html_metric_table(rows, "Pruning risk")
+    return f"<section><h2>Pruning Risk</h2>{body}</section>"
+
+
+def _html_robustness_section(robustness: Any | None) -> str:
+    if robustness is None:
+        body = '<p class="empty">No robustness summary available.</p>'
+    else:
+        rows = [
+            ("Baseline reachable pairs", f"{robustness.baseline_reachable_pairs:.0f}"),
+            ("Average node-failure loss", _percent_text(robustness.average_node_failure_loss)),
+            ("Worst node-failure loss", _percent_text(robustness.worst_node_failure_loss)),
+            ("Average edge-failure loss", _percent_text(robustness.average_edge_failure_loss)),
+            ("Worst edge-failure loss", _percent_text(robustness.worst_edge_failure_loss)),
+        ]
+        body = _html_metric_table(rows, "Robustness")
+    return f"<section><h2>Robustness</h2>{body}</section>"
+
+
+def _html_metric_table(rows: list[tuple[str, str]], label: str) -> str:
+    cells = "".join(
+        f"<tr><td>{_html(metric)}</td><td>{_html(value)}</td></tr>" for metric, value in rows
+    )
+    return (
+        f'<table aria-label="{_html(label)}">'
+        "<thead><tr><th>Metric</th><th>Value</th></tr></thead>"
+        f"<tbody>{cells}</tbody>"
+        "</table>"
+    )
 
 
 def _html_plain_section(title: str, values: list[str]) -> str:

@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from agentprop.core import AgentGraph
+from agentprop.evaluation.metrics import PruningRiskSummary
 from agentprop.propagation import IndependentCascade, PropagationModel
 
 
@@ -45,6 +46,32 @@ def evaluate_pruning(
         baseline_cost=baseline_cost,
         pruned_cost=pruned_cost,
         cost_delta=pruned_cost - baseline_cost,
+    )
+
+
+def summarize_pruning_risk(
+    evaluation: PruningEvaluation,
+    *,
+    target_cost_reduction: float,
+) -> PruningRiskSummary:
+    """Summarize pruning risk as coverage harm plus target miss."""
+
+    if not 0 <= target_cost_reduction <= 1:
+        raise ValueError("target_cost_reduction must be between 0 and 1")
+    achieved_cost_reduction = (
+        0.0
+        if evaluation.baseline_cost == 0
+        else (evaluation.baseline_cost - evaluation.pruned_cost) / evaluation.baseline_cost
+    )
+    coverage_loss = max(0.0, -evaluation.coverage_delta)
+    target_gap = max(0.0, target_cost_reduction - achieved_cost_reduction)
+    return PruningRiskSummary(
+        target_cost_reduction=target_cost_reduction,
+        achieved_cost_reduction=achieved_cost_reduction,
+        coverage_delta=evaluation.coverage_delta,
+        coverage_loss=coverage_loss,
+        target_gap=target_gap,
+        risk_score=coverage_loss + target_gap,
     )
 
 

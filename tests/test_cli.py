@@ -32,7 +32,10 @@ def test_cli_report_writes_markdown(tmp_path: Path) -> None:
     )
 
     assert exit_code == 0
-    assert "AgentProp Optimization Report" in output.read_text()
+    report = output.read_text()
+    assert "AgentProp Optimization Report" in report
+    assert "Pruning Risk" in report
+    assert "Robustness" in report
 
 
 def test_cli_report_writes_html(tmp_path: Path) -> None:
