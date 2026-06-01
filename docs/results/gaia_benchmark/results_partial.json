@@ -6,18 +6,18 @@
     "verifier"
   ],
   "status": "partial",
-  "tasks_done": 15,
+  "tasks_done": 35,
   "broadcast": {
-    "correct": 11,
-    "accuracy": 0.7333,
-    "total_tokens": 68554
+    "correct": 18,
+    "accuracy": 0.5143,
+    "total_tokens": 108818
   },
   "agentprop": {
-    "correct": 12,
-    "accuracy": 0.8,
-    "total_tokens": 56897
+    "correct": 18,
+    "accuracy": 0.5143,
+    "total_tokens": 83824
   },
-  "measured_total_token_saving": 0.17,
+  "measured_total_token_saving": 0.2297,
   "rows": [
     {
       "task_id": "q012",
@@ -160,6 +160,16 @@
       "agentprop_answer": "1989"
     },
     {
+      "task_id": "q030",
+      "gold": "12",
+      "broadcast_correct": false,
+      "agentprop_correct": false,
+      "broadcast_tokens": 1040,
+      "agentprop_tokens": 0,
+      "broadcast_answer": "",
+      "agentprop_answer": ""
+    },
+    {
       "task_id": "q031",
       "gold": "femur",
       "broadcast_correct": true,
@@ -168,6 +178,196 @@
       "agentprop_tokens": 2632,
       "broadcast_answer": "Femur",
       "agentprop_answer": "femur"
+    },
+    {
+      "task_id": "q032",
+      "gold": "32",
+      "broadcast_correct": false,
+      "agentprop_correct": false,
+      "broadcast_tokens": 4133,
+      "agentprop_tokens": 1960,
+      "broadcast_answer": "",
+      "agentprop_answer": ""
+    },
+    {
+      "task_id": "q033",
+      "gold": "Andromeda",
+      "broadcast_correct": false,
+      "agentprop_correct": false,
+      "broadcast_tokens": 817,
+      "agentprop_tokens": 0,
+      "broadcast_answer": "",
+      "agentprop_answer": ""
+    },
+    {
+      "task_id": "q034",
+      "gold": "1989",
+      "broadcast_correct": false,
+      "agentprop_correct": false,
+      "broadcast_tokens": 0,
+      "agentprop_tokens": 0,
+      "broadcast_answer": "",
+      "agentprop_answer": ""
+    },
+    {
+      "task_id": "q035",
+      "gold": "photosynthesis",
+      "broadcast_correct": false,
+      "agentprop_correct": true,
+      "broadcast_tokens": 0,
+      "agentprop_tokens": 2953,
+      "broadcast_answer": "",
+      "agentprop_answer": "photosynthesis"
+    },
+    {
+      "task_id": "q036",
+      "gold": "8",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 3937,
+      "agentprop_tokens": 2738,
+      "broadcast_answer": "8",
+      "agentprop_answer": "8"
+    },
+    {
+      "task_id": "q037",
+      "gold": "diamond",
+      "broadcast_correct": true,
+      "agentprop_correct": false,
+      "broadcast_tokens": 3831,
+      "agentprop_tokens": 1144,
+      "broadcast_answer": "Diamond",
+      "agentprop_answer": ""
+    },
+    {
+      "task_id": "q038",
+      "gold": "1912",
+      "broadcast_correct": false,
+      "agentprop_correct": false,
+      "broadcast_tokens": 0,
+      "agentprop_tokens": 731,
+      "broadcast_answer": "",
+      "agentprop_answer": ""
+    },
+    {
+      "task_id": "q039",
+      "gold": "12",
+      "broadcast_correct": true,
+      "agentprop_correct": false,
+      "broadcast_tokens": 4364,
+      "agentprop_tokens": 0,
+      "broadcast_answer": "12",
+      "agentprop_answer": ""
+    },
+    {
+      "task_id": "q040",
+      "gold": "7",
+      "broadcast_correct": false,
+      "agentprop_correct": false,
+      "broadcast_tokens": 2016,
+      "agentprop_tokens": 0,
+      "broadcast_answer": "",
+      "agentprop_answer": ""
+    },
+    {
+      "task_id": "q041",
+      "gold": "Treaty of Versailles",
+      "broadcast_correct": false,
+      "agentprop_correct": false,
+      "broadcast_tokens": 912,
+      "agentprop_tokens": 0,
+      "broadcast_answer": "",
+      "agentprop_answer": ""
+    },
+    {
+      "task_id": "q042",
+      "gold": "118",
+      "broadcast_correct": false,
+      "agentprop_correct": false,
+      "broadcast_tokens": 0,
+      "agentprop_tokens": 1149,
+      "broadcast_answer": "",
+      "agentprop_answer": ""
+    },
+    {
+      "task_id": "q043",
+      "gold": "Mars",
+      "broadcast_correct": false,
+      "agentprop_correct": true,
+      "broadcast_tokens": 583,
+      "agentprop_tokens": 2336,
+      "broadcast_answer": "",
+      "agentprop_answer": "Mars"
+    },
+    {
+      "task_id": "q044",
+      "gold": "gravity",
+      "broadcast_correct": false,
+      "agentprop_correct": true,
+      "broadcast_tokens": 821,
+      "agentprop_tokens": 3091,
+      "broadcast_answer": "",
+      "agentprop_answer": "gravity"
+    },
+    {
+      "task_id": "q045",
+      "gold": "8",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 3825,
+      "agentprop_tokens": 3249,
+      "broadcast_answer": "8",
+      "agentprop_answer": "8"
+    },
+    {
+      "task_id": "q046",
+      "gold": "Au",
+      "broadcast_correct": true,
+      "agentprop_correct": false,
+      "broadcast_tokens": 3385,
+      "agentprop_tokens": 0,
+      "broadcast_answer": "Au",
+      "agentprop_answer": ""
+    },
+    {
+      "task_id": "q047",
+      "gold": "1950s",
+      "broadcast_correct": true,
+      "agentprop_correct": false,
+      "broadcast_tokens": 4408,
+      "agentprop_tokens": 875,
+      "broadcast_answer": "1950s",
+      "agentprop_answer": ""
+    },
+    {
+      "task_id": "q048",
+      "gold": "Missouri River",
+      "broadcast_correct": false,
+      "agentprop_correct": false,
+      "broadcast_tokens": 2070,
+      "agentprop_tokens": 2948,
+      "broadcast_answer": "",
+      "agentprop_answer": ""
+    },
+    {
+      "task_id": "q049",
+      "gold": "9",
+      "broadcast_correct": false,
+      "agentprop_correct": true,
+      "broadcast_tokens": 596,
+      "agentprop_tokens": 3157,
+      "broadcast_answer": "",
+      "agentprop_answer": "9"
+    },
+    {
+      "task_id": "q050",
+      "gold": "Albert Einstein",
+      "broadcast_correct": true,
+      "agentprop_correct": false,
+      "broadcast_tokens": 3526,
+      "agentprop_tokens": 596,
+      "broadcast_answer": "Albert Einstein",
+      "agentprop_answer": ""
     }
   ]
 }
