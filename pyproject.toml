@@ -43,10 +43,10 @@ dl = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/agentprop/agentprop"
-Repository = "https://github.com/agentprop/agentprop"
-Documentation = "https://github.com/agentprop/agentprop#readme"
-Issues = "https://github.com/agentprop/agentprop/issues"
+Homepage = "https://github.com/aryan5v/AgentProp"
+Repository = "https://github.com/aryan5v/AgentProp"
+Documentation = "https://github.com/aryan5v/AgentProp#readme"
+Issues = "https://github.com/aryan5v/AgentProp/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/agentprop"]

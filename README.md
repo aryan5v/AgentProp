@@ -1,130 +1,200 @@
 # AgentProp
 
-AgentProp is an open-source framework for graph optimization in multi-agent LLM workflows.
+<p align="center">
+  <img src="docs/assets/agentprop-logo.png" alt="AgentProp logo" width="180" />
+</p>
 
-It models agents, tools, memories, documents, and verifiers as nodes in a directed weighted graph, then uses graph propagation models, classical graph algorithms, graph neural networks, and reinforcement learning to optimize context routing, verifier placement, and topology pruning.
+<p align="center">
+  <strong>Graph optimization for multi-agent LLM workflows.</strong>
+</p>
 
-## Why AgentProp Is Different
+<p align="center">
+  <a href="https://github.com/aryan5v/AgentProp/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/aryan5v/AgentProp/actions/workflows/ci.yml/badge.svg" /></a>
+  <img alt="Version" src="https://img.shields.io/badge/version-0.1.0a1-black" />
+  <img alt="License" src="https://img.shields.io/badge/license-MIT-black" />
+  <img alt="Status" src="https://img.shields.io/badge/status-private_alpha-12c95b" />
+</p>
 
-AgentProp is not another agent orchestrator. It is an analysis and optimization layer for workflows you already have or want to study.
+AgentProp models agents, tools, memories, documents, and verifiers as nodes in a
+directed weighted graph. It then uses propagation models, classical graph
+algorithms, optional GNN-style policies, and reinforcement learning to optimize:
 
-- **Training-free first:** strong graph baselines before expensive learning.
-- **Graph-theoretic grounding:** propagation time, influence maximization, randomized zero forcing, verifier placement, and bottleneck analysis.
-- **Cost-aware by design:** every recommendation compares against broadcast routing with token/message cost estimates.
-- **Research-ready:** benchmark runner, propagation models, workflow templates, and ML/RL extension points share one graph abstraction.
-- **Developer-usable:** CLI commands produce immediate seed, pruning, verifier, and savings recommendations.
+- which agents receive full context first
+- which edges are redundant or risky to prune
+- where verifier agents should observe or intercept failures
+- how much cost is saved versus broadcast routing
+- how learned routing policies compare with graph-theoretic baselines
 
-## What It Helps With
+AgentProp is not an agent orchestrator. It is an analysis and optimization layer
+for workflows you already have, want to inspect, or want to study.
 
-- Select which agents receive full context first.
-- Identify redundant communication edges.
-- Place verifier agents where corrections spread quickly.
-- Simulate information and correction propagation.
-- Benchmark training-free, GNN, and RL routing policies.
-- Generate Claude Code/Codex-ready briefs for coding agents.
+## Status
 
-## Quickstart
+AgentProp is usable as a private alpha / v1-candidate framework. The graph
+backbone, CLI, reports, workflow templates, ML/RL baselines, MCP/coding-agent
+briefs, checkpoints, and experiment artifact registry are implemented and tested.
 
-Install locally:
+The main limitation is evidence: the real routed LLM case study has a protocol,
+task set, harness, preflight, and verification runner, but the 20-task connected
+LLM run has not yet been completed. Public claims should therefore say
+`alpha: real LLM validation pending`.
 
-```bash
-python -m pip install -e .
-```
-
-Run the first optimization demo:
-
-```bash
-agentprop optimize benchmarks/workflows/planner_coder_tester_reviewer.json --budget 2
-```
-
-Compare algorithms and propagation models:
-
-```bash
-agentprop benchmark planner_coder_tester_reviewer --budget 2 --trials 50
-```
-
-Generate a coding-agent brief:
+Check the current rollout state:
 
 ```bash
-agentprop agent-instructions planner_coder_tester_reviewer --target codex --out reports/codex_agent_brief.md
+agentprop readiness
 ```
 
-Use AgentProp as a library:
+## Install
 
-```python
-from agentprop import AgentGraph
-from agentprop.algorithms import greedy_seed_selection
-from agentprop.propagation import IndependentCascade
-
-graph = AgentGraph()
-graph.add_agent("planner", token_cost=1000)
-graph.add_agent("coder", token_cost=1500)
-graph.add_agent("tester", token_cost=900)
-graph.add_agent("reviewer", token_cost=800)
-
-graph.add_edge("planner", "coder", message_cost=500, weight=0.9)
-graph.add_edge("coder", "tester", message_cost=400, weight=0.8)
-graph.add_edge("tester", "reviewer", message_cost=300, weight=0.7)
-
-model = IndependentCascade(seed=0)
-seeds = greedy_seed_selection(graph, k=2, propagation_model=model, trials=100)
-
-print(seeds)
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e ".[dev]"
 ```
 
-## Core Features
+Optional extras:
 
-- Directed weighted `AgentGraph` abstraction with JSON and NetworkX conversion.
-- Propagation models:
-  - Independent Cascade
-  - Linear Threshold
-  - Bootstrap Percolation
-  - Randomized Zero Forcing
-- Training-free seed selection:
-  - Random
-  - Degree
-  - PageRank-style influence score
-  - Betweenness
-  - Greedy influence maximization
-  - CELF lazy greedy
-  - Cost-aware greedy
-- Diagnostics:
-  - Bottleneck nodes
-  - Low-weight pruning candidates
-  - Risk-aware verifier placement
-- Evaluation:
-  - Broadcast vs optimized cost comparison
-  - Coverage
-  - Expected propagation time
-  - Full activation probability
-  - Estimated token/message savings
-- ML/RL foundations:
-  - Graph feature extraction
-  - Greedy-labeled seed-selection examples
-  - Lightweight linear node scorer
-  - Message-passing node scorer
-  - Sequential routing environment
+```bash
+python -m pip install -e ".[dl]"  # torch-backed GNN experiments
+python -m pip install -e ".[rl]"  # optional Gymnasium ecosystem compatibility
+```
 
-## Built-In Workflow Templates
+CUDA/GPU is not required for the current dependency-light alpha workflows.
+Modal/GPU becomes useful for larger torch sweeps and hyperparameter searches.
 
-- `planner_coder_tester_reviewer`
-- `research_writer_verifier`
-- `debate_judge`
-- `rag_pipeline`
-- `tool_use_pipeline`
-- `hub_and_spoke_supervisor`
+## First Recipes
 
-## Research Direction
+Analyze a workflow:
 
-AgentProp studies whether training-free graph algorithms and learned GNN/RL policies can reduce communication cost in multi-agent LLM workflows while preserving task success, consistency, and reliability.
+```bash
+agentprop analyze benchmarks/workflows/planner_coder_tester_reviewer.json
+```
 
-- [docs/index.md](docs/index.md) for the documentation index.
-- [docs/tutorial.md](docs/tutorial.md) for the first full walkthrough.
-- [docs/PRD.md](docs/PRD.md) for the cleaned product and research plan.
-- [docs/research/literature_review.md](docs/research/literature_review.md) for the academic framing and related-work map.
-- [docs/trace_ingestion.md](docs/trace_ingestion.md) for converting message logs into workflow graphs.
-- [docs/coding_agents.md](docs/coding_agents.md) for Claude Code, Codex, skill, plugin, and MCP integration guidance.
-- [docs/visualization.md](docs/visualization.md) for Graphviz DOT exports.
-- [docs/deep_learning.md](docs/deep_learning.md) for the optional DL roadmap.
-- [docs/release_checklist.md](docs/release_checklist.md) for the v1 readiness checklist.
-- [CONTRIBUTING.md](CONTRIBUTING.md) for development and contribution guidance.
+Recommend seed agents for context routing:
+
+```bash
+agentprop optimize planner_coder_tester_reviewer --budget 2 --algorithm greedy
+```
+
+Simulate propagation:
+
+```bash
+agentprop simulate chain --seeds node_0 --model zero-forcing
+```
+
+Prune toward a token-reduction target:
+
+```bash
+agentprop prune planner_coder_tester_reviewer --target-token-reduction 0.3
+```
+
+Write an HTML report:
+
+```bash
+agentprop report planner_coder_tester_reviewer --out reports/demo.html --format html
+```
+
+Generate a Codex or Claude Code brief:
+
+```bash
+agentprop agent-instructions planner_coder_tester_reviewer \
+  --target codex \
+  --out reports/codex_agent_brief.md
+```
+
+## Experiment Recipes
+
+Run the benchmark table and SVG plot:
+
+```bash
+PYTHONPATH=src:. python experiments/run_benchmark.py \
+  --workflows planner_coder_tester_reviewer,chain,tree \
+  --budget 2 \
+  --trials 20 \
+  --out-dir results/benchmark
+```
+
+Run a small ML/RL sweep:
+
+```bash
+PYTHONPATH=src:. python experiments/run_ml_rl_sweep.py \
+  --config configs/sweeps/ml_rl_smoke.json \
+  --artifact-root results/ml_rl_smoke
+```
+
+Dry-run the full recipe suite:
+
+```bash
+PYTHONPATH=src:. python experiments/run_experiment_suite.py \
+  --config configs/experiment_suites/ml_core.json \
+  --artifact-root results/ml_core \
+  --dry-run
+```
+
+Preflight the real LLM case study without making LLM calls:
+
+```bash
+PYTHONPATH=src:. python experiments/run_case_study.py \
+  --execution-mode llm \
+  --preflight \
+  --out-dir docs/results/case_study_001
+```
+
+## Artifacts
+
+AgentProp writes plain, inspectable artifacts:
+
+- `results.json` / `results.csv` for benchmark and case-study rows
+- `summary.json` for aggregate metrics
+- `traces.jsonl` and `outputs.jsonl` for routed LLM execution traces
+- `verification_logs.jsonl` when command verification is enabled
+- `registry.json` for ML/RL checkpoints and metric artifacts
+- `*.svg` plots for benchmark and case-study summaries
+- Markdown, JSON, or HTML optimization reports
+
+This recipe-first layout is intentional: every claim should point to a command
+and a saved artifact.
+
+## What Is Implemented
+
+- Directed weighted `AgentGraph` with JSON, validation, NetworkX conversion, and
+  Graphviz DOT export.
+- Propagation models: Independent Cascade, Linear Threshold, Bootstrap
+  Percolation, Randomized Zero Forcing, deterministic Zero Forcing, and learned
+  trace-calibrated propagation.
+- Classical baselines: random, degree, in-degree, out-degree, PageRank,
+  betweenness, closeness, k-core, greedy, CELF, and cost-aware greedy.
+- Bottleneck, articulation, bridge, low-reliability, failure-sensitive, pruning,
+  observability, and verifier-placement diagnostics.
+- Workflow templates for agent-inspired workflows and synthetic graph families.
+- Quality scorers for exact match, human labels, rubrics, and injected
+  LLM-as-judge adapters.
+- Dependency-light ML baselines, optional torch GNNs, Q-learning, REINFORCE, PPO,
+  expanded workflow-control actions, checkpoints, and artifact registry.
+- Framework interchange adapters and optional native hooks for LangGraph, CrewAI,
+  and OpenAI Agents SDK.
+- Claude Code/Codex instructions and a lightweight stdio MCP server.
+
+## Documentation
+
+- [Documentation index](docs/index.md)
+- [Tutorial](docs/tutorial.md)
+- [Product requirements](docs/PRD.md)
+- [V1 readiness audit](docs/v1_readiness.md)
+- [Remaining PRD archive](docs/remaining_prd_archive.md)
+- [Case-study protocol](docs/research/case_study_protocol.md)
+- [ML/DL/RL guide](docs/deep_learning.md)
+- [Coding-agent integration](docs/coding_agents.md)
+- [Framework integrations](docs/framework_integrations.md)
+- [Contributing](CONTRIBUTING.md)
+
+## Development
+
+```bash
+ruff check .
+mypy src
+pytest
+```
+
+CI runs the same gates on every push and pull request.
