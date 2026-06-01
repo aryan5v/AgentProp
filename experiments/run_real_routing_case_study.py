@@ -130,6 +130,28 @@ def extract_code(response: str) -> str:
 # --------------------------------------------------------------------------- #
 # LLM clients
 # --------------------------------------------------------------------------- #
+class RetryingClient:
+    """Wrap any chat client with retry/backoff for transient provider errors."""
+
+    def __init__(self, inner: Any, *, retries: int = 4, base_delay: float = 4.0) -> None:
+        self._inner = inner
+        self._retries = retries
+        self._base_delay = base_delay
+        self.model = getattr(inner, "model", "unknown")
+
+    def chat(self, **kwargs: Any) -> LLMExecutionResult:
+        last: Exception | None = None
+        for attempt in range(self._retries + 1):
+            try:
+                return self._inner.chat(**kwargs)
+            except Exception as exc:  # noqa: BLE001 - provider errors are opaque strings
+                last = exc
+                if attempt == self._retries:
+                    break
+                time.sleep(self._base_delay * (2 ** attempt))
+        raise RuntimeError(f"chat failed after {self._retries + 1} attempts: {last}")
+
+
 class FakeClient:
     """Deterministic stand-in for plumbing tests. NOT a real model.
 
@@ -624,8 +646,10 @@ def main(argv: list[str] | None = None) -> int:
         client: Any = FakeClient(REFERENCE_SOLUTIONS)
         model = client.model
     else:
-        client = OpenAICompatibleChatClient.from_env(
-            model=args.llm_model, base_url=args.llm_base_url, timeout_s=90.0,
+        client = RetryingClient(
+            OpenAICompatibleChatClient.from_env(
+                model=args.llm_model, base_url=args.llm_base_url, timeout_s=120.0,
+            )
         )
         model = client.model
 
