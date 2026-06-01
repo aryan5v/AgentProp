@@ -308,11 +308,17 @@ Goal: analyze workflows users already have.
 
 Adapters to build:
 
-- LangGraph
-- AutoGen
-- CrewAI
-- OpenAI Agents SDK
-- LlamaIndex workflows
+- LangGraph: added dependency-light dictionary export/import adapter.
+- AutoGen: added dependency-light dictionary export/import adapter.
+- CrewAI: added dependency-light dictionary export/import adapter.
+- OpenAI Agents SDK: added dependency-light dictionary export/import adapter.
+- LlamaIndex workflows: added dependency-light dictionary export/import adapter.
+
+Still needed:
+
+- Optional runtime adapters that instantiate framework-native classes when the
+  corresponding packages are installed.
+- Round-trip tests against real framework examples.
 
 Acceptance evidence:
 
