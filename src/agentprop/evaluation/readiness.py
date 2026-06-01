@@ -152,6 +152,8 @@ def build_v1_readiness_report() -> ReadinessReport:
                 "Feature extraction, greedy-labeled datasets, node scorers, pairwise "
                 "ranking, propagation-time regression, and generalization checks exist.",
                 "Experiment suite recipes write reproducible manifests and artifacts.",
+                "Dependency-light ML scorers and tabular RL policies can be persisted "
+                "as JSON checkpoints.",
             ),
         ),
         ReadinessItem(

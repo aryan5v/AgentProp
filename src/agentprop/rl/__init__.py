@@ -1,5 +1,11 @@
 """Reinforcement-learning foundations for sequential routing."""
 
+from agentprop.rl.checkpointing import (
+    RLCheckpointPolicy,
+    RLPolicyCheckpoint,
+    load_rl_policy,
+    save_rl_policy,
+)
 from agentprop.rl.env import (
     AgentRoutingEnv,
     RoutingAction,
@@ -46,6 +52,8 @@ __all__ = [
     "ReinforceConfig",
     "ReinforcePolicy",
     "ReinforceTrainingResult",
+    "RLCheckpointPolicy",
+    "RLPolicyCheckpoint",
     "RoutingReplayResult",
     "RoutingReplayStep",
     "RoutingAction",
@@ -53,11 +61,13 @@ __all__ = [
     "RoutingState",
     "actions_from_exported_trajectory",
     "format_routing_action",
+    "load_rl_policy",
     "parse_routing_action",
     "TabularQPolicy",
     "WorkflowControlReward",
     "propagation_reward",
     "replay_actions",
+    "save_rl_policy",
     "train_ppo_policy",
     "train_q_policy",
     "train_reinforce_policy",

@@ -10,6 +10,8 @@ from agentprop.ml import (
     build_verifier_placement_example,
     extract_edge_features,
     extract_graph_features,
+    load_ml_model,
+    save_ml_model,
 )
 from agentprop.workflows import planner_coder_tester_reviewer
 
@@ -100,3 +102,22 @@ def test_verifier_placement_example_labels_nodes() -> None:
 
     assert len(example.positive_verifiers) == 2
     assert set(example.labels) == {node.id for node in graph.nodes()}
+
+
+def test_ml_model_checkpoint_round_trips_scores(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    graph = planner_coder_tester_reviewer()
+    example = build_seed_selection_example(graph, budget=2, trials=5)
+    scorer = MLPNodeScorer.initialize(len(example.features.feature_names), hidden_dim=4)
+    scorer.train([example], epochs=5, learning_rate=0.05)
+    before = scorer.score_nodes(example.features)
+
+    path = save_ml_model(
+        scorer,
+        tmp_path / "mlp_checkpoint.json",
+        metadata={"workflow": "planner_coder_tester_reviewer"},
+    )
+    loaded = load_ml_model(path)
+
+    assert loaded.metadata["workflow"] == "planner_coder_tester_reviewer"
+    assert isinstance(loaded.model, MLPNodeScorer)
+    assert loaded.model.score_nodes(example.features) == before

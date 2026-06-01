@@ -66,6 +66,16 @@ PYTHONPATH=src:. python experiments/train_edge_pruning_scorer.py
 PYTHONPATH=src:. python experiments/evaluate_ml_generalization.py --model mlp
 ```
 
+Dependency-light ML scorers can be saved as JSON checkpoints:
+
+```python
+from agentprop.ml import load_ml_model, save_ml_model
+
+save_ml_model(scorer, "results/models/mlp_seed_scorer.json", metadata={"task": "seed"})
+checkpoint = load_ml_model("results/models/mlp_seed_scorer.json")
+scorer = checkpoint.model
+```
+
 ## ML Core Experiment Suite
 
 AgentProp also includes a recipe-style ML/RL suite inspired by the config-first

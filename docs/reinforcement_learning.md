@@ -45,6 +45,16 @@ Run expanded-action training:
 PYTHONPATH=src:. python experiments/run_rl_routing.py --policy ppo --expanded-actions --episodes 100
 ```
 
+Trained dependency-light RL policies can be saved as JSON checkpoints:
+
+```python
+from agentprop.rl import load_rl_policy, save_rl_policy
+
+save_rl_policy(policy, "results/models/ppo_routing_policy.json", metadata={"policy": "ppo"})
+checkpoint = load_rl_policy("results/models/ppo_routing_policy.json")
+policy = checkpoint.policy
+```
+
 Compare RL with broadcast, classical graph algorithms, and ML/GNN-style
 baselines:
 

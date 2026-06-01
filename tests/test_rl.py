@@ -10,8 +10,10 @@ from agentprop.rl import (
     TabularQPolicy,
     actions_from_exported_trajectory,
     format_routing_action,
+    load_rl_policy,
     parse_routing_action,
     replay_actions,
+    save_rl_policy,
     train_ppo_policy,
     train_q_policy,
     train_reinforce_policy,
@@ -216,6 +218,29 @@ def test_ppo_can_train_with_expanded_actions() -> None:
     assert policy.expanded_actions
     assert result.preference_count > 0
     assert result.value_count > 0
+
+
+def test_rl_policy_checkpoint_round_trips_action(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    graph = planner_coder_tester_reviewer()
+    env = AgentRoutingEnv(graph, budget=2, trials=3)
+    policy, _ = train_ppo_policy(
+        env,
+        config=PPOConfig(episodes=8, learning_rate=0.05, seed=1, max_steps=5),
+    )
+    env.reset()
+    before = policy.act(env)
+
+    path = save_rl_policy(
+        policy,
+        tmp_path / "ppo_policy.json",
+        metadata={"workflow": "planner_coder_tester_reviewer"},
+    )
+    loaded = load_rl_policy(path)
+
+    assert loaded.metadata["workflow"] == "planner_coder_tester_reviewer"
+    assert isinstance(loaded.policy, PPOPolicy)
+    assert loaded.policy.values == policy.values
+    assert loaded.policy.act(env) == before
 
 
 def test_actions_from_exported_trajectory_extracts_actions() -> None:

@@ -1,5 +1,11 @@
 """Lightweight ML foundations for graph-policy experiments."""
 
+from agentprop.ml.checkpointing import (
+    MLCheckpointModel,
+    MLModelCheckpoint,
+    load_ml_model,
+    save_ml_model,
+)
 from agentprop.ml.datasets import (
     EdgePruningExample,
     SeedRankingExample,
@@ -30,6 +36,8 @@ __all__ = [
     "EdgePruningExample",
     "GraphFeatures",
     "LinearEdgeScorer",
+    "MLCheckpointModel",
+    "MLModelCheckpoint",
     "LinearNodeScorer",
     "LinearNodeRegressor",
     "MLPNodeScorer",
@@ -44,4 +52,6 @@ __all__ = [
     "build_verifier_placement_example",
     "extract_edge_features",
     "extract_graph_features",
+    "load_ml_model",
+    "save_ml_model",
 ]
