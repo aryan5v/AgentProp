@@ -90,6 +90,7 @@ def test_edge_features_and_scorer_train_on_pruning_example() -> None:
     scores = scorer.score_edges(features)
 
     assert example.positive_edges
+    assert example.features.feature_names == features.feature_names
     assert all(0.0 <= score <= 1.0 for score in scores.values())
 
 

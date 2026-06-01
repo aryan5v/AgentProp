@@ -23,7 +23,7 @@ class GraphEncoderConfig:
     task: str = "seed"
     attention_heads: int = 2
     node_type_count: int = 10
-    edge_feature_dim: int = 3
+    edge_feature_dim: int = 9
 
 
 def require_torch() -> Any:

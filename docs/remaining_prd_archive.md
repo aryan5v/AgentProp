@@ -196,6 +196,9 @@ Progress:
 - Graph Transformer: added to optional torch backend.
 - Heterogeneous GNN: added to optional torch backend with node-type embeddings.
 - Edge-conditioned GNN: added to optional torch backend with edge-attribute gates.
+- Edge-conditioned training and inference now share the full edge feature matrix
+  used by pruning models: message cost, latency, relevance, reliability,
+  activation probability, dependency strength, edge weight, and degree features.
 - Trace-conditioned learned propagation model.
 
 Acceptance evidence:

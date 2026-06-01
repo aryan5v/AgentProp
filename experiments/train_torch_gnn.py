@@ -84,6 +84,7 @@ def main(argv: list[str] | None = None) -> int:
 
     payload = {
         "architecture": result.architecture,
+        "edge_feature_dim": config.edge_feature_dim,
         "epochs": result.epochs,
         "final_loss": result.final_loss,
         "losses": result.losses,

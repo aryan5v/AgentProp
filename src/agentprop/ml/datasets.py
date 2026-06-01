@@ -28,6 +28,7 @@ class SeedSelectionExample:
     positive_seeds: list[str]
     budget: int
     neighbors: dict[str, list[str]]
+    edge_features: EdgeFeatures | None = None
 
 
 @dataclass(slots=True)
@@ -59,6 +60,7 @@ class VerifierPlacementExample:
     positive_verifiers: list[str]
     budget: int
     neighbors: dict[str, list[str]]
+    edge_features: EdgeFeatures | None = None
 
 
 def build_seed_selection_example(
@@ -90,6 +92,7 @@ def build_seed_selection_example(
         positive_seeds=positive_seeds,
         budget=budget,
         neighbors=neighbors,
+        edge_features=extract_edge_features(graph),
     )
 
 
@@ -175,6 +178,7 @@ def build_verifier_placement_example(
         positive_verifiers=positive_verifiers,
         budget=budget,
         neighbors=neighbors,
+        edge_features=extract_edge_features(graph),
     )
 
 

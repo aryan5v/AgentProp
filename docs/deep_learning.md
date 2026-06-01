@@ -24,7 +24,9 @@ The optional torch backend includes:
 - GIN seed scorer
 - Graph Transformer seed scorer
 - Heterogeneous GNN seed scorer with node-type embeddings
-- Edge-conditioned GNN seed scorer with edge reliability/relevance gates
+- Edge-conditioned GNN seed scorer with full edge-feature gates over message
+  cost, latency, relevance, reliability, activation probability, dependency
+  strength, edge weight, and source/target degree
 - training loops that consume `SeedSelectionExample`
 
 Run it with:
@@ -37,8 +39,11 @@ PYTHONPATH=src:. python experiments/train_torch_gnn.py --architecture edge_condi
 ```
 
 The base training loop imitates greedy influence-maximization labels and scores
-nodes as seed candidates. It is intentionally small enough to inspect while
-still using real `torch.nn.Module` models and gradient descent.
+nodes as seed candidates. It carries the same rich edge feature matrix used by
+edge-pruning models into torch GNN training so `edge_conditioned` sees workflow
+cost, reliability, and dependency signals during both training and inference. It
+is intentionally small enough to inspect while still using real `torch.nn.Module`
+models and gradient descent.
 
 Dependency-light ML baselines include:
 

@@ -8,7 +8,7 @@ from typing import Any
 from agentprop.core import AgentGraph, NodeType
 from agentprop.dl.encoders import GraphEncoderConfig, require_torch
 from agentprop.ml.datasets import SeedSelectionExample, VerifierPlacementExample
-from agentprop.ml.features import extract_graph_features
+from agentprop.ml.features import EdgeFeatures, extract_edge_features, extract_graph_features
 
 
 @dataclass(slots=True)
@@ -32,7 +32,7 @@ class TorchGNNSeedScorer:
     def score_nodes(self, graph: AgentGraph) -> dict[str, float]:
         """Return node probabilities for the configured graph-policy task."""
 
-        batch = _graph_to_tensors(self.torch, graph)
+        batch = _graph_to_tensors(self.torch, graph, edge_feature_dim=self.config.edge_feature_dim)
         self.model.eval()
         with self.torch.no_grad():
             logits = self.model(
@@ -72,7 +72,11 @@ def train_torch_seed_scorer(
     for _ in range(epochs):
         total_loss = torch.tensor(0.0, dtype=torch.float32)
         for example in examples:
-            batch = _example_to_tensors(torch, example)
+            batch = _example_to_tensors(
+                torch,
+                example,
+                edge_feature_dim=scorer.config.edge_feature_dim,
+            )
             logits = scorer.model(
                 batch["x"],
                 batch["adjacency"],
@@ -94,7 +98,12 @@ def train_torch_seed_scorer(
     )
 
 
-def _graph_to_tensors(torch: Any, graph: AgentGraph) -> dict[str, Any]:
+def _graph_to_tensors(
+    torch: Any,
+    graph: AgentGraph,
+    *,
+    edge_feature_dim: int,
+) -> dict[str, Any]:
     features = extract_graph_features(graph)
     node_ids = list(features.node_features)
     index = {node_id: position for position, node_id in enumerate(node_ids)}
@@ -103,21 +112,19 @@ def _graph_to_tensors(torch: Any, graph: AgentGraph) -> dict[str, Any]:
         dtype=torch.float32,
     )
     adjacency = torch.eye(len(node_ids), dtype=torch.float32)
-    edge_features = torch.zeros((len(node_ids), len(node_ids), 3), dtype=torch.float32)
+    edge_features = _edge_features_to_tensor(
+        torch,
+        extract_edge_features(graph),
+        node_ids,
+        index,
+        edge_feature_dim=edge_feature_dim,
+    )
     for edge in graph.edges():
         if edge.source in index and edge.target in index:
             source = index[edge.source]
             target = index[edge.target]
             adjacency[source, target] = float(edge.weight)
             adjacency[target, source] = max(adjacency[target, source], float(edge.weight))
-            edge_features[source, target] = torch.tensor(
-                [edge.reliability, edge.relevance, edge.activation_probability],
-                dtype=torch.float32,
-            )
-            edge_features[target, source] = torch.tensor(
-                [edge.reliability, edge.relevance, edge.activation_probability],
-                dtype=torch.float32,
-            )
     node_type_ids = torch.tensor(
         [_node_type_index(graph.node(node_id).type) for node_id in node_ids],
         dtype=torch.long,
@@ -134,6 +141,8 @@ def _graph_to_tensors(torch: Any, graph: AgentGraph) -> dict[str, Any]:
 def _example_to_tensors(
     torch: Any,
     example: SeedSelectionExample | VerifierPlacementExample,
+    *,
+    edge_feature_dim: int,
 ) -> dict[str, Any]:
     node_ids = list(example.features.node_features)
     index = {node_id: position for position, node_id in enumerate(node_ids)}
@@ -143,7 +152,13 @@ def _example_to_tensors(
     )
     y = torch.tensor([example.labels[node_id] for node_id in node_ids], dtype=torch.float32)
     adjacency = torch.eye(len(node_ids), dtype=torch.float32)
-    edge_features = torch.zeros((len(node_ids), len(node_ids), 3), dtype=torch.float32)
+    edge_features = _edge_features_to_tensor(
+        torch,
+        example.edge_features,
+        node_ids,
+        index,
+        edge_feature_dim=edge_feature_dim,
+    )
     for node_id, neighbors in example.neighbors.items():
         if node_id not in index:
             continue
@@ -151,7 +166,11 @@ def _example_to_tensors(
         for neighbor in neighbors:
             if neighbor in index:
                 adjacency[source, index[neighbor]] = 1.0
-                edge_features[source, index[neighbor]] = torch.ones(3, dtype=torch.float32)
+                if edge_features[source, index[neighbor]].sum() == 0:
+                    edge_features[source, index[neighbor]] = torch.ones(
+                        edge_feature_dim,
+                        dtype=torch.float32,
+                    )
     node_type_ids = torch.zeros(len(node_ids), dtype=torch.long)
     return {
         "node_ids": node_ids,
@@ -161,6 +180,39 @@ def _example_to_tensors(
         "node_type_ids": node_type_ids,
         "edge_features": edge_features,
     }
+
+
+def _edge_features_to_tensor(
+    torch: Any,
+    edge_features: EdgeFeatures | None,
+    node_ids: list[str],
+    index: dict[str, int],
+    *,
+    edge_feature_dim: int,
+) -> Any:
+    tensor = torch.zeros(
+        (len(node_ids), len(node_ids), edge_feature_dim),
+        dtype=torch.float32,
+    )
+    if edge_features is None:
+        return tensor
+    for (source_id, target_id), values in edge_features.edge_features.items():
+        if source_id not in index or target_id not in index:
+            continue
+        source = index[source_id]
+        target = index[target_id]
+        encoded = _fit_edge_feature_dim(values, edge_feature_dim)
+        tensor[source, target] = torch.tensor(encoded, dtype=torch.float32)
+        tensor[target, source] = torch.tensor(encoded, dtype=torch.float32)
+    return tensor
+
+
+def _fit_edge_feature_dim(values: list[float], edge_feature_dim: int) -> list[float]:
+    if edge_feature_dim < 1:
+        raise ValueError("edge_feature_dim must be at least 1")
+    if len(values) >= edge_feature_dim:
+        return values[:edge_feature_dim]
+    return [*values, *([0.0] * (edge_feature_dim - len(values)))]
 
 
 def _build_model(torch: Any, config: GraphEncoderConfig) -> Any:
