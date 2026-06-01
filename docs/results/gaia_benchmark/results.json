@@ -512,5 +512,35 @@
       "broadcast_answer": "Albert Einstein",
       "agentprop_answer": ""
     }
-  ]
+  ],
+  "clean_subset": {
+    "n": 37,
+    "dropped_tasks": [
+      "q001",
+      "q002",
+      "q030",
+      "q033",
+      "q034",
+      "q035",
+      "q038",
+      "q039",
+      "q040",
+      "q041",
+      "q042",
+      "q046"
+    ],
+    "dropped_reason": "one or both arms returned 0 tokens (API timeout/503 exhausting retries)",
+    "broadcast": {
+      "correct": 26,
+      "accuracy": 0.7027,
+      "total_tokens": 145989
+    },
+    "agentprop": {
+      "correct": 27,
+      "accuracy": 0.7297,
+      "total_tokens": 119057
+    },
+    "token_saving": 0.1845
+  },
+  "data_quality_note": "12 of 49 tasks lost an arm to API failures. Headline result uses the clean 37-task subset."
 }
