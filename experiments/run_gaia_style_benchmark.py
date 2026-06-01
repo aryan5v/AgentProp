@@ -677,7 +677,17 @@ def main(argv: list[str] | None = None) -> None:
         default="",
         help="Comma-separated task ids to skip (e.g. q014)",
     )
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Load results_partial.json and skip already-completed tasks",
+    )
     args = parser.parse_args(argv)
+
+    # Hard socket-level timeout so a stalled provider read cannot wedge a worker
+    # indefinitely (urllib's per-request timeout does not always break a hung read).
+    import socket as _socket
+    _socket.setdefaulttimeout(50.0)
 
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
