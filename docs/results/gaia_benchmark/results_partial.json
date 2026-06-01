@@ -1,0 +1,263 @@
+{
+  "model": "models/gemini-3.5-flash",
+  "seeds": [
+    "planner",
+    "writer",
+    "verifier"
+  ],
+  "status": "partial",
+  "tasks_done": 24,
+  "broadcast": {
+    "correct": 18,
+    "accuracy": 0.75,
+    "total_tokens": 111567
+  },
+  "agentprop": {
+    "correct": 17,
+    "accuracy": 0.7083,
+    "total_tokens": 91114
+  },
+  "measured_total_token_saving": 0.1833,
+  "rows": [
+    {
+      "task_id": "q001",
+      "gold": "Washington DC",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 4333,
+      "agentprop_tokens": 3658,
+      "broadcast_answer": "Washington, D.C.",
+      "agentprop_answer": "Washington, D.C."
+    },
+    {
+      "task_id": "q002",
+      "gold": "4",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 4030,
+      "agentprop_tokens": 3427,
+      "broadcast_answer": "4",
+      "agentprop_answer": "4"
+    },
+    {
+      "task_id": "q003",
+      "gold": "1976",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 3441,
+      "agentprop_tokens": 2524,
+      "broadcast_answer": "1976",
+      "agentprop_answer": "1976"
+    },
+    {
+      "task_id": "q004",
+      "gold": "Seine",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 3711,
+      "agentprop_tokens": 2341,
+      "broadcast_answer": "Seine",
+      "agentprop_answer": "Seine"
+    },
+    {
+      "task_id": "q005",
+      "gold": "27",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 4469,
+      "agentprop_tokens": 3794,
+      "broadcast_answer": "27",
+      "agentprop_answer": "27"
+    },
+    {
+      "task_id": "q006",
+      "gold": "Peruvian sol",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 3430,
+      "agentprop_tokens": 2696,
+      "broadcast_answer": "Peruvian Sol",
+      "agentprop_answer": "Sol"
+    },
+    {
+      "task_id": "q007",
+      "gold": "C",
+      "broadcast_correct": false,
+      "agentprop_correct": false,
+      "broadcast_tokens": 1026,
+      "agentprop_tokens": 4882,
+      "broadcast_answer": "",
+      "agentprop_answer": "None"
+    },
+    {
+      "task_id": "q008",
+      "gold": "6",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 4036,
+      "agentprop_tokens": 3304,
+      "broadcast_answer": "6",
+      "agentprop_answer": "6"
+    },
+    {
+      "task_id": "q009",
+      "gold": "Swahili",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 4153,
+      "agentprop_tokens": 3209,
+      "broadcast_answer": "Swahili and English",
+      "agentprop_answer": "Swahili and English"
+    },
+    {
+      "task_id": "q010",
+      "gold": "4",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 3980,
+      "agentprop_tokens": 3382,
+      "broadcast_answer": "4",
+      "agentprop_answer": "4"
+    },
+    {
+      "task_id": "q011",
+      "gold": "1900s",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 4063,
+      "agentprop_tokens": 2962,
+      "broadcast_answer": "1900s",
+      "agentprop_answer": "1900s"
+    },
+    {
+      "task_id": "q012",
+      "gold": "47",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 7376,
+      "agentprop_tokens": 6505,
+      "broadcast_answer": "47",
+      "agentprop_answer": "47"
+    },
+    {
+      "task_id": "q013",
+      "gold": "14",
+      "broadcast_correct": false,
+      "agentprop_correct": false,
+      "broadcast_tokens": 6597,
+      "agentprop_tokens": 4855,
+      "broadcast_answer": "6",
+      "agentprop_answer": "6"
+    },
+    {
+      "task_id": "q015",
+      "gold": "6",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 3212,
+      "agentprop_tokens": 3286,
+      "broadcast_answer": "6",
+      "agentprop_answer": "6"
+    },
+    {
+      "task_id": "q016",
+      "gold": "Pico de Orizaba",
+      "broadcast_correct": false,
+      "agentprop_correct": false,
+      "broadcast_tokens": 7899,
+      "agentprop_tokens": 5828,
+      "broadcast_answer": "Mount Logan",
+      "agentprop_answer": "Mount Logan"
+    },
+    {
+      "task_id": "q017",
+      "gold": "Vinci",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 4125,
+      "agentprop_tokens": 2780,
+      "broadcast_answer": "Vinci",
+      "agentprop_answer": "Vinci"
+    },
+    {
+      "task_id": "q018",
+      "gold": "-196",
+      "broadcast_correct": false,
+      "agentprop_correct": false,
+      "broadcast_tokens": 4424,
+      "agentprop_tokens": 3527,
+      "broadcast_answer": "-195.79 \u00b0C",
+      "agentprop_answer": "-195.79 \u00b0C"
+    },
+    {
+      "task_id": "q019",
+      "gold": "6",
+      "broadcast_correct": false,
+      "agentprop_correct": false,
+      "broadcast_tokens": 8273,
+      "agentprop_tokens": 7557,
+      "broadcast_answer": "10",
+      "agentprop_answer": "10"
+    },
+    {
+      "task_id": "q020",
+      "gold": "NASA",
+      "broadcast_correct": true,
+      "agentprop_correct": false,
+      "broadcast_tokens": 3921,
+      "agentprop_tokens": 3294,
+      "broadcast_answer": "NASA",
+      "agentprop_answer": "National Aeronautics and Space Administration"
+    },
+    {
+      "task_id": "q021",
+      "gold": "6",
+      "broadcast_correct": false,
+      "agentprop_correct": false,
+      "broadcast_tokens": 4656,
+      "agentprop_tokens": 3864,
+      "broadcast_answer": "4",
+      "agentprop_answer": "4"
+    },
+    {
+      "task_id": "q022",
+      "gold": "300000",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 5177,
+      "agentprop_tokens": 3540,
+      "broadcast_answer": "300,000",
+      "agentprop_answer": "300,000"
+    },
+    {
+      "task_id": "q023",
+      "gold": "1957",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 3755,
+      "agentprop_tokens": 3090,
+      "broadcast_answer": "1957",
+      "agentprop_answer": "1957"
+    },
+    {
+      "task_id": "q024",
+      "gold": "skin",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 7315,
+      "agentprop_tokens": 3747,
+      "broadcast_answer": "Skin",
+      "agentprop_answer": "Skin"
+    },
+    {
+      "task_id": "q026",
+      "gold": "Japanese",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 4165,
+      "agentprop_tokens": 3062,
+      "broadcast_answer": "Japanese",
+      "agentprop_answer": "Japanese"
+    }
+  ]
+}
