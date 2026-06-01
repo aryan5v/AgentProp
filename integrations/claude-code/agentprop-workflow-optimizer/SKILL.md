@@ -59,12 +59,25 @@ PYTHONPATH=src:. python experiments/analyze_case_study.py \
   --out-dir docs/results/case_study_001
 ```
 
+Prepare an external Terminal-Bench run without launching it:
+
+```bash
+agentprop terminal-bench prepare \
+  --dataset terminal-bench/terminal-bench-2-1 \
+  --agent terminus-2 \
+  --model google/gemini-3.1-pro-preview \
+  --environment modal \
+  --out-dir benchmark-results/terminal-bench-2.1
+```
+
 ## Rules For The Coding Agent
 
 - Do not claim a learned ML/RL policy is better unless a saved artifact compares
   it against training-free baselines.
 - Do not prune edges that carry verification, tool output, or user constraints
   into the final answer unless the report shows acceptable risk.
+- For benchmark work, prepare manifests and watchdog wrappers before launching
+  expensive external runs.
 - Use verifier nodes to intercept errors before finalizing.
 - Mention selected seed agents and verification evidence in the final response.
 - Keep Token Router, Modal, OpenAI, and Hugging Face credentials in environment

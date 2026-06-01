@@ -9,13 +9,23 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal
 
-ArtifactKind = Literal["ml-model", "rl-policy", "metrics", "trace", "report"]
+ArtifactKind = Literal[
+    "ml-model",
+    "rl-policy",
+    "metrics",
+    "trace",
+    "report",
+    "benchmark-manifest",
+    "benchmark-runbook",
+]
 _ARTIFACT_KINDS: dict[str, ArtifactKind] = {
     "ml-model": "ml-model",
     "rl-policy": "rl-policy",
     "metrics": "metrics",
     "trace": "trace",
     "report": "report",
+    "benchmark-manifest": "benchmark-manifest",
+    "benchmark-runbook": "benchmark-runbook",
 }
 
 

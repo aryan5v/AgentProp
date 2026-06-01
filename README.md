@@ -180,6 +180,18 @@ PYTHONPATH=src:. python experiments/run_case_study.py \
   --out-dir docs/results/case_study_001
 ```
 
+Prepare a Terminal-Bench 2.1 + Terminus-2 launch bundle without running the
+benchmark:
+
+```bash
+agentprop terminal-bench prepare \
+  --dataset terminal-bench/terminal-bench-2-1 \
+  --agent terminus-2 \
+  --model google/gemini-3.1-pro-preview \
+  --environment modal \
+  --out-dir benchmark-results/terminal-bench-2.1
+```
+
 ## Artifacts
 
 AgentProp writes plain, inspectable artifacts:
@@ -189,6 +201,8 @@ AgentProp writes plain, inspectable artifacts:
 - `traces.jsonl` and `outputs.jsonl` for routed LLM execution traces
 - `verification_logs.jsonl` when command verification is enabled
 - `registry.json` for ML/RL checkpoints and metric artifacts
+- `manifest.json`, `RUNBOOK.md`, and watchdog status JSON for prepared external
+  benchmark runs
 - `*.svg` plots for benchmark and case-study summaries
 - Markdown, JSON, or HTML optimization reports
 
