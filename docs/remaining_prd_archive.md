@@ -328,6 +328,10 @@ Coding-agent integration:
   generic coding-agent briefs from AgentProp routing recommendations.
 - Added `docs/coding_agents.md` with Claude Code skill shape, Codex plugin
   shape, MCP tool recommendations, and ML/DL/RL suite usage guidance.
+- Added a Claude Code skill template under `integrations/claude-code/`.
+- Added a Codex instruction template under `integrations/codex/`.
+- Added `agentprop-mcp`, a lightweight stdio JSON-RPC server exposing
+  AgentProp analyze, optimize, report, and agent-instruction tools.
 
 Adapters to build:
 

@@ -89,6 +89,12 @@ runtime dependency.
 An MCP server is the best long-term integration for editor agents because it
 can expose AgentProp as tools instead of requiring agents to shell out.
 
+AgentProp includes a lightweight stdio JSON-RPC server:
+
+```bash
+agentprop-mcp
+```
+
 Recommended tools:
 
 - `agentprop_analyze`: returns graph diagnostics, bottlenecks, pruning
@@ -103,6 +109,25 @@ Recommended tools:
 The MCP server should keep secrets out of tool arguments. Token Router, OpenAI,
 Modal, and Hugging Face credentials should be read from local environment
 variables or uncommitted config files.
+
+Current implemented MCP-style tools:
+
+- `agentprop_analyze`
+- `agentprop_optimize`
+- `agentprop_report`
+- `agentprop_agent_instructions`
+
+Claude Code skill template:
+
+```text
+integrations/claude-code/agentprop-workflow-optimizer/SKILL.md
+```
+
+Codex instruction template:
+
+```text
+integrations/codex/AGENTPROP.md
+```
 
 ## What This Enables
 

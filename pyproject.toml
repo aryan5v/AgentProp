@@ -24,6 +24,7 @@ dependencies = [
 
 [project.scripts]
 agentprop = "agentprop.cli:main"
+agentprop-mcp = "agentprop.integrations.mcp_server:main"
 
 [project.optional-dependencies]
 dev = [

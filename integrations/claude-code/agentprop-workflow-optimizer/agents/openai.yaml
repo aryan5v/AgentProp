@@ -1,0 +1,3 @@
+display_name: AgentProp Workflow Optimizer
+short_description: Optimize multi-agent workflows with AgentProp routing, verifier, pruning, and ML/RL evidence.
+default_prompt: Use AgentProp to analyze this multi-agent workflow, generate a routing brief, and preserve evidence before changing workflow defaults.
