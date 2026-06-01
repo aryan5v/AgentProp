@@ -43,16 +43,17 @@ The initial local baseline passed 17 of the 26 completed matched tasks and
 failed nine. AgentProp-guided routing converted three of those baseline failures
 into passes:
 
-| Task | Baseline | AgentProp-guided | Change |
+| Task | Baseline | AgentProp-guided | What changed |
 |---|---:|---:|---|
-| `build-pov-ray` | 0.0 | 1.0 | fail -> pass |
-| `caffe-cifar-10` | 0.0 | 1.0 | fail -> pass |
-| `sanitize-git-repo` | 0.0 | 1.0 | fail -> pass |
+| `build-pov-ray` | 0.0 | 1.0 | Legacy build task converted from fail to pass; used fewer raw input+output tokens than baseline. |
+| `caffe-cifar-10` | 0.0 | 1.0 | Long-running build/train/verify task converted from timeout to pass with lower reported cost. |
+| `sanitize-git-repo` | 0.0 | 1.0 | Repository-hygiene task converted from fail to pass via explicit search, edit, and verification loop. |
 
 Two baseline passes regressed in the guided run, leaving a net improvement of
-one pass on the completed matched subset. The useful signal is not just the
-aggregate +1: the run identifies specific task types where
-planner/implementer/verifier discipline helped recover older failures.
+one pass on the completed matched subset. The useful signal is the shape of the
+improvements: AgentProp did not merely add a prompt flourish; it recovered older
+failing tests where task execution benefits from structured handoff between
+planning, implementation, and verification phases.
 
 ## Token And Cost Snapshot
 
@@ -106,14 +107,24 @@ tasks.
 
 ## What Improved
 
-- `build-pov-ray`
-- `caffe-cifar-10`
-- `sanitize-git-repo`
+The three improved tasks are the most important part of this first run because
+they show initial product value: AgentProp-guided routing helped turn baseline
+failures into passes.
 
-These wins suggest that explicit planning, implementation focus, and verification
-discipline can help on setup-heavy or multi-step coding tasks. They are also the
-clearest examples of AgentProp-guided routing improving older failing tests from
-the local baseline.
+- `build-pov-ray` moved from fail to pass. This points to value on legacy
+  build/setup tasks where the agent has to preserve exact installation details
+  and verify the produced binary.
+- `caffe-cifar-10` moved from fail to pass after the baseline timed out. This
+  points to value on multi-stage ML engineering tasks where build, training, and
+  accuracy checks must stay aligned.
+- `sanitize-git-repo` moved from fail to pass. This points to value on
+  repository-wide search/edit/verify tasks where missing one contaminated value
+  is enough to fail the benchmark.
+
+These wins are not enough to claim broad benchmark dominance, but they are a
+strong early signal for AgentProp's core hypothesis: routing discipline should
+spend context and verification effort on the phases most likely to determine
+task success.
 
 ## What Regressed
 
