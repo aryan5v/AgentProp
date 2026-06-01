@@ -20,6 +20,9 @@ from agentprop.workflows import planner_coder_tester_reviewer
 
 
 class _FakeCaseStudyExecutor:
+    def __init__(self) -> None:
+        self.calls: list[dict[str, str]] = []
+
     def chat(
         self,
         *,
@@ -28,11 +31,18 @@ class _FakeCaseStudyExecutor:
         temperature: float = 0.1,
         max_tokens: int | None = None,
     ) -> LLMExecutionResult:
+        self.calls.append({"system": system_prompt, "user": user_prompt})
+        prompt_tokens = max(1, len(system_prompt.split()) + len(user_prompt.split()))
+        completion_tokens = 25
         return LLMExecutionResult(
             model="fake-model",
             prompt=user_prompt,
             response="Final answer: Bug fixed. Verification: pytest passed.",
-            usage=LLMUsage(prompt_tokens=50, completion_tokens=25, total_tokens=75),
+            usage=LLMUsage(
+                prompt_tokens=prompt_tokens,
+                completion_tokens=completion_tokens,
+                total_tokens=prompt_tokens + completion_tokens,
+            ),
             latency_s=0.2,
             raw_response={},
         )
@@ -173,6 +183,7 @@ def test_run_case_study_preflight_writes_readiness_manifest(tmp_path: Path) -> N
     payload = json.loads((output_dir / "preflight.json").read_text())
 
     assert exit_code == 0
+    assert payload["mode"] == "llm-routed"
     assert payload["task_count"] == 20
     assert payload["meets_target_task_count"]
     assert payload["total_task_policy_arms"] == 80
@@ -250,7 +261,7 @@ def test_analyze_case_study_writes_tables_and_plots(tmp_path: Path) -> None:
     assert "optimized_greedy" in (out_dir / "analysis.md").read_text()
 
 
-def test_real_case_study_arm_records_llm_usage_and_output() -> None:
+def test_prompt_only_case_study_arm_is_marked_not_real_validation() -> None:
     task = run_case_study.CaseStudyTask(
         id="demo_bug",
         category="bugfix",
@@ -260,22 +271,58 @@ def test_real_case_study_arm_records_llm_usage_and_output() -> None:
         min_coverage=0.7,
     )
 
-    row, trace, output = run_case_study._evaluate_real_task_arm(
+    executor = _FakeCaseStudyExecutor()
+
+    row, trace, output = run_case_study._evaluate_prompt_only_task_arm(
         task,
         planner_coder_tester_reviewer(),
         policy_name="optimized_greedy",
         seeds=["planner", "tester"],
-        executor=_FakeCaseStudyExecutor(),
+        executor=executor,
         trials=2,
         seed=0,
         max_tokens=100,
     )
 
     assert row["model"] == "fake-model"
-    assert row["total_llm_tokens"] == 75
+    assert row["validation_kind"] == "llm-prompt-only-not-validation"
+    assert row["routing_fidelity"] == "cosmetic_prompt_annotation"
+    assert row["verification_passed"] is None
+    assert row["total_llm_tokens"] > 0
     assert row["quality_passed"]
-    assert trace["total_tokens"] == 75
+    assert trace["total_tokens"] == row["total_llm_tokens"]
     assert output["response"].startswith("Final answer")
+
+
+def test_routed_case_study_arm_executes_multiple_workflow_nodes() -> None:
+    task = run_case_study.CaseStudyTask(
+        id="demo_bug",
+        category="bugfix",
+        prompt="Fix a demo bug.",
+        expected="Bug fixed.",
+        verification_command="pytest tests/test_cli.py",
+        min_coverage=0.7,
+    )
+    executor = _FakeCaseStudyExecutor()
+
+    row, trace, output = run_case_study._evaluate_routed_llm_task_arm(
+        task,
+        planner_coder_tester_reviewer(),
+        policy_name="optimized_greedy",
+        seeds=["planner", "tester"],
+        executor=executor,
+        trials=2,
+        seed=0,
+        max_tokens=100,
+    )
+
+    assert row["validation_kind"] == "llm-routed-multi-agent"
+    assert row["routing_fidelity"] == "node_calls_and_context_scope"
+    assert row["verification_status"] == "not_run"
+    assert row["verification_passed"] is None
+    assert len(executor.calls) >= 3
+    assert output["node_executions"][-1]["node_id"] == "final"
+    assert len(trace["events"]) == len(output["node_executions"])
 
 
 def test_train_seed_scorer_experiment_writes_model(tmp_path: Path) -> None:

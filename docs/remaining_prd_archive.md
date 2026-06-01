@@ -293,6 +293,13 @@ Progress:
 - Added OpenAI-compatible LLM execution support for Token Router or OpenAI-style
   endpoints. LLM mode records prompt/completion/total tokens, latency, final
   outputs, rubric scores, and trace metadata.
+- Fixed LLM execution fidelity: `--execution-mode llm` now resolves to routed
+  multi-agent execution with separate workflow-node calls and scoped context;
+  the previous single-call scaffold is explicit `llm-prompt-only` and marked as
+  non-validation.
+- Separated rubric quality from real verification: LLM rows leave
+  `verification_passed` unknown unless a command result is actually observed, so
+  keyword mentions of expected terms or `pytest` cannot masquerade as pass/fail.
 - Added case-study preflight mode that writes `preflight.json` with task count,
   policy arms, selected seeds, expected artifacts, and Token Router/OpenAI
   readiness without making LLM calls.

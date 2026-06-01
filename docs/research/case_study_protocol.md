@@ -131,11 +131,23 @@ PYTHONPATH=src:. python experiments/run_case_study.py \
   --out-dir docs/results/case_study_001
 ```
 
-The LLM mode uses an OpenAI-compatible chat endpoint. It records prompt tokens,
+`--execution-mode llm` resolves to routed multi-agent execution. The runner calls
+the active workflow nodes separately, gives full task context only to broadcast
+nodes or selected seed nodes, passes predecessor summaries to non-seed nodes, and
+then calls the final output node. This is the mode intended for validation.
+
+The old one-call prompt scaffold is only available as `--execution-mode
+llm-prompt-only`; it is marked `llm-prompt-only-not-validation` in result rows and
+must not be used as evidence that AgentProp routing saves tokens.
+
+LLM modes use an OpenAI-compatible chat endpoint. They record prompt tokens,
 completion tokens, total LLM tokens, latency, selected seeds, quality rubric
 scores, traces, and `outputs.jsonl` with prompts and final model responses.
-Keep the result directory private until a redaction pass confirms no secrets or
-private task data are present.
+`quality_passed` is the automatic rubric result. `verification_passed` is left
+unknown unless a separate execution environment actually runs
+`verification_command`; keyword mentions of `pytest` or expected terms do not
+count as verification. Keep the result directory private until a redaction pass
+confirms no secrets or private task data are present.
 
 Analyze saved results:
 

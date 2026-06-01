@@ -63,7 +63,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--workflow", default="planner_coder_tester_reviewer")
     parser.add_argument(
         "--execution-mode",
-        choices=["offline-simulated", "llm"],
+        choices=["offline-simulated", "llm", "llm-routed", "llm-prompt-only"],
         default="offline-simulated",
     )
     parser.add_argument("--budget", type=int, default=2)
@@ -83,6 +83,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--target-task-count", type=int, default=20)
     parser.add_argument("--out-dir", type=Path, default=Path("docs/results/case_study_offline"))
     args = parser.parse_args(argv)
+    execution_mode = _resolve_execution_mode(args.execution_mode)
 
     tasks = _load_tasks(args.tasks)
     if args.workflow not in WORKFLOW_TEMPLATES:
@@ -102,7 +103,7 @@ def main(argv: list[str] | None = None) -> int:
             tasks,
             policies,
             workflow=args.workflow,
-            execution_mode=args.execution_mode,
+            execution_mode=execution_mode,
             target_task_count=args.target_task_count,
             llm_model=args.llm_model,
             llm_base_url=args.llm_base_url,
@@ -115,7 +116,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     executor: CaseStudyExecutor | None = None
-    if args.execution_mode == "llm":
+    if execution_mode.startswith("llm-"):
         executor = OpenAICompatibleChatClient.from_env(
             model=args.llm_model,
             base_url=args.llm_base_url,
@@ -138,23 +139,36 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 output = None
             else:
-                row, trace, output = _evaluate_real_task_arm(
-                    task,
-                    graph,
-                    policy_name=policy_name,
-                    seeds=seeds,
-                    executor=executor,
-                    trials=args.trials,
-                    seed=args.seed,
-                    max_tokens=args.llm_max_tokens,
-                )
+                if execution_mode == "llm-prompt-only":
+                    row, trace, output = _evaluate_prompt_only_task_arm(
+                        task,
+                        graph,
+                        policy_name=policy_name,
+                        seeds=seeds,
+                        executor=executor,
+                        trials=args.trials,
+                        seed=args.seed,
+                        max_tokens=args.llm_max_tokens,
+                    )
+                else:
+                    row, trace, output = _evaluate_routed_llm_task_arm(
+                        task,
+                        graph,
+                        policy_name=policy_name,
+                        seeds=seeds,
+                        executor=executor,
+                        trials=args.trials,
+                        seed=args.seed,
+                        max_tokens=args.llm_max_tokens,
+                    )
             rows.append(row)
             traces.append(trace)
             if output is not None:
                 outputs.append(output)
 
     payload = {
-        "mode": args.execution_mode,
+        "mode": execution_mode,
+        "requested_execution_mode": args.execution_mode,
         "workflow": args.workflow,
         "budget": args.budget,
         "trials": args.trials,
@@ -176,6 +190,12 @@ def main(argv: list[str] | None = None) -> int:
         _write_traces(args.out_dir / "outputs.jsonl", outputs)
     print(f"Wrote {args.out_dir}")
     return 0
+
+
+def _resolve_execution_mode(raw_mode: str) -> str:
+    if raw_mode == "llm":
+        return "llm-routed"
+    return raw_mode
 
 
 def _load_tasks(path: Path) -> list[CaseStudyTask]:
@@ -213,7 +233,7 @@ def _preflight_payload(
     task_categories = sorted({task.category for task in tasks})
     env_status = (
         openai_compatible_env_status(model=llm_model, base_url=llm_base_url)
-        if execution_mode == "llm"
+        if execution_mode.startswith("llm-")
         else {
             "ready": True,
             "api_key_env": None,
@@ -248,7 +268,7 @@ def _preflight_payload(
             "results.csv",
             "summary.json",
             "traces.jsonl",
-            *(["outputs.jsonl"] if execution_mode == "llm" else []),
+            *(["outputs.jsonl"] if execution_mode.startswith("llm-") else []),
         ],
         "llm_environment": env_status,
     }
@@ -417,7 +437,7 @@ def _evaluate_task_arm(
     return row, trace
 
 
-def _evaluate_real_task_arm(
+def _evaluate_prompt_only_task_arm(
     task: CaseStudyTask,
     graph: AgentGraph,
     *,
@@ -444,10 +464,9 @@ def _evaluate_real_task_arm(
         max_tokens=max_tokens,
     )
     quality = _score_real_output(task, execution.response)
-    success = quality.passed
     token_cost = float(execution.usage.total_tokens)
     efficiency = quality_cost_summary(
-        success_rate=1.0 if success else 0.0,
+        success_rate=quality.score,
         token_cost=token_cost,
         latency=execution.latency_s,
     )
@@ -455,6 +474,8 @@ def _evaluate_real_task_arm(
         "task_id": task.id,
         "category": task.category,
         "policy": policy_name,
+        "validation_kind": "llm-prompt-only-not-validation",
+        "routing_fidelity": "cosmetic_prompt_annotation",
         "selected_seeds": seeds,
         "activated_node_count": len(routing["activated_nodes"]),
         "coverage": routing["coverage"],
@@ -469,11 +490,12 @@ def _evaluate_real_task_arm(
         "propagation_time": routing["propagation_time"],
         "model": execution.model,
         "verification_command": task.verification_command,
-        "verification_passed": success,
+        "verification_status": "not_run",
+        "verification_passed": None,
         "quality_score": quality.score,
         "quality_method": quality.method,
         "quality_passed": quality.passed,
-        "missed_required_behavior": not success,
+        "missed_required_behavior": not quality.passed,
         "verifier_or_tester_caught_issue": _mentions_verification_role(execution.response),
         "cost_adjusted_success": efficiency.cost_adjusted_success,
         "efficiency_score": efficiency.efficiency_score,
@@ -520,6 +542,182 @@ def _evaluate_real_task_arm(
     return row, trace, output
 
 
+def _evaluate_routed_llm_task_arm(
+    task: CaseStudyTask,
+    graph: AgentGraph,
+    *,
+    policy_name: str,
+    seeds: list[str],
+    executor: CaseStudyExecutor,
+    trials: int,
+    seed: int,
+    max_tokens: int,
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    routing = _routing_snapshot(
+        graph,
+        policy_name=policy_name,
+        seeds=seeds,
+        trials=trials,
+        seed=seed,
+    )
+    activated_nodes = {
+        node_id
+        for node_id in routing["activated_nodes"]
+        if graph.node(node_id).type != NodeType.OUTPUT
+    }
+    node_order = _routed_node_order(graph, seeds, activated_nodes)
+    node_outputs: dict[str, str] = {}
+    executions = []
+    total_latency = 0.0
+
+    for node_id in node_order:
+        node = graph.node(node_id)
+        predecessor_outputs = {
+            predecessor: node_outputs[predecessor]
+            for predecessor in graph.predecessors(node_id)
+            if predecessor in node_outputs
+        }
+        full_context = policy_name == "broadcast" or node_id in seeds
+        execution = executor.chat(
+            system_prompt=_node_system_prompt(policy_name, node_id, node.type.value, node.role),
+            user_prompt=_node_user_prompt(
+                task,
+                routing,
+                node_id=node_id,
+                full_context=full_context,
+                predecessor_outputs=predecessor_outputs,
+            ),
+            temperature=0.1,
+            max_tokens=max_tokens,
+        )
+        node_outputs[node_id] = execution.response
+        total_latency += execution.latency_s
+        executions.append(
+            {
+                "node_id": node_id,
+                "node_type": node.type.value,
+                "full_context": full_context,
+                "prompt": execution.prompt,
+                "response": execution.response,
+                "usage": _usage_to_dict(execution),
+                "latency_s": execution.latency_s,
+            }
+        )
+
+    final_execution = executor.chat(
+        system_prompt=(
+            "You are the AgentProp final output node. Consolidate routed agent outputs "
+            "without inventing verification results."
+        ),
+        user_prompt=_final_user_prompt(task, policy_name, seeds, node_outputs),
+        temperature=0.1,
+        max_tokens=max_tokens,
+    )
+    total_latency += final_execution.latency_s
+    executions.append(
+        {
+            "node_id": "final",
+            "node_type": NodeType.OUTPUT.value,
+            "full_context": False,
+            "prompt": final_execution.prompt,
+            "response": final_execution.response,
+            "usage": _usage_to_dict(final_execution),
+            "latency_s": final_execution.latency_s,
+        }
+    )
+
+    quality = _score_real_output(task, final_execution.response)
+    prompt_tokens = sum(item["usage"]["prompt_tokens"] for item in executions)
+    completion_tokens = sum(item["usage"]["completion_tokens"] for item in executions)
+    total_tokens = sum(item["usage"]["total_tokens"] for item in executions)
+    token_cost = float(total_tokens)
+    total_cost = token_cost + float(routing["estimated_message_cost"])
+    efficiency = quality_cost_summary(
+        success_rate=quality.score,
+        token_cost=total_cost,
+        latency=total_latency,
+    )
+    row = {
+        "task_id": task.id,
+        "category": task.category,
+        "policy": policy_name,
+        "validation_kind": "llm-routed-multi-agent",
+        "routing_fidelity": "node_calls_and_context_scope",
+        "selected_seeds": seeds,
+        "executed_nodes": [item["node_id"] for item in executions],
+        "activated_node_count": len(activated_nodes),
+        "coverage": routing["coverage"],
+        "prompt_tokens": prompt_tokens,
+        "completion_tokens": completion_tokens,
+        "total_llm_tokens": total_tokens,
+        "token_cost": token_cost,
+        "message_cost": routing["estimated_message_cost"],
+        "total_cost": total_cost,
+        "message_count": routing["message_count"],
+        "latency": total_latency,
+        "propagation_time": routing["propagation_time"],
+        "model": final_execution.model,
+        "verification_command": task.verification_command,
+        "verification_status": "not_run",
+        "verification_passed": None,
+        "quality_score": quality.score,
+        "quality_method": quality.method,
+        "quality_passed": quality.passed,
+        "missed_required_behavior": not quality.passed,
+        "verifier_or_tester_caught_issue": any(
+            _mentions_verification_role(item["response"]) for item in executions
+        ),
+        "cost_adjusted_success": efficiency.cost_adjusted_success,
+        "efficiency_score": efficiency.efficiency_score,
+    }
+    trace = {
+        "task_id": task.id,
+        "policy": policy_name,
+        "model": final_execution.model,
+        "prompt_tokens": prompt_tokens,
+        "completion_tokens": completion_tokens,
+        "total_tokens": total_tokens,
+        "latency_s": total_latency,
+        "events": [
+            {
+                "source": "task" if item["full_context"] else "predecessor_summaries",
+                "target": item["node_id"],
+                "success": item["node_id"] in activated_nodes or item["node_id"] == "final",
+                "token_cost": item["usage"]["total_tokens"],
+                "full_context": item["full_context"],
+            }
+            for item in executions
+        ],
+    }
+    output = {
+        "task_id": task.id,
+        "policy": policy_name,
+        "model": final_execution.model,
+        "validation_kind": "llm-routed-multi-agent",
+        "node_executions": executions,
+        "response": final_execution.response,
+        "expected": task.expected,
+        "quality": {
+            "score": quality.score,
+            "method": quality.method,
+            "passed": quality.passed,
+            "rationale": quality.rationale,
+            "metadata": quality.metadata,
+        },
+        "usage": {
+            "prompt_tokens": prompt_tokens,
+            "completion_tokens": completion_tokens,
+            "total_tokens": total_tokens,
+        },
+        "verification": {
+            "command": task.verification_command,
+            "status": "not_run",
+            "passed": None,
+        },
+    }
+    return row, trace, output
+
+
 def _routing_snapshot(
     graph: AgentGraph,
     *,
@@ -548,6 +746,101 @@ def _routing_snapshot(
         "estimated_message_cost": cost.message_cost,
         "message_count": cost.message_count,
     }
+
+
+def _routed_node_order(
+    graph: AgentGraph,
+    seeds: list[str],
+    activated_nodes: set[str],
+) -> list[str]:
+    seeded = [node_id for node_id in seeds if node_id in activated_nodes]
+    remaining = [
+        node.id
+        for node in graph.nodes()
+        if node.id in activated_nodes and node.id not in seeded
+    ]
+    return [*seeded, *remaining]
+
+
+def _node_system_prompt(
+    policy_name: str,
+    node_id: str,
+    node_type: str,
+    role: str | None,
+) -> str:
+    return (
+        "You are one node in an AgentProp routed multi-agent case-study run. "
+        f"Routing policy: {policy_name}. Node: {node_id}. Type: {node_type}. "
+        f"Role: {role or 'unspecified'}. "
+        "Return only this node's contribution; do not claim tests were run unless "
+        "provided command output proves it."
+    )
+
+
+def _node_user_prompt(
+    task: CaseStudyTask,
+    routing: dict[str, Any],
+    *,
+    node_id: str,
+    full_context: bool,
+    predecessor_outputs: dict[str, str],
+) -> str:
+    context_lines = [
+        f"Task ID: {task.id}",
+        f"Category: {task.category}",
+        f"Node receiving context: {node_id}",
+        f"Expected outcome: {task.expected}",
+        f"Verification command: {task.verification_command}",
+        f"Propagation coverage: {routing['coverage']:.3f}",
+    ]
+    if full_context:
+        context_lines.append(f"Full task context: {task.prompt}")
+    else:
+        context_lines.append("Full task context was not routed to this node.")
+        context_lines.append("Use only predecessor summaries below.")
+    if predecessor_outputs:
+        context_lines.append("Predecessor outputs:")
+        for predecessor, output in sorted(predecessor_outputs.items()):
+            context_lines.append(f"- {predecessor}: {_compact_text(output)}")
+    else:
+        context_lines.append("Predecessor outputs: none")
+    return "\n".join(context_lines)
+
+
+def _final_user_prompt(
+    task: CaseStudyTask,
+    policy_name: str,
+    seeds: list[str],
+    node_outputs: dict[str, str],
+) -> str:
+    lines = [
+        f"Task ID: {task.id}",
+        f"Routing policy: {policy_name}",
+        f"Seed agents with full context: {', '.join(seeds) or 'none'}",
+        f"Task: {task.prompt}",
+        f"Expected outcome: {task.expected}",
+        f"Verification command to report, not fabricate: {task.verification_command}",
+        "Routed node outputs:",
+    ]
+    for node_id, output in sorted(node_outputs.items()):
+        lines.append(f"- {node_id}: {_compact_text(output, limit=900)}")
+    lines.append("Produce the final answer and clearly state that verification was not run.")
+    return "\n".join(lines)
+
+
+def _usage_to_dict(execution: LLMExecutionResult) -> dict[str, int]:
+    return {
+        "prompt_tokens": execution.usage.prompt_tokens,
+        "completion_tokens": execution.usage.completion_tokens,
+        "total_tokens": execution.usage.total_tokens,
+    }
+
+
+def _compact_text(text: str, *, limit: int = 500) -> str:
+    compact = " ".join(text.split())
+    if len(compact) <= limit:
+        return compact
+    return compact[: limit - 3] + "..."
 
 
 def _case_study_system_prompt(policy_name: str, seeds: list[str]) -> str:
@@ -631,11 +924,15 @@ def _summarize(rows: list[dict[str, Any]]) -> dict[str, dict[str, float]]:
     summary: dict[str, dict[str, float]] = {}
     for policy in policies:
         policy_rows = [row for row in rows if row["policy"] == policy]
+        verification_values = [
+            bool(row["verification_passed"])
+            for row in policy_rows
+            if isinstance(row.get("verification_passed"), bool)
+        ]
         summary[policy] = {
             "task_count": float(len(policy_rows)),
-            "success_rate": _mean(
-                [1.0 if row["verification_passed"] else 0.0 for row in policy_rows]
-            ),
+            "success_rate": _mean([1.0 if passed else 0.0 for passed in verification_values]),
+            "verification_observed_count": float(len(verification_values)),
             "mean_quality_score": _mean([float(row["quality_score"]) for row in policy_rows]),
             "mean_total_cost": _mean([float(row["total_cost"]) for row in policy_rows]),
             "mean_token_cost": _mean([float(row["token_cost"]) for row in policy_rows]),
