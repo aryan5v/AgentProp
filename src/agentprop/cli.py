@@ -118,7 +118,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     benchmark.add_argument("--json", action="store_true")
 
-    report = subparsers.add_parser("report", help="write a markdown or JSON optimization report")
+    report = subparsers.add_parser("report", help="write a Markdown, JSON, or HTML report")
     report.add_argument("workflow", help="workflow JSON path or built-in workflow name")
     report.add_argument("--budget", "-k", type=int, default=2)
     report.add_argument(
@@ -140,6 +140,13 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     report.add_argument("--trials", type=int, default=100)
     report.add_argument("--out", type=Path, default=Path("reports/agentprop_report.md"))
+    report.add_argument(
+        "--format",
+        dest="report_format",
+        choices=["auto", "markdown", "json", "html"],
+        default="auto",
+        help="report format; auto infers from --out extension",
+    )
 
     simulate = subparsers.add_parser("simulate", help="simulate propagation from seed nodes")
     simulate.add_argument("workflow", help="workflow JSON path or built-in workflow name")
@@ -245,7 +252,12 @@ def _report(args: argparse.Namespace) -> int:
         budget=args.budget,
         trials=args.trials,
     )
-    output_path = write_report(report, args.out, workflow_name=workflow_name)
+    output_path = write_report(
+        report,
+        args.out,
+        workflow_name=workflow_name,
+        report_format=args.report_format,
+    )
     print(f"Wrote {output_path}")
     return 0
 

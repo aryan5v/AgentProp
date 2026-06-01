@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import html
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from agentprop.evaluation.metrics import RecommendationReport
+
+ConcreteReportFormat = Literal["markdown", "json", "html"]
+ReportFormat = Literal["auto", "markdown", "json", "html"]
 
 
 def report_to_dict(report: RecommendationReport) -> dict[str, Any]:
@@ -82,21 +86,107 @@ def render_markdown_report(
     return "\n".join(line for line in lines if line is not None) + "\n"
 
 
+def render_html_report(
+    report: RecommendationReport,
+    *,
+    title: str = "AgentProp Optimization Report",
+    workflow_name: str | None = None,
+) -> str:
+    """Render a recommendation report as standalone HTML."""
+
+    workflow_line = ""
+    if workflow_name:
+        workflow_line = f'<p class="eyebrow">Workflow: <code>{_html(workflow_name)}</code></p>'
+
+    return "\n".join(
+        [
+            "<!doctype html>",
+            '<html lang="en">',
+            "<head>",
+            '<meta charset="utf-8">',
+            '<meta name="viewport" content="width=device-width, initial-scale=1">',
+            f"<title>{_html(title)}</title>",
+            "<style>",
+            _html_report_css(),
+            "</style>",
+            "</head>",
+            "<body>",
+            "<main>",
+            "<header>",
+            workflow_line,
+            f"<h1>{_html(title)}</h1>",
+            '<section class="summary-grid" aria-label="Recommendation summary">',
+            _summary_card("Seeds", ", ".join(report.seeds) or "None"),
+            _summary_card("Propagation Model", report.propagation_model),
+            _summary_card("Coverage", _percent_text(report.propagation.coverage)),
+            _summary_card("Estimated Savings", _percent_text(report.estimated_savings)),
+            _summary_card(
+                "Full Activation",
+                _optional_percent_text(report.propagation.full_activation_probability),
+            ),
+            _summary_card(
+                "Expected Time",
+                _optional_number_text(report.propagation.expected_propagation_time),
+            ),
+            "</section>",
+            "</header>",
+            "<section>",
+            "<h2>Cost Comparison</h2>",
+            '<table aria-label="Cost comparison">',
+            "<thead>",
+            "<tr>",
+            "<th>Strategy</th><th>Token Cost</th><th>Message Cost</th>",
+            "<th>Total Cost</th><th>Latency</th><th>Messages</th>",
+            "</tr>",
+            "</thead>",
+            "<tbody>",
+            _html_cost_row("Broadcast", report.broadcast_cost),
+            _html_cost_row("Optimized", report.optimized_cost),
+            "</tbody>",
+            "</table>",
+            "</section>",
+            _html_ranked_section("Bottleneck Nodes", report.bottlenecks),
+            _html_edge_section("Pruning Candidates", report.pruning_candidates),
+            _html_plain_section("Verifier Candidates", report.verifier_candidates),
+            _html_plain_section("Activated Nodes", sorted(report.propagation.activated_nodes)),
+            "</main>",
+            "</body>",
+            "</html>",
+        ]
+    )
+
+
 def write_report(
     report: RecommendationReport,
     path: str | Path,
     *,
     workflow_name: str | None = None,
+    report_format: ReportFormat = "auto",
 ) -> Path:
-    """Write a Markdown or JSON report based on file extension."""
+    """Write a report in Markdown, JSON, or HTML."""
 
     output_path = Path(path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    if output_path.suffix == ".json":
-        output_path.write_text(json.dumps(report_to_dict(report), indent=2, sort_keys=True) + "\n")
+    resolved_format = _resolve_report_format(output_path, report_format)
+    if resolved_format == "json":
+        content = json.dumps(report_to_dict(report), indent=2, sort_keys=True) + "\n"
+    elif resolved_format == "html":
+        content = render_html_report(report, workflow_name=workflow_name)
     else:
-        output_path.write_text(render_markdown_report(report, workflow_name=workflow_name))
+        content = render_markdown_report(report, workflow_name=workflow_name)
+    output_path.write_text(content)
     return output_path
+
+
+def _resolve_report_format(path: Path, report_format: ReportFormat) -> ConcreteReportFormat:
+    if report_format != "auto":
+        return report_format
+    suffix = path.suffix.lower()
+    if suffix == ".json":
+        return "json"
+    if suffix in {".html", ".htm"}:
+        return "html"
+    return "markdown"
 
 
 def _cost_to_dict(cost: Any) -> dict[str, float | int]:
@@ -144,3 +234,167 @@ def _plain_lines(values: list[str]) -> list[str]:
     if not values:
         return ["None."]
     return [f"- `{value}`" for value in values]
+
+
+def _html_report_css() -> str:
+    return """
+:root {
+  color-scheme: light;
+  --bg: #f7f8fa;
+  --ink: #172026;
+  --muted: #64707d;
+  --panel: #ffffff;
+  --line: #d7dde4;
+  --accent: #146c5d;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+main {
+  width: min(1120px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 40px 0 56px;
+}
+h1, h2 { line-height: 1.15; margin: 0; }
+h1 { font-size: clamp(2rem, 5vw, 4rem); max-width: 760px; }
+h2 { font-size: 1.15rem; margin-bottom: 12px; }
+header { margin-bottom: 28px; }
+section {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin-top: 16px;
+  padding: 20px;
+}
+.eyebrow {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 0 0 12px;
+}
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+.metric {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+}
+.metric span, th {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.metric strong {
+  display: block;
+  font-size: 1.4rem;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow-wrap: anywhere;
+}
+th, td {
+  border-bottom: 1px solid var(--line);
+  padding: 10px 8px;
+  text-align: right;
+}
+th:first-child, td:first-child { text-align: left; }
+tbody tr:last-child td { border-bottom: 0; }
+ul { margin: 0; padding-left: 20px; }
+li + li { margin-top: 6px; }
+code {
+  background: #edf1f4;
+  border-radius: 5px;
+  padding: 0.1rem 0.28rem;
+}
+.empty { color: var(--muted); margin: 0; }
+""".strip()
+
+
+def _html(value: Any) -> str:
+    return html.escape(str(value), quote=True)
+
+
+def _percent_text(value: float) -> str:
+    return f"{value:.1%}"
+
+
+def _optional_percent_text(value: float | None) -> str:
+    if value is None:
+        return "n/a"
+    return _percent_text(value)
+
+
+def _optional_number_text(value: float | None) -> str:
+    if value is None:
+        return "n/a"
+    return f"{value:.2f}"
+
+
+def _summary_card(label: str, value: str) -> str:
+    return (
+        '<article class="metric">'
+        f"<span>{_html(label)}</span>"
+        f"<strong>{_html(value)}</strong>"
+        "</article>"
+    )
+
+
+def _html_cost_row(label: str, cost: Any) -> str:
+    return (
+        "<tr>"
+        f"<td>{_html(label)}</td>"
+        f"<td>{cost.token_cost:.0f}</td>"
+        f"<td>{cost.message_cost:.0f}</td>"
+        f"<td>{cost.total_cost:.0f}</td>"
+        f"<td>{cost.latency:.2f}</td>"
+        f"<td>{cost.message_count}</td>"
+        "</tr>"
+    )
+
+
+def _html_ranked_section(title: str, rows: list[tuple[str, float]]) -> str:
+    if not rows:
+        body = '<p class="empty">No bottlenecks identified.</p>'
+    else:
+        items = "".join(
+            f"<li><code>{_html(node_id)}</code>: <strong>{score:.3f}</strong></li>"
+            for node_id, score in rows
+        )
+        body = f"<ul>{items}</ul>"
+    return f"<section><h2>{_html(title)}</h2>{body}</section>"
+
+
+def _html_edge_section(title: str, rows: list[tuple[str, str]]) -> str:
+    if not rows:
+        body = '<p class="empty">No pruning candidates identified.</p>'
+    else:
+        items = "".join(
+            f"<li><code>{_html(source)}</code> to <code>{_html(target)}</code></li>"
+            for source, target in rows
+        )
+        body = f"<ul>{items}</ul>"
+    return f"<section><h2>{_html(title)}</h2>{body}</section>"
+
+
+def _html_plain_section(title: str, values: list[str]) -> str:
+    if not values:
+        body = '<p class="empty">None.</p>'
+    else:
+        items = "".join(f"<li><code>{_html(value)}</code></li>" for value in values)
+        body = f"<ul>{items}</ul>"
+    return f"<section><h2>{_html(title)}</h2>{body}</section>"

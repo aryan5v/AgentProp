@@ -43,12 +43,14 @@ This lets you compare random, centrality, greedy, CELF, and cost-aware greedy me
 
 ```bash
 agentprop report planner_coder_tester_reviewer --budget 2 --out reports/tutorial.md
+agentprop report planner_coder_tester_reviewer --budget 2 --out reports/tutorial.html --format html
 ```
 
 Expected artifact:
 
 ```text
 reports/tutorial.md
+reports/tutorial.html
 ```
 
 The report includes:

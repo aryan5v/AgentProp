@@ -34,7 +34,7 @@ agentprop optimize benchmarks/workflows/planner_coder_tester_reviewer.json --bud
 agentprop simulate chain --seeds node_0 --model zero-forcing
 agentprop prune planner_coder_tester_reviewer --target-token-reduction 0.3
 agentprop benchmark planner_coder_tester_reviewer --budget 2 --trials 50
-agentprop report planner_coder_tester_reviewer --out reports/demo.md
+agentprop report planner_coder_tester_reviewer --out reports/demo.html --format html
 agentprop viz planner_coder_tester_reviewer --out reports/workflow.dot
 ```
 

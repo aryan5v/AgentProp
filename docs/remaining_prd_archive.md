@@ -153,7 +153,7 @@ Add CLI commands:
 
 Extend reports:
 
-- HTML report output.
+- HTML report output: added.
 - Visual graph embedded or linked from reports.
 - Pruning section with target reduction and risk estimate.
 - Robustness section.
@@ -161,6 +161,7 @@ Extend reports:
 Acceptance evidence:
 
 - CLI tests cover `simulate` and `prune`: added.
+- Report renderer tests cover HTML output and escaping: added.
 - Tutorial uses the CLI-only path end to end.
 
 ## Workstream 5: ML / DL

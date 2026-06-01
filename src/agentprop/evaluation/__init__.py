@@ -19,7 +19,12 @@ from agentprop.evaluation.quality import (
     RubricScorer,
     aggregate_quality_scores,
 )
-from agentprop.evaluation.reporting import render_markdown_report, report_to_dict, write_report
+from agentprop.evaluation.reporting import (
+    render_html_report,
+    render_markdown_report,
+    report_to_dict,
+    write_report,
+)
 from agentprop.evaluation.runner import BenchmarkRow, run_benchmark
 
 __all__ = [
@@ -39,6 +44,7 @@ __all__ = [
     "compare_routing",
     "evaluate_pruning",
     "quality_cost_summary",
+    "render_html_report",
     "render_markdown_report",
     "report_to_dict",
     "robustness_under_failures",

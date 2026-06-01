@@ -3,7 +3,7 @@ from pathlib import Path
 
 from agentprop.algorithms import bottleneck_nodes, low_weight_edges, risk_aware_verifier_placement
 from agentprop.evaluation import compare_routing
-from agentprop.evaluation.reporting import render_markdown_report, write_report
+from agentprop.evaluation.reporting import render_html_report, render_markdown_report, write_report
 from agentprop.propagation import IndependentCascade
 from agentprop.workflows import planner_coder_tester_reviewer
 
@@ -41,3 +41,20 @@ def test_write_report_supports_json(tmp_path: Path) -> None:
     payload = json.loads(path.read_text())
     assert payload["seeds"] == ["planner"]
     assert payload["broadcast_cost"]["total_cost"] > 0
+
+
+def test_html_report_contains_escaped_recommendation(tmp_path: Path) -> None:
+    graph = planner_coder_tester_reviewer()
+    model = IndependentCascade(seed=0)
+    result = model.simulate(graph, ["planner"], trials=5)
+    report = compare_routing(graph, ["planner"], model.name, result)
+
+    html = render_html_report(report, workflow_name="demo <workflow>")
+
+    assert "<!doctype html>" in html
+    assert "Cost Comparison" in html
+    assert "demo &lt;workflow&gt;" in html
+
+    path = tmp_path / "report.html"
+    write_report(report, path, workflow_name="demo")
+    assert "<html" in path.read_text()

@@ -35,6 +35,30 @@ def test_cli_report_writes_markdown(tmp_path: Path) -> None:
     assert "AgentProp Optimization Report" in output.read_text()
 
 
+def test_cli_report_writes_html(tmp_path: Path) -> None:
+    output = tmp_path / "report.html"
+
+    exit_code = main(
+        [
+            "report",
+            "planner_coder_tester_reviewer",
+            "--budget",
+            "2",
+            "--trials",
+            "5",
+            "--out",
+            str(output),
+            "--format",
+            "html",
+        ]
+    )
+
+    assert exit_code == 0
+    html = output.read_text()
+    assert "<!doctype html>" in html
+    assert "Cost Comparison" in html
+
+
 def test_cli_trace_and_viz_write_artifacts(tmp_path: Path) -> None:
     trace = tmp_path / "trace.json"
     workflow = tmp_path / "workflow.json"
