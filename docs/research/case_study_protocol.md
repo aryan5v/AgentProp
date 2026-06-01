@@ -102,6 +102,21 @@ The offline runner does not call an LLM. It validates the study schema by
 writing `results.json`, `results.csv`, `summary.json`, and `traces.jsonl` for
 the broadcast, optimized-greedy, ML message-passing, and PPO routing arms.
 
+Preflight a real LLM run before spending tokens:
+
+```bash
+PYTHONPATH=src:. python experiments/run_case_study.py \
+  --execution-mode llm \
+  --preflight \
+  --tasks benchmarks/case_study_tasks.json \
+  --workflow planner_coder_tester_reviewer \
+  --out-dir docs/results/case_study_001
+```
+
+The preflight writes `preflight.json` with task count, policy arms, selected
+seeds, expected artifacts, and Token Router/OpenAI environment readiness. It
+does not call an LLM.
+
 Real LLM execution:
 
 ```bash

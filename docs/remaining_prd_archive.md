@@ -293,6 +293,9 @@ Progress:
 - Added OpenAI-compatible LLM execution support for Token Router or OpenAI-style
   endpoints. LLM mode records prompt/completion/total tokens, latency, final
   outputs, rubric scores, and trace metadata.
+- Added case-study preflight mode that writes `preflight.json` with task count,
+  policy arms, selected seeds, expected artifacts, and Token Router/OpenAI
+  readiness without making LLM calls.
 - Added `experiments/analyze_case_study.py` to turn saved results into
   `analysis.json`, `analysis.md`, `policy_comparison.csv`, token-savings plots,
   quality plots, and acceptance checks.

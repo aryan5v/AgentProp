@@ -16,6 +16,7 @@ from agentprop.evaluation import (
     LLMExecutionResult,
     OpenAICompatibleChatClient,
     RubricScorer,
+    openai_compatible_env_status,
     quality_cost_summary,
 )
 from agentprop.evaluation.metrics import broadcast_cost, seeded_routing_cost
@@ -74,6 +75,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--llm-base-url", default=None)
     parser.add_argument("--llm-timeout", type=float, default=60.0)
     parser.add_argument("--llm-max-tokens", type=int, default=1200)
+    parser.add_argument(
+        "--preflight",
+        action="store_true",
+        help="write a readiness manifest without executing any task arms",
+    )
+    parser.add_argument("--target-task-count", type=int, default=20)
     parser.add_argument("--out-dir", type=Path, default=Path("docs/results/case_study_offline"))
     args = parser.parse_args(argv)
 
@@ -90,6 +97,23 @@ def main(argv: list[str] | None = None) -> int:
         epochs=args.epochs,
         seed=args.seed,
     )
+    if args.preflight:
+        payload = _preflight_payload(
+            tasks,
+            policies,
+            workflow=args.workflow,
+            execution_mode=args.execution_mode,
+            target_task_count=args.target_task_count,
+            llm_model=args.llm_model,
+            llm_base_url=args.llm_base_url,
+        )
+        args.out_dir.mkdir(parents=True, exist_ok=True)
+        (args.out_dir / "preflight.json").write_text(
+            json.dumps(payload, indent=2, sort_keys=True) + "\n"
+        )
+        print(f"Wrote {args.out_dir / 'preflight.json'}")
+        return 0
+
     executor: CaseStudyExecutor | None = None
     if args.execution_mode == "llm":
         executor = OpenAICompatibleChatClient.from_env(
@@ -174,6 +198,60 @@ def _load_tasks(path: Path) -> list[CaseStudyTask]:
             )
         )
     return tasks
+
+
+def _preflight_payload(
+    tasks: list[CaseStudyTask],
+    policies: dict[str, list[str]],
+    *,
+    workflow: str,
+    execution_mode: str,
+    target_task_count: int,
+    llm_model: str | None,
+    llm_base_url: str | None,
+) -> dict[str, Any]:
+    task_categories = sorted({task.category for task in tasks})
+    env_status = (
+        openai_compatible_env_status(model=llm_model, base_url=llm_base_url)
+        if execution_mode == "llm"
+        else {
+            "ready": True,
+            "api_key_env": None,
+            "model": None,
+            "base_url": None,
+            "missing": [],
+        }
+    )
+    total_arms = len(tasks) * len(policies)
+    meets_target = len(tasks) >= target_task_count
+    ready = bool(meets_target and env_status["ready"])
+    return {
+        "ready": ready,
+        "status": "ready" if ready else "missing_requirements",
+        "mode": execution_mode,
+        "workflow": workflow,
+        "task_count": len(tasks),
+        "target_task_count": target_task_count,
+        "meets_target_task_count": meets_target,
+        "task_categories": task_categories,
+        "policy_count": len(policies),
+        "policies": {
+            policy_name: {
+                "selected_seeds": seeds,
+                "seed_count": len(seeds),
+            }
+            for policy_name, seeds in sorted(policies.items())
+        },
+        "total_task_policy_arms": total_arms,
+        "expected_artifacts": [
+            "results.json",
+            "results.csv",
+            "summary.json",
+            "traces.jsonl",
+            *(["outputs.jsonl"] if execution_mode == "llm" else []),
+        ],
+        "llm_environment": env_status,
+    }
 
 
 def _policy_seed_sets(

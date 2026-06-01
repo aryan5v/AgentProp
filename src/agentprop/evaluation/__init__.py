@@ -4,6 +4,7 @@ from agentprop.evaluation.llm_execution import (
     LLMExecutionResult,
     LLMUsage,
     OpenAICompatibleChatClient,
+    openai_compatible_env_status,
 )
 from agentprop.evaluation.metrics import (
     CostSummary,
@@ -58,6 +59,7 @@ __all__ = [
     "compare_routing",
     "evaluate_pruning",
     "quality_cost_summary",
+    "openai_compatible_env_status",
     "render_html_report",
     "render_markdown_report",
     "report_to_dict",

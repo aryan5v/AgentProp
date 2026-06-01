@@ -150,6 +150,39 @@ def test_run_case_study_writes_offline_artifacts(tmp_path: Path) -> None:
     )
 
 
+def test_run_case_study_preflight_writes_readiness_manifest(tmp_path: Path) -> None:
+    output_dir = tmp_path / "preflight"
+
+    exit_code = run_case_study.main(
+        [
+            "--execution-mode",
+            "llm",
+            "--preflight",
+            "--tasks",
+            "benchmarks/case_study_tasks.json",
+            "--trials",
+            "2",
+            "--episodes",
+            "2",
+            "--epochs",
+            "2",
+            "--out-dir",
+            str(output_dir),
+        ]
+    )
+    payload = json.loads((output_dir / "preflight.json").read_text())
+
+    assert exit_code == 0
+    assert payload["task_count"] == 20
+    assert payload["meets_target_task_count"]
+    assert payload["total_task_policy_arms"] == 80
+    assert {"broadcast", "optimized_greedy", "ml_message_passing", "rl_ppo"}.issubset(
+        payload["policies"]
+    )
+    assert "outputs.jsonl" in payload["expected_artifacts"]
+    assert "llm_environment" in payload
+
+
 def test_analyze_case_study_writes_tables_and_plots(tmp_path: Path) -> None:
     results = tmp_path / "results.json"
     out_dir = tmp_path / "analysis"
