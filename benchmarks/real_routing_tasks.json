@@ -1,0 +1,75 @@
+{
+  "conventions_doc": "TEAM ENGINEERING CONVENTIONS (apply to EVERY function you write).\n\n1. EMPTY-INPUT RULE: When the primary input is empty (an empty string, empty list, or empty matrix), return the natural empty result instead of raising. Empty string -> \"\"; empty list/matrix -> []; a count/length question -> 0. Never raise on empty input.\n\n2. INVALID-INPUT RULE: When an argument is out of its documented domain (e.g. an unsupported base, a zero denominator, a non-positive k, a malformed token), raise ValueError with a short message. Do not return a sentinel like -1 or None for invalid input.\n\n3. CASING RULE: Any hexadecimal or alphabetic digits you emit must be LOWERCASE (use 'a'..'f', never 'A'..'F').\n\n4. PURITY RULE: Functions must be pure. Do not print, do not read input, do not mutate the caller's arguments in place. Return a new value.\n\n5. REDUCTION RULE: Any fraction you return must be fully reduced to lowest terms, the denominator must be positive, and the sign (if any) must be carried on the numerator. Represent it as the string \"n/d\".\n\n6. STDLIB-ONLY RULE: Use only the Python standard library. No third-party packages.\n\nThese conventions are mandatory and are checked by the test suite. Many tasks deliberately depend on the empty-input, invalid-input, and casing rules above.",
+  "tasks": [
+    {
+      "id": "to_base",
+      "title": "Integer to arbitrary base",
+      "entry_point": "to_base",
+      "prompt": "Implement to_base(n, b): return the string representation of non-negative integer n in base b, where 2 <= b <= 16. Follow the team conventions exactly.",
+      "test_code": "assert to_base(0, 2) == '0'\nassert to_base(10, 2) == '1010'\nassert to_base(255, 16) == 'ff'\nassert to_base(254, 16) == 'fe'\nassert to_base(31, 16) == '1f'\ntry:\n    to_base(10, 17); raise AssertionError('expected ValueError for base 17')\nexcept ValueError:\n    pass\ntry:\n    to_base(10, 1); raise AssertionError('expected ValueError for base 1')\nexcept ValueError:\n    pass"
+    },
+    {
+      "id": "rle_encode",
+      "title": "Run-length encoding",
+      "entry_point": "rle_encode",
+      "prompt": "Implement rle_encode(s): return the run-length encoding of string s, e.g. 'aaab' -> 'a3b1'. Each run is the character followed by its count. Follow the team conventions exactly.",
+      "test_code": "assert rle_encode('') == ''\nassert rle_encode('aaab') == 'a3b1'\nassert rle_encode('abc') == 'a1b1c1'\nassert rle_encode('aabbbbcc') == 'a2b4c2'"
+    },
+    {
+      "id": "roman_to_int",
+      "title": "Roman numeral to integer",
+      "entry_point": "roman_to_int",
+      "prompt": "Implement roman_to_int(s): convert an uppercase Roman numeral string to its integer value (supports I,V,X,L,C,D,M and subtractive pairs like IV, IX, XL, XC, CD, CM). Follow the team conventions exactly (note the empty-input and invalid-input rules).",
+      "test_code": "assert roman_to_int('') == 0\nassert roman_to_int('III') == 3\nassert roman_to_int('IV') == 4\nassert roman_to_int('IX') == 9\nassert roman_to_int('LVIII') == 58\nassert roman_to_int('MCMXCIV') == 1994\ntry:\n    roman_to_int('IIA'); raise AssertionError('expected ValueError for invalid char')\nexcept ValueError:\n    pass"
+    },
+    {
+      "id": "is_valid_ipv4",
+      "title": "IPv4 validation",
+      "entry_point": "is_valid_ipv4",
+      "prompt": "Implement is_valid_ipv4(s): return True if s is a valid dotted-quad IPv4 address (four decimal octets 0-255, no leading zeros except the literal '0'), else False. This predicate returns a bool and never raises. Follow the team conventions exactly.",
+      "test_code": "assert is_valid_ipv4('0.0.0.0') is True\nassert is_valid_ipv4('255.255.255.255') is True\nassert is_valid_ipv4('192.168.1.1') is True\nassert is_valid_ipv4('') is False\nassert is_valid_ipv4('256.1.1.1') is False\nassert is_valid_ipv4('1.1.1') is False\nassert is_valid_ipv4('01.1.1.1') is False\nassert is_valid_ipv4('1.1.1.1.1') is False"
+    },
+    {
+      "id": "add_fractions",
+      "title": "Add two fractions",
+      "entry_point": "add_fractions",
+      "prompt": "Implement add_fractions(a, b) where a and b are strings like '1/2' or '-3/4'. Return their sum as a fully reduced fraction string. Follow the team conventions exactly (reduction rule and invalid-input rule for a zero denominator).",
+      "test_code": "assert add_fractions('1/2', '1/3') == '5/6'\nassert add_fractions('1/2', '1/2') == '1/1'\nassert add_fractions('1/2', '-1/2') == '0/1'\nassert add_fractions('-1/3', '-1/6') == '-1/2'\nassert add_fractions('2/4', '1/4') == '3/4'\ntry:\n    add_fractions('1/0', '1/2'); raise AssertionError('expected ValueError for zero denominator')\nexcept ValueError:\n    pass"
+    },
+    {
+      "id": "merge_intervals",
+      "title": "Merge overlapping intervals",
+      "entry_point": "merge_intervals",
+      "prompt": "Implement merge_intervals(intervals): given a list of [start, end] pairs, return a new list of merged, non-overlapping intervals sorted by start. Touching intervals like [1,2] and [2,3] merge into [1,3]. Follow the team conventions exactly (empty-input and purity rules).",
+      "test_code": "assert merge_intervals([]) == []\nassert merge_intervals([[1,3],[2,6],[8,10],[15,18]]) == [[1,6],[8,10],[15,18]]\nassert merge_intervals([[1,4],[4,5]]) == [[1,5]]\nsrc = [[2,3],[1,2]]\nassert merge_intervals(src) == [[1,3]]\nassert src == [[2,3],[1,2]]"
+    },
+    {
+      "id": "longest_unique",
+      "title": "Longest substring without repeats",
+      "entry_point": "longest_unique",
+      "prompt": "Implement longest_unique(s): return the length (an integer) of the longest substring of s with all distinct characters. Follow the team conventions exactly.",
+      "test_code": "assert longest_unique('') == 0\nassert longest_unique('abcabcbb') == 3\nassert longest_unique('bbbbb') == 1\nassert longest_unique('pwwkew') == 3\nassert longest_unique('abcdef') == 6"
+    },
+    {
+      "id": "is_balanced",
+      "title": "Balanced brackets",
+      "entry_point": "is_balanced",
+      "prompt": "Implement is_balanced(s): return True if every bracket among ()[]{} in s is correctly matched and nested, else False. Non-bracket characters are ignored. Follow the team conventions exactly (note the empty-input rule).",
+      "test_code": "assert is_balanced('') is True\nassert is_balanced('()[]{}') is True\nassert is_balanced('(]') is False\nassert is_balanced('([{}])') is True\nassert is_balanced('(a[b]c)') is True\nassert is_balanced('(') is False\nassert is_balanced(']') is False"
+    },
+    {
+      "id": "spiral_order",
+      "title": "Matrix spiral order",
+      "entry_point": "spiral_order",
+      "prompt": "Implement spiral_order(matrix): given a rectangular matrix (list of equal-length rows), return a flat list of its elements in clockwise spiral order starting from the top-left. Follow the team conventions exactly (empty-input rule).",
+      "test_code": "assert spiral_order([]) == []\nassert spiral_order([[1,2,3],[4,5,6],[7,8,9]]) == [1,2,3,6,9,8,7,4,5]\nassert spiral_order([[1,2,3,4]]) == [1,2,3,4]\nassert spiral_order([[1],[2],[3]]) == [1,2,3]\nassert spiral_order([[1,2],[3,4]]) == [1,2,4,3]"
+    },
+    {
+      "id": "top_k_words",
+      "title": "Top-k frequent words",
+      "entry_point": "top_k_words",
+      "prompt": "Implement top_k_words(text, k): return the k most frequent whitespace-separated words in text, as a list ordered by descending frequency and ties broken alphabetically. Comparison is case-sensitive. Follow the team conventions exactly (empty-input and invalid-input rules; k must be a positive integer).",
+      "test_code": "assert top_k_words('', 3) == []\nassert top_k_words('a b a c b a', 2) == ['a', 'b']\nassert top_k_words('x y z', 2) == ['x', 'y']\nassert top_k_words('the the the dog dog cat', 2) == ['the', 'dog']\ntry:\n    top_k_words('a b c', 0); raise AssertionError('expected ValueError for k=0')\nexcept ValueError:\n    pass"
+    }
+  ]
+}
