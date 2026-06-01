@@ -11,8 +11,8 @@
 <p align="center">
   <a href="https://github.com/aryan5v/AgentProp/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/aryan5v/AgentProp/actions/workflows/ci.yml/badge.svg" /></a>
   <img alt="Version" src="https://img.shields.io/badge/version-0.1.0a1-black" />
-  <img alt="License" src="https://img.shields.io/badge/license-MIT-black" />
-  <img alt="Status" src="https://img.shields.io/badge/status-private_alpha-12c95b" />
+  <img alt="License" src="https://img.shields.io/badge/license-Apache--2.0-black" />
+  <img alt="Status" src="https://img.shields.io/badge/status-public_alpha-12c95b" />
 </p>
 
 AgentProp models agents, tools, memories, documents, and verifiers as nodes in a
@@ -30,14 +30,13 @@ for workflows you already have, want to inspect, or want to study.
 
 ## Status
 
-AgentProp is usable as a private alpha / v1-candidate framework. The graph
-backbone, CLI, reports, workflow templates, ML/RL baselines, MCP/coding-agent
-briefs, checkpoints, and experiment artifact registry are implemented and tested.
+AgentProp is usable as a public alpha framework. The graph backbone, CLI,
+reports, workflow templates, ML/RL baselines, MCP/coding-agent briefs,
+checkpoints, and experiment artifact registry are implemented and tested.
 
-The main limitation is evidence: the real routed LLM case study has a protocol,
-task set, harness, preflight, and verification runner, but the 20-task connected
-LLM run has not yet been completed. Public claims should therefore say
-`alpha: real LLM validation pending`.
+The main limitation is evidence depth: real routed LLM validation should be
+treated as directional until larger, repeated studies are published. The current
+library prioritizes reproducible artifacts and conservative claims.
 
 Check the current rollout state:
 
@@ -75,6 +74,14 @@ Recommend seed agents for context routing:
 
 ```bash
 agentprop optimize planner_coder_tester_reviewer --budget 2 --algorithm greedy
+```
+
+Use quality-aware routing when correctness-sensitive roles should be protected:
+
+```bash
+agentprop optimize planner_coder_tester_reviewer \
+  --budget 2 \
+  --algorithm quality-aware-greedy
 ```
 
 Simulate propagation:
@@ -164,14 +171,19 @@ and a saved artifact.
   Percolation, Randomized Zero Forcing, deterministic Zero Forcing, and learned
   trace-calibrated propagation.
 - Classical baselines: random, degree, in-degree, out-degree, PageRank,
-  betweenness, closeness, k-core, greedy, CELF, and cost-aware greedy.
+  betweenness, closeness, k-core, greedy, CELF, cost-aware greedy, and
+  quality-aware greedy.
 - Bottleneck, articulation, bridge, low-reliability, failure-sensitive, pruning,
   observability, and verifier-placement diagnostics.
+- Role-critical routing with context-sensitivity scores, graded context
+  allocation, calibrated compression ratios, risk annotations, and
+  verifier-placement coupling.
 - Workflow templates for agent-inspired workflows and synthetic graph families.
 - Quality scorers for exact match, human labels, rubrics, and injected
   LLM-as-judge adapters.
 - Dependency-light ML baselines, optional torch GNNs, Q-learning, REINFORCE, PPO,
-  expanded workflow-control actions, checkpoints, and artifact registry.
+  expanded workflow-control actions, a category-conditioned online bandit,
+  checkpoints, and artifact registry.
 - Framework interchange adapters and optional native hooks for LangGraph, CrewAI,
   and OpenAI Agents SDK.
 - Claude Code/Codex instructions and a lightweight stdio MCP server.
@@ -180,9 +192,7 @@ and a saved artifact.
 
 - [Documentation index](docs/index.md)
 - [Tutorial](docs/tutorial.md)
-- [Product requirements](docs/PRD.md)
-- [V1 readiness audit](docs/v1_readiness.md)
-- [Remaining PRD archive](docs/remaining_prd_archive.md)
+- [Quality-aware routing](docs/routing_quality.md)
 - [Case-study protocol](docs/research/case_study_protocol.md)
 - [ML/DL/RL guide](docs/deep_learning.md)
 - [Coding-agent integration](docs/coding_agents.md)

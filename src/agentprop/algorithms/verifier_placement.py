@@ -103,6 +103,29 @@ def greedy_correction_coverage_placement(graph: AgentGraph, k: int) -> list[str]
     return selected
 
 
+def context_sensitive_verifier_placement(
+    graph: AgentGraph,
+    context_ratios: dict[str, float],
+    k: int,
+) -> list[str]:
+    """Place verifiers downstream of high-sensitivity compressed nodes."""
+
+    _validate_k(k)
+    scores = error_propagation_centrality(graph)
+    for node in graph.nodes():
+        importance = node.importance_score if node.importance_score is not None else 0.5
+        compression_risk = max(0.0, 1.0 - context_ratios.get(node.id, 1.0)) * importance
+        if compression_risk == 0:
+            continue
+        downstream = graph.successors(node.id)
+        if downstream:
+            for target in downstream:
+                scores[target] = scores.get(target, 0.0) + compression_risk
+        else:
+            scores[node.id] = scores.get(node.id, 0.0) + compression_risk
+    return _rank_scores(scores, k)
+
+
 def _observable_nodes(nx_graph: nx.DiGraph, node_id: str) -> set[str]:
     if node_id not in nx_graph:
         return set()

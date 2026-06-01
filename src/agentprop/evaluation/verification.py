@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import os
 import subprocess
+import sys
 import time
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Literal
 
 VerificationStatus = Literal["passed", "failed", "timeout", "error"]
@@ -110,6 +112,76 @@ def run_verification_command(
         stdout=_truncate(completed.stdout, output_limit),
         stderr=_truncate(completed.stderr, output_limit),
     )
+
+
+def run_python_code_tests(
+    code: str,
+    test_code: str,
+    *,
+    timeout_s: float = 15.0,
+    output_limit: int = 20_000,
+) -> VerificationResult:
+    """Run generated Python code against tests in an isolated temp directory.
+
+    This helper is intended for LLM case-study harnesses. It strips the parent
+    environment so generated code cannot read API keys inherited from the run.
+    """
+
+    if not code.strip():
+        return VerificationResult(
+            command="python -I candidate.py",
+            status="failed",
+            passed=False,
+            returncode=None,
+            duration_s=0.0,
+            stderr="no code produced",
+        )
+    if timeout_s <= 0:
+        raise ValueError("timeout_s must be positive")
+
+    start = time.monotonic()
+    with TemporaryDirectory(prefix="agentprop-verify-") as tmp:
+        workdir = Path(tmp)
+        script = workdir / "candidate.py"
+        script.write_text(f"{code}\n\n# --- tests ---\n{test_code}\n", encoding="utf-8")
+        safe_env = {
+            "PATH": os.environ.get("PATH", ""),
+            "PYTHONIOENCODING": "utf-8",
+        }
+        try:
+            completed = subprocess.run(
+                [sys.executable, "-I", str(script)],
+                cwd=workdir,
+                env=safe_env,
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=timeout_s,
+            )
+        except subprocess.TimeoutExpired as exc:
+            return VerificationResult(
+                command="python -I candidate.py",
+                status="timeout",
+                passed=False,
+                returncode=None,
+                duration_s=time.monotonic() - start,
+                cwd=str(workdir),
+                stdout=_coerce_output(exc.stdout, output_limit),
+                stderr=_coerce_output(exc.stderr, output_limit),
+                metadata={"timeout_s": timeout_s, "isolated": True},
+            )
+
+        return VerificationResult(
+            command="python -I candidate.py",
+            status="passed" if completed.returncode == 0 else "failed",
+            passed=completed.returncode == 0,
+            returncode=completed.returncode,
+            duration_s=time.monotonic() - start,
+            cwd=str(workdir),
+            stdout=_truncate(completed.stdout, output_limit),
+            stderr=_truncate(completed.stderr, output_limit),
+            metadata={"isolated": True},
+        )
 
 
 def verification_row_fields(result: VerificationResult) -> dict[str, object]:

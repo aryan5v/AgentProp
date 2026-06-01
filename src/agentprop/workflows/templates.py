@@ -20,6 +20,7 @@ def planner_coder_tester_reviewer() -> AgentGraph:
         reliability=0.86,
         error_rate=0.10,
         role="decomposes the task and routes work",
+        importance_score=0.55,
     )
     graph.add_node(
         "coder",
@@ -29,6 +30,7 @@ def planner_coder_tester_reviewer() -> AgentGraph:
         reliability=0.80,
         error_rate=0.18,
         role="implements the solution",
+        importance_score=1.0,
     )
     graph.add_node(
         "tester",
@@ -38,6 +40,7 @@ def planner_coder_tester_reviewer() -> AgentGraph:
         reliability=0.88,
         error_rate=0.08,
         role="tests the implementation",
+        importance_score=0.85,
     )
     graph.add_node(
         "reviewer",
@@ -47,8 +50,16 @@ def planner_coder_tester_reviewer() -> AgentGraph:
         reliability=0.90,
         error_rate=0.07,
         role="reviews correctness and maintainability",
+        importance_score=0.65,
     )
-    graph.add_node("final", type=NodeType.OUTPUT, token_cost=350, latency=0.4, reliability=0.95)
+    graph.add_node(
+        "final",
+        type=NodeType.OUTPUT,
+        token_cost=350,
+        latency=0.4,
+        reliability=0.95,
+        importance_score=0.0,
+    )
 
     graph.add_edge("planner", "coder", message_cost=650, latency=0.7, weight=0.9)
     graph.add_edge("coder", "tester", message_cost=450, latency=0.5, weight=0.8)

@@ -37,6 +37,9 @@ def report_to_dict(report: RecommendationReport) -> dict[str, Any]:
         "pruning_risk": _pruning_risk_to_dict(report.pruning_risk),
         "robustness": _robustness_to_dict(report.robustness),
         "verifier_candidates": report.verifier_candidates,
+        "context_allocations": dict(report.context_allocations),
+        "routing_risks": [_routing_risk_to_dict(risk) for risk in report.routing_risks],
+        "quality_objective_score": report.quality_objective_score,
     }
 
 
@@ -71,6 +74,16 @@ def render_markdown_report(
         _cost_row("Broadcast", report.broadcast_cost),
         _cost_row("Optimized", report.optimized_cost),
         f"\nEstimated savings: **{report.estimated_savings:.1%}**",
+        "",
+        "## Quality and Risk",
+        (
+            "- Quality-aware objective score: "
+            f"`{_optional_number_text(report.quality_objective_score)}`"
+        ),
+        *_routing_risk_lines(report.routing_risks),
+        "",
+        "## Context Allocation",
+        *_context_allocation_lines(report.context_allocations),
         "",
         "## Bottleneck Nodes",
         *_ranked_node_lines(report.bottlenecks),
@@ -155,6 +168,7 @@ def render_html_report(
             "</section>",
             _html_ranked_section("Bottleneck Nodes", report.bottlenecks),
             _html_edge_section("Pruning Candidates", report.pruning_candidates),
+            _html_routing_risk_section(report.routing_risks),
             _html_pruning_risk_section(report.pruning_risk),
             _html_robustness_section(report.robustness),
             _html_plain_section("Verifier Candidates", report.verifier_candidates),
@@ -234,6 +248,17 @@ def _pruning_risk_to_dict(pruning_risk: Any | None) -> dict[str, float] | None:
     }
 
 
+def _routing_risk_to_dict(risk: Any) -> dict[str, object]:
+    if hasattr(risk, "to_dict"):
+        return dict(risk.to_dict())
+    return {
+        "node": getattr(risk, "node_id", ""),
+        "severity": getattr(risk, "severity", ""),
+        "risk_score": getattr(risk, "risk_score", 0.0),
+        "reason": getattr(risk, "reason", ""),
+    }
+
+
 def _cost_row(label: str, cost: Any) -> str:
     return (
         f"| {label} | {cost.token_cost:.0f} | {cost.message_cost:.0f} | "
@@ -269,6 +294,27 @@ def _plain_lines(values: list[str]) -> list[str]:
     if not values:
         return ["None."]
     return [f"- `{value}`" for value in values]
+
+
+def _routing_risk_lines(risks: list[Any]) -> list[str]:
+    if not risks:
+        return ["- Routing risk: `none detected`"]
+    return [
+        (
+            f"- `{risk.node_id}`: `{risk.severity}` risk "
+            f"({risk.risk_score:.3f}) - {risk.reason}"
+        )
+        for risk in risks
+    ]
+
+
+def _context_allocation_lines(allocations: dict[str, float]) -> list[str]:
+    if not allocations:
+        return ["No context allocation data available."]
+    return [
+        f"- `{node_id}`: `{ratio:.0%}`"
+        for node_id, ratio in sorted(allocations.items())
+    ]
 
 
 def _robustness_lines(robustness: Any | None) -> list[str]:
@@ -465,6 +511,22 @@ def _html_pruning_risk_section(pruning_risk: Any | None) -> str:
         ]
         body = _html_metric_table(rows, "Pruning risk")
     return f"<section><h2>Pruning Risk</h2>{body}</section>"
+
+
+def _html_routing_risk_section(risks: list[Any]) -> str:
+    if not risks:
+        body = '<p class="empty">No routing risks detected.</p>'
+    else:
+        items = "".join(
+            (
+                f"<li><code>{_html(risk.node_id)}</code>: "
+                f"<strong>{_html(risk.severity)}</strong> "
+                f"({risk.risk_score:.3f}) - {_html(risk.reason)}</li>"
+            )
+            for risk in risks
+        )
+        body = f"<ul>{items}</ul>"
+    return f"<section><h2>Routing Risk</h2>{body}</section>"
 
 
 def _html_robustness_section(robustness: Any | None) -> str:

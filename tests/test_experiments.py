@@ -205,10 +205,16 @@ def test_run_case_study_writes_offline_artifacts(tmp_path: Path) -> None:
     assert (output_dir / "traces.jsonl").exists()
     assert payload["mode"] == "offline-simulated"
     assert payload["task_count"] == 2
-    assert {"broadcast", "optimized_greedy", "ml_message_passing", "rl_ppo"}.issubset(
+    assert {
+        "broadcast",
+        "optimized_greedy",
+        "quality_aware_greedy",
+        "ml_message_passing",
+        "rl_ppo",
+    }.issubset(
         payload["summary"]
     )
-    assert len(trace_lines) == 8
+    assert len(trace_lines) == 10
     assert all(
         "final" not in row["selected_seeds"]
         for row in payload["rows"]
@@ -242,8 +248,14 @@ def test_run_case_study_preflight_writes_readiness_manifest(tmp_path: Path) -> N
     assert payload["mode"] == "llm-routed"
     assert payload["task_count"] == 20
     assert payload["meets_target_task_count"]
-    assert payload["total_task_policy_arms"] == 80
-    assert {"broadcast", "optimized_greedy", "ml_message_passing", "rl_ppo"}.issubset(
+    assert payload["total_task_policy_arms"] == 100
+    assert {
+        "broadcast",
+        "optimized_greedy",
+        "quality_aware_greedy",
+        "ml_message_passing",
+        "rl_ppo",
+    }.issubset(
         payload["policies"]
     )
     assert "outputs.jsonl" in payload["expected_artifacts"]
@@ -440,7 +452,7 @@ def test_run_case_study_can_capture_real_verification_logs(tmp_path: Path) -> No
     assert exit_code == 0
     assert payload["summary"]["optimized_greedy"]["verification_observed_count"] == 1.0
     assert all(row["verification_passed"] for row in payload["rows"])
-    assert len(log_lines) == 4
+    assert len(log_lines) == 5
     assert "verified" in json.loads(log_lines[0])["stdout"]
     assert json.loads(output_lines[0])["verification"]["status"] == "passed"
 

@@ -2,7 +2,11 @@ import shlex
 import sys
 from pathlib import Path
 
-from agentprop.evaluation import run_verification_command, verification_row_fields
+from agentprop.evaluation import (
+    run_python_code_tests,
+    run_verification_command,
+    verification_row_fields,
+)
 
 
 def test_run_verification_command_captures_success(tmp_path: Path) -> None:
@@ -40,3 +44,15 @@ def test_run_verification_command_truncates_output() -> None:
 
     assert len(result.stdout) > 5
     assert "truncated" in result.stdout
+
+
+def test_run_python_code_tests_scrubs_parent_environment(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    monkeypatch.setenv("TOKEN_ROUTER_API_KEY", "secret")
+
+    result = run_python_code_tests(
+        "import os\nassert 'TOKEN_ROUTER_API_KEY' not in os.environ",
+        "assert True",
+    )
+
+    assert result.passed
+    assert result.metadata["isolated"]

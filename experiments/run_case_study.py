@@ -9,15 +9,17 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
-from agentprop.algorithms import greedy_seed_selection
+from agentprop.algorithms import greedy_seed_selection, quality_aware_greedy_seed_selection
 from agentprop.core import AgentGraph, NodeType
 from agentprop.evaluation import (
     HumanLabelScorer,
     LLMExecutionResult,
     OpenAICompatibleChatClient,
     RubricScorer,
+    graded_context_allocations,
     openai_compatible_env_status,
     quality_cost_summary,
+    routing_risks,
     run_verification_command,
     verification_row_fields,
 )
@@ -326,6 +328,12 @@ def _policy_seed_sets(
             propagation_model=IndependentCascade(seed=seed),
             trials=trials,
         ),
+        "quality_aware_greedy": quality_aware_greedy_seed_selection(
+            graph,
+            budget,
+            propagation_model=IndependentCascade(seed=seed),
+            trials=trials,
+        ),
         "ml_message_passing": _message_passing_seeds(
             graph,
             workflow_name=workflow_name,
@@ -411,13 +419,30 @@ def _evaluate_task_arm(
         coverage = 1.0
         propagation_time = 0.0
         activated_nodes = {node.id for node in graph.nodes()}
+        context_allocations = {
+            node.id: 1.0 for node in graph.nodes() if node.type != NodeType.OUTPUT
+        }
+        risk_rows: list[dict[str, object]] = []
     else:
         model = IndependentCascade(seed=seed)
         propagation = model.simulate(graph, seeds, trials=trials)
-        cost = seeded_routing_cost(graph, seeds, propagation.activated_nodes)
+        context_allocations = graded_context_allocations(
+            graph,
+            seeds=seeds,
+            activated_nodes=propagation.activated_nodes,
+        )
+        cost = seeded_routing_cost(
+            graph,
+            seeds,
+            propagation.activated_nodes,
+            context_ratios=context_allocations,
+        )
         coverage = propagation.coverage
         propagation_time = propagation.expected_propagation_time or propagation.propagation_time
         activated_nodes = propagation.activated_nodes
+        risk_rows = [
+            risk.to_dict() for risk in routing_risks(graph, context_ratios=context_allocations)
+        ]
 
     quality_label = _simulated_human_label(coverage, task.min_coverage)
     quality = HumanLabelScorer().from_label(
@@ -435,6 +460,8 @@ def _evaluate_task_arm(
         "category": task.category,
         "policy": policy_name,
         "selected_seeds": seeds,
+        "context_allocations": context_allocations,
+        "routing_risks": risk_rows,
         "activated_node_count": len(activated_nodes),
         "coverage": coverage,
         "token_cost": cost.token_cost,
@@ -511,6 +538,8 @@ def _evaluate_prompt_only_task_arm(
         "validation_kind": "llm-prompt-only-not-validation",
         "routing_fidelity": "cosmetic_prompt_annotation",
         "selected_seeds": seeds,
+        "context_allocations": routing["context_allocations"],
+        "routing_risks": routing["routing_risks"],
         "activated_node_count": len(routing["activated_nodes"]),
         "coverage": routing["coverage"],
         "prompt_tokens": execution.usage.prompt_tokens,
@@ -611,7 +640,8 @@ def _evaluate_routed_llm_task_arm(
             for predecessor in graph.predecessors(node_id)
             if predecessor in node_outputs
         }
-        full_context = policy_name == "broadcast" or node_id in seeds
+        context_ratio = float(routing["context_allocations"].get(node_id, 0.0))
+        full_context = context_ratio >= 0.80
         execution = executor.chat(
             system_prompt=_node_system_prompt(policy_name, node_id, node.type.value, node.role),
             user_prompt=_node_user_prompt(
@@ -619,6 +649,7 @@ def _evaluate_routed_llm_task_arm(
                 routing,
                 node_id=node_id,
                 full_context=full_context,
+                context_ratio=context_ratio,
                 predecessor_outputs=predecessor_outputs,
             ),
             temperature=0.1,
@@ -631,6 +662,7 @@ def _evaluate_routed_llm_task_arm(
                 "node_id": node_id,
                 "node_type": node.type.value,
                 "full_context": full_context,
+                "context_ratio": context_ratio,
                 "prompt": execution.prompt,
                 "response": execution.response,
                 "usage": _usage_to_dict(execution),
@@ -678,6 +710,8 @@ def _evaluate_routed_llm_task_arm(
         "validation_kind": "llm-routed-multi-agent",
         "routing_fidelity": "node_calls_and_context_scope",
         "selected_seeds": seeds,
+        "context_allocations": routing["context_allocations"],
+        "routing_risks": routing["routing_risks"],
         "executed_nodes": [item["node_id"] for item in executions],
         "activated_node_count": len(activated_nodes),
         "coverage": routing["coverage"],
@@ -763,21 +797,40 @@ def _routing_snapshot(
     if policy_name == "broadcast":
         cost = broadcast_cost(graph)
         activated_nodes = {node.id for node in graph.nodes()}
+        context_allocations = {
+            node.id: 1.0 for node in graph.nodes() if node.type != NodeType.OUTPUT
+        }
         return {
             "coverage": 1.0,
             "propagation_time": 0.0,
             "activated_nodes": activated_nodes,
             "estimated_message_cost": cost.message_cost,
+            "context_allocations": context_allocations,
+            "routing_risks": [],
             "message_count": cost.message_count,
         }
     model = IndependentCascade(seed=seed)
     propagation = model.simulate(graph, seeds, trials=trials)
-    cost = seeded_routing_cost(graph, seeds, propagation.activated_nodes)
+    context_allocations = graded_context_allocations(
+        graph,
+        seeds=seeds,
+        activated_nodes=propagation.activated_nodes,
+    )
+    cost = seeded_routing_cost(
+        graph,
+        seeds,
+        propagation.activated_nodes,
+        context_ratios=context_allocations,
+    )
     return {
         "coverage": propagation.coverage,
         "propagation_time": propagation.expected_propagation_time or propagation.propagation_time,
         "activated_nodes": propagation.activated_nodes,
         "estimated_message_cost": cost.message_cost,
+        "context_allocations": context_allocations,
+        "routing_risks": [
+            risk.to_dict() for risk in routing_risks(graph, context_ratios=context_allocations)
+        ],
         "message_count": cost.message_count,
     }
 
@@ -817,6 +870,7 @@ def _node_user_prompt(
     *,
     node_id: str,
     full_context: bool,
+    context_ratio: float,
     predecessor_outputs: dict[str, str],
 ) -> str:
     context_lines = [
@@ -826,12 +880,17 @@ def _node_user_prompt(
         f"Expected outcome: {task.expected}",
         f"Verification command: {task.verification_command}",
         f"Propagation coverage: {routing['coverage']:.3f}",
+        f"Routed context allocation: {context_ratio:.0%}",
     ]
     if full_context:
         context_lines.append(f"Full task context: {task.prompt}")
     else:
-        context_lines.append("Full task context was not routed to this node.")
-        context_lines.append("Use only predecessor summaries below.")
+        context_lines.append("Compressed task context was routed to this node.")
+        summary_limit = max(120, int(500 * context_ratio))
+        context_lines.append(f"Summary: {_compact_text(task.prompt, limit=summary_limit)}")
+        context_lines.append(
+            "Use predecessor summaries below and preserve explicit edge-case constraints."
+        )
     if predecessor_outputs:
         context_lines.append("Predecessor outputs:")
         for predecessor, output in sorted(predecessor_outputs.items()):

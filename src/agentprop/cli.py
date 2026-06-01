@@ -72,6 +72,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "greedy",
         "celf",
         "cost-aware-greedy",
+        "quality-aware-greedy",
     ]
 
     optimize = subparsers.add_parser("optimize", help="recommend seed nodes for a workflow graph")

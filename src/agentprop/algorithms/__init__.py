@@ -23,10 +23,12 @@ from agentprop.algorithms.seed_selection import (
     greedy_seed_selection,
     k_core_seed_selection,
     pagerank_seed_selection,
+    quality_aware_greedy_seed_selection,
     random_seed_selection,
 )
 from agentprop.algorithms.verifier_placement import (
     betweenness_verifier_placement,
+    context_sensitive_verifier_placement,
     error_propagation_centrality,
     error_propagation_verifier_placement,
     greedy_correction_coverage_placement,
@@ -43,6 +45,7 @@ __all__ = [
     "celf_seed_selection",
     "closeness_seed_selection",
     "cost_aware_greedy_seed_selection",
+    "context_sensitive_verifier_placement",
     "degree_seed_selection",
     "edge_bottlenecks",
     "error_propagation_centrality",
@@ -58,6 +61,7 @@ __all__ = [
     "observability_scores",
     "pagerank_seed_selection",
     "pagerank_verifier_placement",
+    "quality_aware_greedy_seed_selection",
     "random_seed_selection",
     "risk_aware_verifier_placement",
     "verifier_observability_placement",

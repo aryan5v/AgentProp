@@ -1,5 +1,6 @@
 """Reinforcement-learning foundations for sequential routing."""
 
+from agentprop.rl.bandit import BanditArmStats, CategoryBanditRoutingPolicy
 from agentprop.rl.checkpointing import (
     RLCheckpointPolicy,
     RLPolicyCheckpoint,
@@ -43,6 +44,8 @@ from agentprop.rl.trajectory import (
 
 __all__ = [
     "AgentRoutingEnv",
+    "BanditArmStats",
+    "CategoryBanditRoutingPolicy",
     "GreedyCoveragePolicy",
     "PPOConfig",
     "PPOPolicy",

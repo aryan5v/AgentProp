@@ -31,6 +31,7 @@ def test_markdown_report_contains_core_recommendation() -> None:
     assert "# AgentProp Optimization Report" in markdown
     assert "planner, tester" in markdown
     assert "Cost Comparison" in markdown
+    assert "Quality and Risk" in markdown
     assert "Robustness" in markdown
 
 
@@ -46,6 +47,7 @@ def test_write_report_supports_json(tmp_path: Path) -> None:
     payload = json.loads(path.read_text())
     assert payload["seeds"] == ["planner"]
     assert payload["broadcast_cost"]["total_cost"] > 0
+    assert "routing_risks" in payload
 
 
 def test_html_report_contains_escaped_recommendation(tmp_path: Path) -> None:

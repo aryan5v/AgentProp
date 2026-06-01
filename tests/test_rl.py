@@ -1,5 +1,6 @@
 from agentprop.rl import (
     AgentRoutingEnv,
+    CategoryBanditRoutingPolicy,
     GreedyCoveragePolicy,
     PPOConfig,
     PPOPolicy,
@@ -31,6 +32,16 @@ def test_agent_routing_env_selects_seed_and_stops_at_budget() -> None:
     assert state.coverage > 0
     assert reward != 0
     assert info["selected_seeds"] == ("planner",)
+
+
+def test_category_bandit_updates_routing_policy_by_task_type() -> None:
+    policy = CategoryBanditRoutingPolicy(epsilon=0.0)
+
+    policy.update("edge-case-heavy", "quality-aware-greedy", passed=True, token_savings=0.10)
+    policy.update("edge-case-heavy", "cost-aware-greedy", passed=False, token_savings=0.35)
+
+    assert policy.choose("edge-case-heavy") == "quality-aware-greedy"
+    assert policy.values("edge-case-heavy")["quality-aware-greedy"] > 0
 
 
 def test_agent_routing_env_supports_expanded_control_actions() -> None:
