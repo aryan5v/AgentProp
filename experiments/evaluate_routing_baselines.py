@@ -42,6 +42,7 @@ from agentprop.rl import (
     QLearningConfig,
     ReinforceConfig,
     RoutingAction,
+    RoutingState,
     train_ppo_policy,
     train_q_policy,
     train_reinforce_policy,
@@ -112,15 +113,8 @@ def main(argv: list[str] | None = None) -> int:
             ).items()
         )
         rows.extend(
-            _evaluate_policy(
+            _evaluate_rl_policies(
                 workflow_name,
-                graph,
-                policy_name,
-                seeds,
-                trials=args.trials,
-                seed=args.seed,
-            )
-            for policy_name, seeds in _rl_seed_sets(
                 graph,
                 budget=args.budget,
                 trials=args.trials,
@@ -128,7 +122,7 @@ def main(argv: list[str] | None = None) -> int:
                 learning_rate=args.learning_rate,
                 seed=args.seed,
                 max_steps=args.max_steps,
-            ).items()
+            )
         )
 
     payload = {
@@ -239,7 +233,8 @@ def _learned_seed_sets(
     }
 
 
-def _rl_seed_sets(
+def _evaluate_rl_policies(
+    workflow_name: str,
     graph: AgentGraph,
     *,
     budget: int,
@@ -248,7 +243,40 @@ def _rl_seed_sets(
     learning_rate: float,
     seed: int,
     max_steps: int,
-) -> dict[str, list[str]]:
+) -> list[dict[str, Any]]:
+    rows = []
+    for expanded_actions in (False, True):
+        suffix = "_expanded" if expanded_actions else ""
+        rows.extend(
+            _evaluate_rl_policy_family(
+                workflow_name,
+                graph,
+                suffix=suffix,
+                budget=budget,
+                trials=trials,
+                episodes=episodes,
+                learning_rate=learning_rate,
+                seed=seed,
+                max_steps=max_steps,
+                expanded_actions=expanded_actions,
+            )
+        )
+    return rows
+
+
+def _evaluate_rl_policy_family(
+    workflow_name: str,
+    graph: AgentGraph,
+    *,
+    suffix: str,
+    budget: int,
+    trials: int,
+    episodes: int,
+    learning_rate: float,
+    seed: int,
+    max_steps: int,
+    expanded_actions: bool,
+) -> list[dict[str, Any]]:
     q_env = AgentRoutingEnv(graph, budget=budget, trials=trials)
     q_policy, _ = train_q_policy(
         q_env,
@@ -257,6 +285,7 @@ def _rl_seed_sets(
             learning_rate=learning_rate,
             epsilon=0.2,
             seed=seed,
+            expanded_actions=expanded_actions,
         ),
     )
     reinforce_env = AgentRoutingEnv(graph, budget=budget, trials=trials)
@@ -267,6 +296,7 @@ def _rl_seed_sets(
             learning_rate=learning_rate,
             seed=seed,
             max_steps=max_steps,
+            expanded_actions=expanded_actions,
         ),
     )
     ppo_env = AgentRoutingEnv(graph, budget=budget, trials=trials)
@@ -277,35 +307,90 @@ def _rl_seed_sets(
             learning_rate=learning_rate,
             seed=seed,
             max_steps=max_steps,
+            expanded_actions=expanded_actions,
         ),
     )
-    return {
-        "q_learning": _rollout_seed_policy(q_env, q_policy.act, max_steps=max_steps),
-        "reinforce": _rollout_seed_policy(
-            reinforce_env,
-            reinforce_policy.act,
-            max_steps=max_steps,
-        ),
-        "ppo": _rollout_seed_policy(ppo_env, ppo_policy.act, max_steps=max_steps),
-    }
+    rows = []
+    for policy_name, env, action_fn in (
+        (f"q_learning{suffix}", q_env, q_policy.act),
+        (f"reinforce{suffix}", reinforce_env, reinforce_policy.act),
+        (f"ppo{suffix}", ppo_env, ppo_policy.act),
+    ):
+        state, actions = _rollout_routing_policy(env, action_fn, max_steps=max_steps)
+        rows.append(
+            _evaluate_rl_state(
+                workflow_name,
+                graph,
+                policy_name,
+                state,
+                actions,
+            )
+        )
+    return rows
 
 
-def _rollout_seed_policy(
+def _rollout_routing_policy(
     env: AgentRoutingEnv,
     action_fn: Callable[[AgentRoutingEnv], str],
     *,
     max_steps: int,
-) -> list[str]:
+) -> tuple[RoutingState, list[str]]:
     state = env.reset()
+    actions = []
     done = False
     steps = 0
     while not done and steps < max_steps:
         action = action_fn(env)
+        actions.append(action)
         state, _, done, _ = env.step(action)
         steps += 1
         if action == RoutingAction.STOP.value:
             break
-    return list(state.selected_seeds)
+    return state, actions
+
+
+def _evaluate_rl_state(
+    workflow_name: str,
+    graph: AgentGraph,
+    policy_name: str,
+    state: RoutingState,
+    actions: list[str],
+) -> dict[str, Any]:
+    broadcast = broadcast_cost(graph)
+    cost = CostSummary(
+        token_cost=state.token_cost,
+        message_cost=state.message_cost,
+        latency=state.propagation_time,
+        message_count=len(state.used_edges),
+    )
+    quality = quality_cost_summary(
+        success_rate=state.coverage,
+        token_cost=cost.total_cost,
+        latency=cost.latency,
+    )
+    row = _row(
+        workflow_name=workflow_name,
+        policy_name=policy_name,
+        seeds=list(state.selected_seeds),
+        coverage=state.coverage,
+        full_activation_probability=None,
+        propagation_time=state.propagation_time,
+        cost=cost,
+        broadcast=broadcast,
+        efficiency_score=quality.efficiency_score,
+        cost_adjusted_success=quality.cost_adjusted_success,
+    )
+    row.update(
+        {
+            "actions": actions,
+            "activated_verifiers": list(state.activated_verifiers),
+            "used_edges": [list(edge) for edge in state.used_edges],
+            "pruned_edges": [list(edge) for edge in state.pruned_edges],
+            "called_tools": list(state.called_tools),
+            "summary_nodes": list(state.summary_nodes),
+        }
+    )
+    return row
 
 
 def _evaluate_policy(

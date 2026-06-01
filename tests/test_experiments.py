@@ -376,8 +376,14 @@ def test_evaluate_routing_baselines_writes_comparison(tmp_path: Path) -> None:
     assert {"broadcast", "greedy", "celf", "message_passing_gnn", "reinforce", "ppo"}.issubset(
         policies
     )
+    assert {"q_learning_expanded", "reinforce_expanded", "ppo_expanded"}.issubset(policies)
     assert {"pairwise_ranker", "marginal_gain_regressor"}.issubset(policies)
     assert payload["summary"]["greedy"]["workflows"] == 2.0
+    expanded_rows = [row for row in payload["rows"] if row["policy"].endswith("_expanded")]
+    assert expanded_rows
+    assert all("actions" in row for row in expanded_rows)
+    assert all("activated_verifiers" in row for row in expanded_rows)
+    assert all("pruned_edges" in row for row in expanded_rows)
     assert all(
         "final" not in row["seeds"]
         for row in payload["rows"]

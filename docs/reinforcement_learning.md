@@ -52,6 +52,12 @@ baselines:
 PYTHONPATH=src:. python experiments/evaluate_routing_baselines.py --workflows chain,star,tree --episodes 40
 ```
 
+The comparison report now includes both seed-only policies (`q_learning`,
+`reinforce`, `ppo`) and expanded-control policies (`q_learning_expanded`,
+`reinforce_expanded`, `ppo_expanded`). Expanded rows preserve the chosen action
+trace plus activated verifiers, pruned edges, tool calls, and summary requests so
+RL decisions can be audited against greedy and GNN-style routing baselines.
+
 Replay an exported trajectory with a deterministic propagation seed:
 
 ```bash

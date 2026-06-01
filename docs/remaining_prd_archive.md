@@ -249,6 +249,10 @@ Goal: move beyond seed-selection Q-learning toward real workflow control.
   `experiments/evaluate_routing_baselines.py` for synthetic workflow
   comparisons across broadcast, classical, ML/GNN-style, Q-learning, and
   REINFORCE/PPO policies.
+- Expanded-action RL evaluation: routing baseline comparison now emits
+  `q_learning_expanded`, `reinforce_expanded`, and `ppo_expanded` rows with
+  action traces, activated verifiers, pruned edges, tool calls, and summary
+  requests preserved for audit.
 
 ### Expanded Actions
 

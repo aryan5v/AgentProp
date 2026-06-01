@@ -88,7 +88,7 @@ PYTHONPATH=src:. python experiments/run_experiment_suite.py \
 The default suite runs:
 
 - held-out workflow ML generalization
-- classical vs ML/GNN-style vs RL routing baselines
+- classical vs ML/GNN-style vs seed-only and expanded-action RL routing baselines
 - PPO trajectory export with final cost-adjusted proxy quality
 
 ## Still Planned
