@@ -76,6 +76,25 @@ checkpoint = load_ml_model("results/models/mlp_seed_scorer.json")
 scorer = checkpoint.model
 ```
 
+Experiment runs can also register checkpoints and metrics into a model registry:
+
+```bash
+PYTHONPATH=src:. python experiments/train_seed_scorer.py \
+  --model mlp \
+  --registry-root results/ml_core/model_registry \
+  --run-id mlp_seed_scorer
+
+PYTHONPATH=src:. python experiments/run_rl_routing.py \
+  --policy ppo \
+  --registry-root results/ml_core/model_registry \
+  --run-id ppo_routing_policy
+```
+
+The registry writes `registry.json` with artifact id, kind, checkpoint path,
+metrics path, source script, tags, metadata, and timestamps. This gives ML/RL
+experiments a stable artifact index without requiring a heavyweight tracking
+server.
+
 ## ML Core Experiment Suite
 
 AgentProp also includes a recipe-style ML/RL suite inspired by the config-first
@@ -102,9 +121,11 @@ PYTHONPATH=src:. python experiments/run_experiment_suite.py \
 
 The default suite runs:
 
+- checkpointed MLP seed scoring
+- checkpointed edge-pruning scoring
 - held-out workflow ML generalization
 - classical vs ML/GNN-style vs seed-only and expanded-action RL routing baselines
-- PPO trajectory export with final cost-adjusted proxy quality
+- checkpointed PPO trajectory export with final cost-adjusted proxy quality
 
 ## Still Planned
 

@@ -17,7 +17,7 @@ from experiments import (
     train_seed_scorer,
 )
 
-from agentprop.evaluation import LLMExecutionResult, LLMUsage
+from agentprop.evaluation import LLMExecutionResult, LLMUsage, load_artifact_registry
 from agentprop.workflows import planner_coder_tester_reviewer
 
 
@@ -393,13 +393,26 @@ def test_run_case_study_can_capture_real_verification_logs(tmp_path: Path) -> No
 
 def test_train_seed_scorer_experiment_writes_model(tmp_path: Path) -> None:
     output = tmp_path / "model.json"
+    registry_root = tmp_path / "registry"
 
     exit_code = train_seed_scorer.main(
-        ["--trials", "3", "--epochs", "3", "--out", str(output)]
+        [
+            "--trials",
+            "3",
+            "--epochs",
+            "3",
+            "--out",
+            str(output),
+            "--registry-root",
+            str(registry_root),
+        ]
     )
+    records = load_artifact_registry(registry_root / "registry.json")
 
     assert exit_code == 0
     assert output.exists()
+    assert records[0].kind == "ml-model"
+    assert Path(records[0].path).exists()
 
 
 def test_train_seed_scorer_experiment_writes_pairwise_model(tmp_path: Path) -> None:
@@ -452,13 +465,16 @@ def test_train_seed_scorer_experiment_writes_regression_model(tmp_path: Path) ->
 
 def test_train_edge_pruning_scorer_experiment_writes_model(tmp_path: Path) -> None:
     output = tmp_path / "edge_model.json"
+    registry_root = tmp_path / "edge_registry"
 
     exit_code = train_edge_pruning_scorer.main(
-        ["--epochs", "3", "--out", str(output)]
+        ["--epochs", "3", "--out", str(output), "--registry-root", str(registry_root)]
     )
+    records = load_artifact_registry(registry_root / "registry.json")
 
     assert exit_code == 0
     assert output.exists()
+    assert records[0].metadata["epochs"] == 3
 
 
 def test_train_learned_propagation_experiment_writes_model(tmp_path: Path) -> None:
@@ -622,6 +638,7 @@ def test_rl_routing_experiment_writes_reinforce_trajectory(tmp_path: Path) -> No
 
 def test_rl_routing_experiment_writes_ppo_trajectory(tmp_path: Path) -> None:
     output = tmp_path / "rl_ppo.json"
+    registry_root = tmp_path / "rl_registry"
 
     exit_code = run_rl_routing.main(
         [
@@ -635,12 +652,17 @@ def test_rl_routing_experiment_writes_ppo_trajectory(tmp_path: Path) -> None:
             "5",
             "--out",
             str(output),
+            "--registry-root",
+            str(registry_root),
         ]
     )
 
     payload = json.loads(output.read_text())
+    records = load_artifact_registry(registry_root / "registry.json")
 
     assert exit_code == 0
     assert output.exists()
     assert payload[0]["policy"] == "ppo"
     assert "values" in payload[0]
+    assert payload[0]["checkpoint_path"]
+    assert any(record.kind == "rl-policy" for record in records)

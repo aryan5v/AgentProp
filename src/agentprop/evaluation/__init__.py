@@ -1,5 +1,13 @@
 """Evaluation metrics and recommendation helpers."""
 
+from agentprop.evaluation.artifacts import (
+    ArtifactKind,
+    ArtifactRecord,
+    load_artifact_registry,
+    register_artifact,
+    safe_artifact_id,
+    write_artifact_registry,
+)
 from agentprop.evaluation.llm_execution import (
     LLMExecutionResult,
     LLMUsage,
@@ -52,6 +60,8 @@ from agentprop.evaluation.verification import (
 
 __all__ = [
     "BenchmarkRow",
+    "ArtifactKind",
+    "ArtifactRecord",
     "CostSummary",
     "ExactMatchScorer",
     "HumanLabelScorer",
@@ -75,16 +85,20 @@ __all__ = [
     "build_v1_readiness_report",
     "compare_routing",
     "evaluate_pruning",
+    "load_artifact_registry",
     "quality_cost_summary",
     "openai_compatible_env_status",
     "render_html_report",
     "render_markdown_report",
     "render_v1_readiness_markdown",
+    "register_artifact",
     "report_to_dict",
     "robustness_under_failures",
+    "safe_artifact_id",
     "run_verification_command",
     "run_benchmark",
     "summarize_pruning_risk",
     "verification_row_fields",
+    "write_artifact_registry",
     "write_report",
 ]

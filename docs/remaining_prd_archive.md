@@ -204,6 +204,8 @@ Progress:
 Acceptance evidence:
 
 - Training scripts write model configs, metrics, and predictions.
+- ML/RL training scripts can register checkpoints and metrics into
+  `registry.json` under a model-registry root.
 - Evaluation compares learned policies against random, PageRank, CELF,
   cost-aware greedy, and Q-learning.
 - Experiment suite manifest records runtime assumptions, artifact root, command

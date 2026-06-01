@@ -6,6 +6,7 @@ import argparse
 import json
 from pathlib import Path
 
+from agentprop.evaluation import register_artifact, safe_artifact_id
 from agentprop.ml import (
     LinearNodeRegressor,
     LinearNodeScorer,
@@ -15,6 +16,7 @@ from agentprop.ml import (
     build_seed_selection_example,
     build_verifier_placement_example,
     extract_graph_features,
+    save_ml_model,
 )
 from agentprop.workflows import WORKFLOW_TEMPLATES
 
@@ -32,6 +34,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--epochs", type=int, default=150)
     parser.add_argument("--learning-rate", type=float, default=0.05)
     parser.add_argument("--out", type=Path, default=Path("results/ml/linear_seed_scorer.json"))
+    parser.add_argument("--checkpoint-out", type=Path, default=None)
+    parser.add_argument("--registry-root", type=Path, default=None)
+    parser.add_argument("--run-id", default=None)
     args = parser.parse_args(argv)
 
     if args.task == "verifier" and args.model in {"pairwise", "regression"}:
@@ -92,6 +97,42 @@ def main(argv: list[str] | None = None) -> int:
         payload["weights"] = scorer.weights
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+    run_id = safe_artifact_id(args.run_id or f"{args.task}-{args.model}-node-scorer")
+    checkpoint_path = args.checkpoint_out
+    if checkpoint_path is None and args.registry_root is not None:
+        checkpoint_path = args.registry_root / "checkpoints" / f"{run_id}.json"
+    if checkpoint_path is not None:
+        checkpoint_path = save_ml_model(
+            scorer,
+            checkpoint_path,
+            metadata={
+                "task": args.task,
+                "model": args.model,
+                "budget": args.budget,
+                "trials": args.trials,
+                "epochs": args.epochs,
+                "learning_rate": args.learning_rate,
+                "feature_names": examples[0].features.feature_names,
+            },
+        )
+    if args.registry_root is not None:
+        if checkpoint_path is None:
+            raise ValueError("checkpoint_path must be available when registry_root is set")
+        register_artifact(
+            args.registry_root,
+            artifact_id=run_id,
+            kind="ml-model",
+            path=checkpoint_path,
+            source="experiments.train_seed_scorer",
+            metrics_path=args.out,
+            tags=("node-scorer", args.task, args.model),
+            metadata={
+                "budget": args.budget,
+                "trials": args.trials,
+                "epochs": args.epochs,
+                "learning_rate": args.learning_rate,
+            },
+        )
     print(f"Wrote {args.out}")
     return 0
 

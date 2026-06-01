@@ -6,7 +6,7 @@ import argparse
 import json
 from pathlib import Path
 
-from agentprop.evaluation import quality_cost_summary
+from agentprop.evaluation import quality_cost_summary, register_artifact, safe_artifact_id
 from agentprop.rl import (
     AgentRoutingEnv,
     GreedyCoveragePolicy,
@@ -15,6 +15,7 @@ from agentprop.rl import (
     ReinforceConfig,
     RoutingAction,
     RoutingState,
+    save_rl_policy,
     train_ppo_policy,
     train_q_policy,
     train_reinforce_policy,
@@ -38,9 +39,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--expanded-actions", action="store_true")
     parser.add_argument("--max-steps", type=int, default=20)
     parser.add_argument("--out", type=Path, default=Path("results/rl/routing_policy.json"))
+    parser.add_argument("--checkpoint-dir", type=Path, default=None)
+    parser.add_argument("--registry-root", type=Path, default=None)
+    parser.add_argument("--run-id", default=None)
     args = parser.parse_args(argv)
 
     rows = []
+    checkpoint_dir = args.checkpoint_dir
+    if checkpoint_dir is None and args.registry_root is not None:
+        checkpoint_dir = args.registry_root / "checkpoints"
     for workflow_name, builder in WORKFLOW_TEMPLATES.items():
         env = AgentRoutingEnv(builder(), budget=args.budget, trials=args.trials)
         training = None
@@ -135,6 +142,46 @@ def main(argv: list[str] | None = None) -> int:
                 row["training"]["truncated_episodes"] = training.truncated_episodes
                 row["preferences"] = policy.to_dict()
                 row["values"] = policy.values_to_dict()
+            if checkpoint_dir is not None:
+                artifact_id = safe_artifact_id(
+                    f"{args.run_id}-{workflow_name}"
+                    if args.run_id
+                    else f"{workflow_name}-{args.policy}-routing-policy"
+                )
+                checkpoint_path = save_rl_policy(
+                    policy,
+                    checkpoint_dir / f"{artifact_id}.json",
+                    metadata={
+                        "workflow": workflow_name,
+                        "policy": args.policy,
+                        "budget": args.budget,
+                        "trials": args.trials,
+                        "episodes": args.episodes,
+                        "learning_rate": args.learning_rate,
+                        "expanded_actions": args.expanded_actions,
+                        "max_steps": args.max_steps,
+                    },
+                )
+                row["checkpoint_path"] = str(checkpoint_path)
+                if args.registry_root is not None:
+                    register_artifact(
+                        args.registry_root,
+                        artifact_id=artifact_id,
+                        kind="rl-policy",
+                        path=checkpoint_path,
+                        source="experiments.run_rl_routing",
+                        metrics_path=args.out,
+                        tags=("routing-policy", args.policy, workflow_name),
+                        metadata={
+                            "workflow": workflow_name,
+                            "budget": args.budget,
+                            "trials": args.trials,
+                            "episodes": args.episodes,
+                            "expanded_actions": args.expanded_actions,
+                            "final_coverage": row["summary"]["final_coverage"],
+                            "efficiency_score": row["summary"]["efficiency_score"],
+                        },
+                    )
         rows.append(row)
 
     args.out.parent.mkdir(parents=True, exist_ok=True)

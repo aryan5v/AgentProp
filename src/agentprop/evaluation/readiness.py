@@ -154,6 +154,8 @@ def build_v1_readiness_report() -> ReadinessReport:
                 "Experiment suite recipes write reproducible manifests and artifacts.",
                 "Dependency-light ML scorers and tabular RL policies can be persisted "
                 "as JSON checkpoints.",
+                "ML/RL training scripts can register checkpoints and metrics in an "
+                "artifact registry.",
             ),
         ),
         ReadinessItem(
