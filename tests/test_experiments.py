@@ -248,9 +248,13 @@ def test_rl_routing_experiment_writes_trajectory(tmp_path: Path) -> None:
     output = tmp_path / "rl.json"
 
     exit_code = run_rl_routing.main(["--trials", "3", "--out", str(output)])
+    payload = json.loads(output.read_text())
 
     assert exit_code == 0
     assert output.exists()
+    assert payload[0]["summary"]["total_reward"] != 0
+    assert "cost_adjusted_success" in payload[0]["summary"]
+    assert "cumulative_reward" in payload[0]["trajectory"][0]
 
 
 def test_replay_rl_trajectory_experiment_imports_exported_trajectory(tmp_path: Path) -> None:

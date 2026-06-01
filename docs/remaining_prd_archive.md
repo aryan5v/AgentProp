@@ -259,7 +259,8 @@ Acceptance evidence:
 
 - RL policy improves over random on held-out synthetic workflows.
 - RL policy is compared with GNN and classical baselines using the same metrics.
-- Saved trajectories show chosen actions, rewards, costs, and final quality.
+- Saved trajectories show chosen actions, rewards, costs, and final proxy quality:
+  added through cumulative rewards and trajectory summaries.
 
 ## Workstream 7: Real LLM Case Study
 

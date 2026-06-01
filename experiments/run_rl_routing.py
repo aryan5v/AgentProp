@@ -6,6 +6,7 @@ import argparse
 import json
 from pathlib import Path
 
+from agentprop.evaluation import quality_cost_summary
 from agentprop.rl import (
     AgentRoutingEnv,
     GreedyCoveragePolicy,
@@ -13,6 +14,7 @@ from agentprop.rl import (
     QLearningConfig,
     ReinforceConfig,
     RoutingAction,
+    RoutingState,
     train_ppo_policy,
     train_q_policy,
     train_reinforce_policy,
@@ -82,6 +84,7 @@ def main(argv: list[str] | None = None) -> int:
         trajectory = []
         done = False
         steps = 0
+        total_reward = 0.0
         while not done and steps < args.max_steps:
             action = policy.act(env)
             if action == RoutingAction.STOP.value:
@@ -89,10 +92,12 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 state, reward, done, info = env.step(action)
             steps += 1
+            total_reward += reward
             trajectory.append(
                 {
                     "action": action,
                     "reward": reward,
+                    "cumulative_reward": total_reward,
                     "coverage": state.coverage,
                     "token_cost": state.token_cost,
                     "message_cost": state.message_cost,
@@ -105,7 +110,13 @@ def main(argv: list[str] | None = None) -> int:
                     "info": dict(info),
                 }
             )
-        row = {"workflow": workflow_name, "policy": args.policy, "trajectory": trajectory}
+        final_state = env.state
+        row = {
+            "workflow": workflow_name,
+            "policy": args.policy,
+            "trajectory": trajectory,
+            "summary": _trajectory_summary(final_state, total_reward),
+        }
         if training is not None:
             row["training"] = {
                 "episodes": training.episodes,
@@ -130,6 +141,28 @@ def main(argv: list[str] | None = None) -> int:
     args.out.write_text(json.dumps(rows, indent=2, sort_keys=True) + "\n")
     print(f"Wrote {args.out}")
     return 0
+
+
+def _trajectory_summary(state: RoutingState, total_reward: float) -> dict[str, float]:
+    token_cost = state.token_cost
+    message_cost = state.message_cost
+    total_cost = token_cost + message_cost
+    quality = quality_cost_summary(
+        success_rate=state.coverage,
+        token_cost=total_cost,
+        latency=state.propagation_time,
+    )
+    return {
+        "total_reward": total_reward,
+        "final_coverage": quality.success_rate,
+        "final_token_cost": token_cost,
+        "final_message_cost": message_cost,
+        "final_total_cost": total_cost,
+        "final_propagation_time": quality.latency,
+        "proxy_success_rate": quality.success_rate,
+        "cost_adjusted_success": quality.cost_adjusted_success,
+        "efficiency_score": quality.efficiency_score,
+    }
 
 
 if __name__ == "__main__":
