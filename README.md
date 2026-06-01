@@ -49,6 +49,10 @@ regressions, and twenty-one ties. On the 24 completed tasks with token data in
 both arms, AgentProp-guided used **2.4% fewer input+output tokens** with **1.1%
 higher reported cost** due to cache and completion mix.
 
+The initial local baseline failed nine of the 26 completed matched tasks.
+AgentProp-guided routing converted three of those older failures into passes:
+`build-pov-ray`, `caffe-cifar-10`, and `sanitize-git-repo`.
+
 This is a first directional benchmark, not a leaderboard submission. It shows a
 small positive success-rate signal and several useful failure modes for future
 budget-aware routing. See the full artifact note:

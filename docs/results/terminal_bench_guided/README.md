@@ -37,6 +37,23 @@ AgentProp-guided routing improved the matched pass count by one task on this
 snapshot. The signal is positive but small, and the run also exposed important
 timeout and over-exploration failure modes.
 
+## Baseline Uplift
+
+The initial local baseline passed 17 of the 26 completed matched tasks and
+failed nine. AgentProp-guided routing converted three of those baseline failures
+into passes:
+
+| Task | Baseline | AgentProp-guided | Change |
+|---|---:|---:|---|
+| `build-pov-ray` | 0.0 | 1.0 | fail -> pass |
+| `caffe-cifar-10` | 0.0 | 1.0 | fail -> pass |
+| `sanitize-git-repo` | 0.0 | 1.0 | fail -> pass |
+
+Two baseline passes regressed in the guided run, leaving a net improvement of
+one pass on the completed matched subset. The useful signal is not just the
+aggregate +1: the run identifies specific task types where
+planner/implementer/verifier discipline helped recover older failures.
+
 ## Token And Cost Snapshot
 
 Token accounting is available for 24 of the 26 completed matched tasks. Two
@@ -94,7 +111,9 @@ tasks.
 - `sanitize-git-repo`
 
 These wins suggest that explicit planning, implementation focus, and verification
-discipline can help on setup-heavy or multi-step coding tasks.
+discipline can help on setup-heavy or multi-step coding tasks. They are also the
+clearest examples of AgentProp-guided routing improving older failing tests from
+the local baseline.
 
 ## What Regressed
 
