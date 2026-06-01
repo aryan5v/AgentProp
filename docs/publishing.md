@@ -7,8 +7,8 @@ AgentProp publishes Python distributions to TestPyPI and PyPI from
 
 `agentprop==0.1.0a1` is published on:
 
-- PyPI: <https://pypi.org/project/agentprop/0.1.0a1/>
-- TestPyPI: <https://test.pypi.org/project/agentprop/0.1.0a1/>
+- PyPI: <https://pypi.org/project/agentprop/>
+- TestPyPI: <https://test.pypi.org/project/agentprop/>
 
 ## Release Checklist
 
