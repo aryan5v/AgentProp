@@ -35,7 +35,9 @@ import os
 import re
 import string
 import sys
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -664,6 +666,17 @@ def main(argv: list[str] | None = None) -> None:
         default=1.5,
         help="Seconds to pause between successful LLM calls (rate-limit safety)",
     )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=4,
+        help="Number of tasks to process concurrently (batching)",
+    )
+    parser.add_argument(
+        "--skip",
+        default="",
+        help="Comma-separated task ids to skip (e.g. q014)",
+    )
     args = parser.parse_args(argv)
 
     out_dir = Path(args.out_dir)
@@ -691,7 +704,7 @@ def main(argv: list[str] | None = None) -> None:
             api_key=api_key,
             model=args.model,
             base_url=GEMINI_BASE_URL,
-            timeout_s=120.0,
+            timeout_s=45.0,
         )
         client = RetryingClient(inner, inter_call_pause=args.pause)
 
@@ -705,51 +718,97 @@ def main(argv: list[str] | None = None) -> None:
 
     context_doc_tokens = len(context_doc.split()) * 4 // 3  # rough token estimate
 
-    broadcast_results: list[ArmResult] = []
-    agentprop_results: list[ArmResult] = []
-    outputs: list[dict[str, Any]] = []
+    skip_ids = {s.strip() for s in args.skip.split(",") if s.strip()}
+    run_tasks = [t for t in tasks if t.id not in skip_ids]
+    if skip_ids:
+        print(f"Skipping tasks: {sorted(skip_ids)}")
 
-    for i, task in enumerate(tasks):
-        print(f"\n[{i+1}/{len(tasks)}] {task.id}: {task.question[:60]}...")
-
-        # Broadcast arm
-        b_result = run_arm(
+    # Per-task worker: runs both arms, returns (task, b_result, a_result)
+    def process_task(task: QATask) -> tuple[QATask, ArmResult, ArmResult]:
+        b = run_arm(
             client, task, context_doc, seeds,
             is_agentprop=False, compressed_context=compressed,
             max_tokens=args.max_tokens, fake_client=args.fake,
         )
-        broadcast_results.append(b_result)
-        icon = "✓" if b_result.correct else "✗"
-        print(f"  broadcast  [{icon}] answer='{b_result.final_answer}' | tokens={b_result.total_tokens}")
-
-        # AgentProp arm
-        a_result = run_arm(
+        a = run_arm(
             client, task, context_doc, seeds,
             is_agentprop=True, compressed_context=compressed,
             max_tokens=args.max_tokens, fake_client=args.fake,
         )
-        agentprop_results.append(a_result)
-        icon = "✓" if a_result.correct else "✗"
-        print(f"  agentprop  [{icon}] answer='{a_result.final_answer}' | tokens={a_result.total_tokens}")
+        return task, b, a
 
-        # Record outputs
-        outputs.append({
-            "task_id": task.id,
-            "question": task.question,
-            "gold": task.answer,
+    results_by_id: dict[str, tuple[QATask, ArmResult, ArmResult]] = {}
+    write_lock = threading.Lock()
+    done_count = 0
+
+    def flush_partial() -> None:
+        """Write incremental results.json + outputs.jsonl from whatever is done."""
+        ordered = [results_by_id[t.id] for t in run_tasks if t.id in results_by_id]
+        if not ordered:
+            return
+        b_res = [b for _, b, _ in ordered]
+        a_res = [a for _, _, a in ordered]
+        nn = len(ordered)
+        bc = sum(1 for r in b_res if r.correct)
+        ac = sum(1 for r in a_res if r.correct)
+        bt = sum(r.total_tokens for r in b_res)
+        at = sum(r.total_tokens for r in a_res)
+        partial = {
+            "model": args.model,
+            "seeds": seeds,
+            "status": "partial",
+            "tasks_done": nn,
+            "broadcast": {"correct": bc, "accuracy": round(bc / nn, 4), "total_tokens": bt},
+            "agentprop": {"correct": ac, "accuracy": round(ac / nn, 4), "total_tokens": at},
+            "measured_total_token_saving": round((bt - at) / bt, 4) if bt else 0,
+            "rows": [
+                {
+                    "task_id": t.id, "gold": t.answer,
+                    "broadcast_correct": b.correct, "agentprop_correct": a.correct,
+                    "broadcast_tokens": b.total_tokens, "agentprop_tokens": a.total_tokens,
+                    "broadcast_answer": b.final_answer, "agentprop_answer": a.final_answer,
+                }
+                for t, b, a in ordered
+            ],
+        }
+        (out_dir / "results_partial.json").write_text(json.dumps(partial, indent=2))
+
+    with ThreadPoolExecutor(max_workers=max(1, args.workers)) as pool:
+        futures = {pool.submit(process_task, t): t for t in run_tasks}
+        for fut in as_completed(futures):
+            task, b_result, a_result = fut.result()
+            with write_lock:
+                results_by_id[task.id] = (task, b_result, a_result)
+                done_count += 1
+                bi = "✓" if b_result.correct else "✗"
+                ai = "✓" if a_result.correct else "✗"
+                print(f"[{done_count}/{len(run_tasks)}] {task.id}: "
+                      f"broadcast [{bi}]='{b_result.final_answer}' ({b_result.total_tokens}tok) | "
+                      f"agentprop [{ai}]='{a_result.final_answer}' ({a_result.total_tokens}tok)",
+                      flush=True)
+                flush_partial()
+
+    # Reassemble in task order
+    ordered = [results_by_id[t.id] for t in run_tasks if t.id in results_by_id]
+    tasks = [t for t, _, _ in ordered]
+    broadcast_results = [b for _, b, _ in ordered]
+    agentprop_results = [a for _, _, a in ordered]
+    outputs = [
+        {
+            "task_id": t.id,
+            "question": t.question,
+            "gold": t.answer,
             "broadcast": {
-                "answer": b_result.final_answer,
-                "correct": b_result.correct,
-                "total_tokens": b_result.total_tokens,
-                "stages": [{"stage": s.stage, "tokens": s.total_tokens, "full_context": s.full_context} for s in b_result.stage_results],
+                "answer": b.final_answer, "correct": b.correct, "total_tokens": b.total_tokens,
+                "stages": [{"stage": s.stage, "tokens": s.total_tokens, "full_context": s.full_context} for s in b.stage_results],
             },
             "agentprop": {
-                "answer": a_result.final_answer,
-                "correct": a_result.correct,
-                "total_tokens": a_result.total_tokens,
-                "stages": [{"stage": s.stage, "tokens": s.total_tokens, "full_context": s.full_context} for s in a_result.stage_results],
+                "answer": a.final_answer, "correct": a.correct, "total_tokens": a.total_tokens,
+                "stages": [{"stage": s.stage, "tokens": s.total_tokens, "full_context": s.full_context} for s in a.stage_results],
             },
-        })
+        }
+        for t, b, a in ordered
+    ]
 
     # Compute aggregate stats
     n = len(tasks)
