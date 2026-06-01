@@ -280,13 +280,18 @@ Progress:
 - Added `experiments/run_case_study.py`, an offline accounting harness that
   compares broadcast, optimized-greedy, ML message-passing, and PPO routing
   arms and writes JSON, CSV, summary, quality, cost, and trace artifacts.
+- Added OpenAI-compatible LLM execution support for Token Router or OpenAI-style
+  endpoints. LLM mode records prompt/completion/total tokens, latency, final
+  outputs, rubric scores, and trace metadata.
 
 Still needed:
 
 - Run the 20 tasks with real LLM calls.
-- Connect the runner to a real execution adapter or token router.
-- Save real prompt/output token counts instead of simulated graph costs.
-- Save final LLM outputs and verification command logs.
+- Provide `TOKEN_ROUTER_API_KEY`, `TOKEN_ROUTER_BASE_URL`, and
+  `TOKEN_ROUTER_MODEL` or equivalent OpenAI env vars.
+- Run the connected LLM mode and save committed or private-reviewed results.
+- Save external verification command logs from an execution environment that
+  actually applies generated code changes.
 - Save real verifier corrections and interception events.
 - Write the final analysis and plots.
 

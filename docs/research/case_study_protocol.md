@@ -102,6 +102,26 @@ The offline runner does not call an LLM. It validates the study schema by
 writing `results.json`, `results.csv`, `summary.json`, and `traces.jsonl` for
 the broadcast, optimized-greedy, ML message-passing, and PPO routing arms.
 
+Real LLM execution:
+
+```bash
+export TOKEN_ROUTER_API_KEY=...
+export TOKEN_ROUTER_BASE_URL=...
+export TOKEN_ROUTER_MODEL=...
+
+PYTHONPATH=src:. python experiments/run_case_study.py \
+  --execution-mode llm \
+  --tasks benchmarks/case_study_tasks.json \
+  --workflow planner_coder_tester_reviewer \
+  --out-dir docs/results/case_study_001
+```
+
+The LLM mode uses an OpenAI-compatible chat endpoint. It records prompt tokens,
+completion tokens, total LLM tokens, latency, selected seeds, quality rubric
+scores, traces, and `outputs.jsonl` with prompts and final model responses.
+Keep the result directory private until a redaction pass confirms no secrets or
+private task data are present.
+
 ## Public-Release Gate
 
 Do not make the repository public until this protocol has at least one completed

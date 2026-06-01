@@ -14,6 +14,28 @@ from experiments import (
     train_seed_scorer,
 )
 
+from agentprop.evaluation import LLMExecutionResult, LLMUsage
+from agentprop.workflows import planner_coder_tester_reviewer
+
+
+class _FakeCaseStudyExecutor:
+    def chat(
+        self,
+        *,
+        system_prompt: str,
+        user_prompt: str,
+        temperature: float = 0.1,
+        max_tokens: int | None = None,
+    ) -> LLMExecutionResult:
+        return LLMExecutionResult(
+            model="fake-model",
+            prompt=user_prompt,
+            response="Final answer: Bug fixed. Verification: pytest passed.",
+            usage=LLMUsage(prompt_tokens=50, completion_tokens=25, total_tokens=75),
+            latency_s=0.2,
+            raw_response={},
+        )
+
 
 def test_run_benchmark_experiment_writes_artifacts(tmp_path: Path) -> None:
     output_dir = tmp_path / "benchmark"
@@ -125,6 +147,34 @@ def test_run_case_study_writes_offline_artifacts(tmp_path: Path) -> None:
         for row in payload["rows"]
         if row["policy"] == "broadcast"
     )
+
+
+def test_real_case_study_arm_records_llm_usage_and_output() -> None:
+    task = run_case_study.CaseStudyTask(
+        id="demo_bug",
+        category="bugfix",
+        prompt="Fix a demo bug.",
+        expected="Bug fixed.",
+        verification_command="pytest tests/test_cli.py",
+        min_coverage=0.7,
+    )
+
+    row, trace, output = run_case_study._evaluate_real_task_arm(
+        task,
+        planner_coder_tester_reviewer(),
+        policy_name="optimized_greedy",
+        seeds=["planner", "tester"],
+        executor=_FakeCaseStudyExecutor(),
+        trials=2,
+        seed=0,
+        max_tokens=100,
+    )
+
+    assert row["model"] == "fake-model"
+    assert row["total_llm_tokens"] == 75
+    assert row["quality_passed"]
+    assert trace["total_tokens"] == 75
+    assert output["response"].startswith("Final answer")
 
 
 def test_train_seed_scorer_experiment_writes_model(tmp_path: Path) -> None:

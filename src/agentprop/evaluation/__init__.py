@@ -1,5 +1,10 @@
 """Evaluation metrics and recommendation helpers."""
 
+from agentprop.evaluation.llm_execution import (
+    LLMExecutionResult,
+    LLMUsage,
+    OpenAICompatibleChatClient,
+)
 from agentprop.evaluation.metrics import (
     CostSummary,
     PruningRiskSummary,
@@ -38,6 +43,9 @@ __all__ = [
     "ExactMatchScorer",
     "HumanLabelScorer",
     "LLMJudgeScorer",
+    "LLMExecutionResult",
+    "LLMUsage",
+    "OpenAICompatibleChatClient",
     "PruningEvaluation",
     "PruningRiskSummary",
     "QualityCostSummary",
