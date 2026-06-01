@@ -36,6 +36,24 @@ AgentProp is usable as a public alpha framework. The graph backbone, CLI,
 reports, workflow templates, ML/RL baselines, MCP/coding-agent briefs,
 checkpoints, and experiment artifact registry are implemented and tested.
 
+## First Benchmark
+
+We ran an AgentProp-guided Terminal-Bench comparison using Harbor on a frozen
+27-task subset completed by the local Gemini CLI baseline. The AgentProp-guided
+run completed 26 tasks; one task hung in the external harness and is excluded
+from the headline.
+
+On the 26 completed matched tasks, AgentProp-guided routing improved pass rate
+from **17/26 (65.4%)** to **18/26 (69.2%)**. The run produced three wins, two
+regressions, and twenty-one ties. On the 24 completed tasks with token data in
+both arms, AgentProp-guided used **2.4% fewer input+output tokens** with **1.1%
+higher reported cost** due to cache and completion mix.
+
+This is a first directional benchmark, not a leaderboard submission. It shows a
+small positive success-rate signal and several useful failure modes for future
+budget-aware routing. See the full artifact note:
+[Terminal-Bench guided benchmark](docs/results/terminal_bench_guided/README.md).
+
 The main limitation is evidence depth: real routed LLM validation should be
 treated as directional until larger, repeated studies are published. The current
 library prioritizes reproducible artifacts and conservative claims.
