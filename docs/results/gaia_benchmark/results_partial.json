@@ -6,18 +6,18 @@
     "verifier"
   ],
   "status": "partial",
-  "tasks_done": 6,
+  "tasks_done": 15,
   "broadcast": {
-    "correct": 3,
-    "accuracy": 0.5,
-    "total_tokens": 32575
+    "correct": 11,
+    "accuracy": 0.7333,
+    "total_tokens": 68554
   },
   "agentprop": {
-    "correct": 4,
-    "accuracy": 0.6667,
-    "total_tokens": 28583
+    "correct": 12,
+    "accuracy": 0.8,
+    "total_tokens": 56897
   },
-  "measured_total_token_saving": 0.1225,
+  "measured_total_token_saving": 0.17,
   "rows": [
     {
       "task_id": "q012",
@@ -70,6 +70,26 @@
       "agentprop_answer": "NASA"
     },
     {
+      "task_id": "q021",
+      "gold": "6",
+      "broadcast_correct": false,
+      "agentprop_correct": false,
+      "broadcast_tokens": 4633,
+      "agentprop_tokens": 3714,
+      "broadcast_answer": "4",
+      "agentprop_answer": "4"
+    },
+    {
+      "task_id": "q022",
+      "gold": "300000",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 4144,
+      "agentprop_tokens": 4070,
+      "broadcast_answer": "300,000",
+      "agentprop_answer": "300,000"
+    },
+    {
       "task_id": "q023",
       "gold": "1957",
       "broadcast_correct": true,
@@ -78,6 +98,76 @@
       "agentprop_tokens": 2963,
       "broadcast_answer": "1957",
       "agentprop_answer": "1957"
+    },
+    {
+      "task_id": "q024",
+      "gold": "skin",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 4663,
+      "agentprop_tokens": 3010,
+      "broadcast_answer": "Skin",
+      "agentprop_answer": "Skin"
+    },
+    {
+      "task_id": "q025",
+      "gold": "4",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 4051,
+      "agentprop_tokens": 2976,
+      "broadcast_answer": "4",
+      "agentprop_answer": "4"
+    },
+    {
+      "task_id": "q026",
+      "gold": "Japanese",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 3574,
+      "agentprop_tokens": 3248,
+      "broadcast_answer": "Japanese",
+      "agentprop_answer": "Japanese"
+    },
+    {
+      "task_id": "q027",
+      "gold": "7",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 3933,
+      "agentprop_tokens": 2802,
+      "broadcast_answer": "7",
+      "agentprop_answer": "7"
+    },
+    {
+      "task_id": "q028",
+      "gold": "NaCl",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 3676,
+      "agentprop_tokens": 2700,
+      "broadcast_answer": "NaCl",
+      "agentprop_answer": "NaCl"
+    },
+    {
+      "task_id": "q029",
+      "gold": "1989",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 3618,
+      "agentprop_tokens": 3162,
+      "broadcast_answer": "1989",
+      "agentprop_answer": "1989"
+    },
+    {
+      "task_id": "q031",
+      "gold": "femur",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 3687,
+      "agentprop_tokens": 2632,
+      "broadcast_answer": "Femur",
+      "agentprop_answer": "femur"
     }
   ]
 }
