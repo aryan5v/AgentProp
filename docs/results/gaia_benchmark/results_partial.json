@@ -6,19 +6,39 @@
     "verifier"
   ],
   "status": "partial",
-  "tasks_done": 1,
+  "tasks_done": 6,
   "broadcast": {
-    "correct": 0,
-    "accuracy": 0.0,
-    "total_tokens": 4486
+    "correct": 3,
+    "accuracy": 0.5,
+    "total_tokens": 32575
   },
   "agentprop": {
-    "correct": 1,
-    "accuracy": 1.0,
-    "total_tokens": 3060
+    "correct": 4,
+    "accuracy": 0.6667,
+    "total_tokens": 28583
   },
-  "measured_total_token_saving": 0.3179,
+  "measured_total_token_saving": 0.1225,
   "rows": [
+    {
+      "task_id": "q012",
+      "gold": "47",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 7293,
+      "agentprop_tokens": 6503,
+      "broadcast_answer": "47",
+      "agentprop_answer": "47"
+    },
+    {
+      "task_id": "q016",
+      "gold": "Pico de Orizaba",
+      "broadcast_correct": false,
+      "agentprop_correct": false,
+      "broadcast_tokens": 6506,
+      "agentprop_tokens": 7015,
+      "broadcast_answer": "Mount Logan",
+      "agentprop_answer": "Mount Logan"
+    },
     {
       "task_id": "q018",
       "gold": "-196",
@@ -28,6 +48,36 @@
       "agentprop_tokens": 3060,
       "broadcast_answer": "-195.79 \u00b0C",
       "agentprop_answer": "-196 \u00b0C"
+    },
+    {
+      "task_id": "q019",
+      "gold": "6",
+      "broadcast_correct": false,
+      "agentprop_correct": false,
+      "broadcast_tokens": 7090,
+      "agentprop_tokens": 6274,
+      "broadcast_answer": "10",
+      "agentprop_answer": "12"
+    },
+    {
+      "task_id": "q020",
+      "gold": "NASA",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 3598,
+      "agentprop_tokens": 2768,
+      "broadcast_answer": "NASA",
+      "agentprop_answer": "NASA"
+    },
+    {
+      "task_id": "q023",
+      "gold": "1957",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 3602,
+      "agentprop_tokens": 2963,
+      "broadcast_answer": "1957",
+      "agentprop_answer": "1957"
     }
   ]
 }
