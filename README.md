@@ -49,8 +49,8 @@ regressions, and twenty-one ties. On the 24 completed tasks with token data in
 both arms, AgentProp-guided used **2.4% fewer input+output tokens** with **1.1%
 higher reported cost** due to cache and completion mix.
 
-The first value signal is recovery on tasks that the initial local baseline did
-not pass. The baseline failed nine of the 26 completed matched tasks;
+The first value signal is the recovery of tasks that the initial local baseline
+failed. The baseline failed nine of the 26 completed matched tasks;
 AgentProp-guided routing converted three of those older failures into passes:
 `build-pov-ray`, `caffe-cifar-10`, and `sanitize-git-repo`. Those recoveries are
 the clearest early evidence for the framework: explicit planning, full context
