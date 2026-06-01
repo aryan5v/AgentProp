@@ -364,7 +364,10 @@ Adapters to build:
 Still needed:
 
 - Optional runtime adapters that instantiate framework-native classes when the
-  corresponding packages are installed.
+  corresponding packages are installed: added for LangGraph, CrewAI, and OpenAI
+  Agents SDK best-effort builders.
+- Configured runtime builders for AutoGen and LlamaIndex, which need model
+  clients or user-defined workflow step functions.
 - Round-trip tests against real framework examples.
 
 Acceptance evidence:

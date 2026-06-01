@@ -1,7 +1,10 @@
 import json
+import sys
 from pathlib import Path
+from types import ModuleType
 
 from agentprop.integrations import (
+    NativeFrameworkUnavailable,
     graph_from_autogen_dict,
     graph_from_crewai_dict,
     graph_from_framework_dict,
@@ -9,11 +12,13 @@ from agentprop.integrations import (
     graph_from_llamaindex_dict,
     graph_from_openai_agents_dict,
     graph_from_trace,
+    native_framework_status,
     to_autogen_dict,
     to_crewai_dict,
     to_framework_dict,
     to_langgraph_dict,
     to_llamaindex_dict,
+    to_native_framework,
     to_openai_agents_dict,
 )
 from agentprop.workflows import planner_coder_tester_reviewer
@@ -119,3 +124,108 @@ def test_generic_framework_adapter_dispatches_aliases() -> None:
 
     assert payload["framework"] == "openai-agents"
     assert imported.edge_count >= graph.edge_count
+
+
+def test_native_framework_status_reports_optional_packages() -> None:
+    statuses = native_framework_status(["langgraph", "autogen"])
+
+    by_name = {status.framework: status for status in statuses}
+    assert by_name["langgraph"].native_adapter is True
+    assert by_name["autogen"].native_adapter is False
+    assert by_name["langgraph"].import_names == ("langgraph.graph",)
+
+
+def test_native_langgraph_builder_uses_installed_state_graph(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    graph_module = ModuleType("langgraph.graph")
+
+    class FakeStateGraph:
+        def __init__(self, state_type):
+            self.state_type = state_type
+            self.nodes = {}
+            self.edges = []
+            self.entrypoints = []
+            self.finish_points = []
+
+        def add_node(self, name, handler):
+            self.nodes[name] = handler
+
+        def add_edge(self, source, target):
+            self.edges.append((source, target))
+
+        def set_entry_point(self, name):
+            self.entrypoints.append(name)
+
+        def set_finish_point(self, name):
+            self.finish_points.append(name)
+
+    graph_module.StateGraph = FakeStateGraph
+    monkeypatch.setitem(sys.modules, "langgraph", ModuleType("langgraph"))
+    monkeypatch.setitem(sys.modules, "langgraph.graph", graph_module)
+
+    native = to_native_framework(planner_coder_tester_reviewer(), "langgraph")
+
+    assert native.state_type is dict
+    assert "planner" in native.nodes
+    assert ("planner", "coder") in native.edges
+    assert "planner" in native.entrypoints
+    assert "final" in native.finish_points
+
+
+def test_native_crewai_builder_uses_installed_classes(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    crewai_module = ModuleType("crewai")
+
+    class FakeAgent:
+        def __init__(self, role, goal, backstory, allow_delegation):
+            self.role = role
+            self.goal = goal
+            self.backstory = backstory
+            self.allow_delegation = allow_delegation
+
+    class FakeTask:
+        def __init__(self, description, expected_output, agent):
+            self.description = description
+            self.expected_output = expected_output
+            self.agent = agent
+
+    class FakeCrew:
+        def __init__(self, agents, tasks):
+            self.agents = agents
+            self.tasks = tasks
+
+    crewai_module.Agent = FakeAgent
+    crewai_module.Task = FakeTask
+    crewai_module.Crew = FakeCrew
+    monkeypatch.setitem(sys.modules, "crewai", crewai_module)
+
+    native = to_native_framework(planner_coder_tester_reviewer(), "crewai")
+
+    assert len(native.agents) == 4
+    assert native.tasks
+    assert any(task.agent.role == "coder" for task in native.tasks)
+
+
+def test_native_openai_agents_builder_uses_installed_agent_class(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    agents_module = ModuleType("agents")
+
+    class FakeAgent:
+        def __init__(self, name, instructions, handoff_description):
+            self.name = name
+            self.instructions = instructions
+            self.handoff_description = handoff_description
+
+    agents_module.Agent = FakeAgent
+    monkeypatch.setitem(sys.modules, "agents", agents_module)
+
+    native = to_native_framework(planner_coder_tester_reviewer(), "openai")
+
+    assert [agent.name for agent in native] == ["planner", "coder", "tester", "reviewer"]
+    assert native[0].handoff_description == "AgentProp node planner"
+
+
+def test_native_runtime_builder_explains_unsupported_framework() -> None:
+    try:
+        to_native_framework(planner_coder_tester_reviewer(), "autogen")
+    except NativeFrameworkUnavailable as exc:
+        assert "model clients" in str(exc)
+    else:
+        raise AssertionError("expected NativeFrameworkUnavailable")

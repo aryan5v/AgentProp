@@ -194,9 +194,11 @@ def build_v1_readiness_report() -> ReadinessReport:
             evidence=(
                 "LangGraph, AutoGen, CrewAI, OpenAI Agents SDK, and LlamaIndex workflows "
                 "have dependency-light dictionary adapters.",
+                "LangGraph, CrewAI, and OpenAI Agents SDK have optional best-effort native "
+                "builders when those packages are installed.",
             ),
             remaining=(
-                "Add optional runtime adapters for native framework classes.",
+                "Add configured runtime builders for AutoGen and LlamaIndex.",
                 "Round-trip against real framework examples.",
             ),
         ),

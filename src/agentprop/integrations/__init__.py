@@ -6,17 +6,21 @@ from agentprop.integrations.agent_instructions import (
 )
 from agentprop.integrations.framework_adapters import (
     SUPPORTED_FRAMEWORKS,
+    NativeFrameworkStatus,
+    NativeFrameworkUnavailable,
     graph_from_autogen_dict,
     graph_from_crewai_dict,
     graph_from_framework_dict,
     graph_from_langgraph_dict,
     graph_from_llamaindex_dict,
     graph_from_openai_agents_dict,
+    native_framework_status,
     to_autogen_dict,
     to_crewai_dict,
     to_framework_dict,
     to_langgraph_dict,
     to_llamaindex_dict,
+    to_native_framework,
     to_openai_agents_dict,
 )
 from agentprop.integrations.trace_loader import (
@@ -27,6 +31,8 @@ from agentprop.integrations.trace_loader import (
 
 __all__ = [
     "CodingAgentTarget",
+    "NativeFrameworkStatus",
+    "NativeFrameworkUnavailable",
     "SUPPORTED_FRAMEWORKS",
     "TraceLoadResult",
     "graph_from_autogen_dict",
@@ -37,11 +43,13 @@ __all__ = [
     "graph_from_openai_agents_dict",
     "graph_from_trace",
     "graph_from_trace_dict",
+    "native_framework_status",
     "render_coding_agent_instructions",
     "to_autogen_dict",
     "to_crewai_dict",
     "to_framework_dict",
     "to_langgraph_dict",
     "to_llamaindex_dict",
+    "to_native_framework",
     "to_openai_agents_dict",
 ]
