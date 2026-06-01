@@ -314,7 +314,9 @@ Still needed:
   `TOKEN_ROUTER_MODEL` or equivalent OpenAI env vars.
 - Run the connected LLM mode and save committed or private-reviewed results.
 - Save external verification command logs from an execution environment that
-  actually applies generated code changes.
+  actually applies generated code changes: harness added through
+  `--run-verification`, which writes `verification_logs.jsonl` and populates
+  `verification_passed` from command exit status.
 - Save real verifier corrections and interception events.
 - Review the generated final analysis and plots after the real run.
 

@@ -234,8 +234,8 @@ def build_v1_readiness_report() -> ReadinessReport:
                 "Provide Token Router or OpenAI-compatible credentials.",
                 "Run the routed multi-node arms and save cost, quality, trace, and "
                 "verification artifacts.",
-                "Capture verification logs from an environment that actually applies and "
-                "tests generated code changes.",
+                "Use the verification harness against an environment that actually applies "
+                "and tests generated code changes.",
             ),
             weight=1.5,
         ),

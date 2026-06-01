@@ -1,4 +1,6 @@
 import json
+import shlex
+import sys
 from pathlib import Path
 
 from experiments import (
@@ -323,6 +325,70 @@ def test_routed_case_study_arm_executes_multiple_workflow_nodes() -> None:
     assert len(executor.calls) >= 3
     assert output["node_executions"][-1]["node_id"] == "final"
     assert len(trace["events"]) == len(output["node_executions"])
+
+
+def test_run_case_study_can_capture_real_verification_logs(tmp_path: Path) -> None:
+    tasks = tmp_path / "tasks.json"
+    verification_command = f"{shlex.quote(sys.executable)} -c 'print(\"verified\")'"
+    tasks.write_text(
+        json.dumps(
+            {
+                "tasks": [
+                    {
+                        "id": "demo_bug",
+                        "category": "bugfix",
+                        "prompt": "Fix a demo bug.",
+                        "expected": "Bug fixed.",
+                        "verification_command": verification_command,
+                        "min_coverage": 0.7,
+                    }
+                ]
+            }
+        )
+    )
+    output_dir = tmp_path / "case_study_verified"
+
+    original_client = run_case_study.OpenAICompatibleChatClient
+
+    class FakeClientFactory:
+        @classmethod
+        def from_env(cls, **kwargs):  # type: ignore[no-untyped-def]
+            return _FakeCaseStudyExecutor()
+
+    run_case_study.OpenAICompatibleChatClient = FakeClientFactory
+    try:
+        exit_code = run_case_study.main(
+            [
+                "--execution-mode",
+                "llm-routed",
+                "--tasks",
+                str(tasks),
+                "--trials",
+                "2",
+                "--episodes",
+                "2",
+                "--epochs",
+                "2",
+                "--run-verification",
+                "--verification-workdir",
+                str(tmp_path),
+                "--out-dir",
+                str(output_dir),
+            ]
+        )
+    finally:
+        run_case_study.OpenAICompatibleChatClient = original_client
+
+    payload = json.loads((output_dir / "results.json").read_text())
+    log_lines = (output_dir / "verification_logs.jsonl").read_text().strip().splitlines()
+    output_lines = (output_dir / "outputs.jsonl").read_text().strip().splitlines()
+
+    assert exit_code == 0
+    assert payload["summary"]["optimized_greedy"]["verification_observed_count"] == 1.0
+    assert all(row["verification_passed"] for row in payload["rows"])
+    assert len(log_lines) == 4
+    assert "verified" in json.loads(log_lines[0])["stdout"]
+    assert json.loads(output_lines[0])["verification"]["status"] == "passed"
 
 
 def test_train_seed_scorer_experiment_writes_model(tmp_path: Path) -> None:

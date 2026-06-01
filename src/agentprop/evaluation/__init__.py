@@ -43,6 +43,12 @@ from agentprop.evaluation.reporting import (
     write_report,
 )
 from agentprop.evaluation.runner import BenchmarkRow, run_benchmark
+from agentprop.evaluation.verification import (
+    VerificationResult,
+    VerificationStatus,
+    run_verification_command,
+    verification_row_fields,
+)
 
 __all__ = [
     "BenchmarkRow",
@@ -63,6 +69,8 @@ __all__ = [
     "ReadinessReport",
     "RobustnessSummary",
     "RubricScorer",
+    "VerificationResult",
+    "VerificationStatus",
     "aggregate_quality_scores",
     "build_v1_readiness_report",
     "compare_routing",
@@ -74,7 +82,9 @@ __all__ = [
     "render_v1_readiness_markdown",
     "report_to_dict",
     "robustness_under_failures",
+    "run_verification_command",
     "run_benchmark",
     "summarize_pruning_risk",
+    "verification_row_fields",
     "write_report",
 ]

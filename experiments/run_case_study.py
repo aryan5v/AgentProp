@@ -18,6 +18,8 @@ from agentprop.evaluation import (
     RubricScorer,
     openai_compatible_env_status,
     quality_cost_summary,
+    run_verification_command,
+    verification_row_fields,
 )
 from agentprop.evaluation.metrics import broadcast_cost, seeded_routing_cost
 from agentprop.ml import (
@@ -76,6 +78,19 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--llm-timeout", type=float, default=60.0)
     parser.add_argument("--llm-max-tokens", type=int, default=1200)
     parser.add_argument(
+        "--run-verification",
+        action="store_true",
+        help="run each task verification command after an LLM arm completes",
+    )
+    parser.add_argument(
+        "--verification-workdir",
+        type=Path,
+        default=None,
+        help="working directory for verification commands",
+    )
+    parser.add_argument("--verification-timeout", type=float, default=120.0)
+    parser.add_argument("--verification-output-limit", type=int, default=20_000)
+    parser.add_argument(
         "--preflight",
         action="store_true",
         help="write a readiness manifest without executing any task arms",
@@ -126,6 +141,7 @@ def main(argv: list[str] | None = None) -> int:
     rows = []
     traces = []
     outputs = []
+    verification_logs = []
     for task in tasks:
         for policy_name, seeds in policies.items():
             if executor is None:
@@ -164,6 +180,22 @@ def main(argv: list[str] | None = None) -> int:
             rows.append(row)
             traces.append(trace)
             if output is not None:
+                if args.run_verification:
+                    verification = run_verification_command(
+                        task.verification_command,
+                        cwd=args.verification_workdir,
+                        timeout_s=args.verification_timeout,
+                        output_limit=args.verification_output_limit,
+                    )
+                    row.update(verification_row_fields(verification))
+                    output["verification"] = verification.to_dict()
+                    verification_logs.append(
+                        {
+                            "task_id": task.id,
+                            "policy": policy_name,
+                            **verification.to_dict(),
+                        }
+                    )
                 outputs.append(output)
 
     payload = {
@@ -188,6 +220,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     if outputs:
         _write_traces(args.out_dir / "outputs.jsonl", outputs)
+    if verification_logs:
+        _write_traces(args.out_dir / "verification_logs.jsonl", verification_logs)
     print(f"Wrote {args.out_dir}")
     return 0
 

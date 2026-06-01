@@ -149,6 +149,22 @@ unknown unless a separate execution environment actually runs
 count as verification. Keep the result directory private until a redaction pass
 confirms no secrets or private task data are present.
 
+To capture real command evidence without changing the routing protocol, run LLM
+arms with the opt-in verification harness:
+
+```bash
+PYTHONPATH=src:. python experiments/run_case_study.py \
+  --execution-mode llm-routed \
+  --run-verification \
+  --verification-workdir /path/to/task/worktree \
+  --verification-timeout 120 \
+  --out-dir docs/results/case_study_001
+```
+
+This writes `verification_logs.jsonl` with command, status, return code,
+duration, stdout, and stderr. `verification_passed` is populated only from these
+executed command results.
+
 Analyze saved results:
 
 ```bash
