@@ -174,6 +174,9 @@ Progress:
 
 - Added trace-calibrated learned propagation model.
 - Added learned propagation training script for trace JSON.
+- Added `configs/experiment_suites/ml_core.json` and
+  `experiments/run_experiment_suite.py` as an `ml-intern`-inspired recipe layer
+  for reproducible ML/RL artifact runs.
 
 ### Immediate DL Additions
 
@@ -200,6 +203,8 @@ Acceptance evidence:
 - Training scripts write model configs, metrics, and predictions.
 - Evaluation compares learned policies against random, PageRank, CELF,
   cost-aware greedy, and Q-learning.
+- Experiment suite manifest records runtime assumptions, artifact root, command
+  arguments, outputs, and exit codes.
 - At least one learned model beats a centrality baseline on held-out synthetic
   graphs, or docs state that it does not.
 

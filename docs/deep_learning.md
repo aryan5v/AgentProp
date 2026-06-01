@@ -61,6 +61,36 @@ PYTHONPATH=src:. python experiments/train_edge_pruning_scorer.py
 PYTHONPATH=src:. python experiments/evaluate_ml_generalization.py --model mlp
 ```
 
+## ML Core Experiment Suite
+
+AgentProp also includes a recipe-style ML/RL suite inspired by the config-first
+discipline in `huggingface/ml-intern`: keep credentials in environment
+variables, write every artifact under one private result root, and make runtime
+expectations explicit.
+
+Dry-run the suite:
+
+```bash
+PYTHONPATH=src:. python experiments/run_experiment_suite.py \
+  --config configs/experiment_suites/ml_core.json \
+  --artifact-root results/ml_core \
+  --dry-run
+```
+
+Run one recipe:
+
+```bash
+PYTHONPATH=src:. python experiments/run_experiment_suite.py \
+  --only ml_generalization_mlp \
+  --artifact-root results/ml_core
+```
+
+The default suite runs:
+
+- held-out workflow ML generalization
+- classical vs ML/GNN-style vs RL routing baselines
+- PPO trajectory export with final cost-adjusted proxy quality
+
 ## Still Planned
 
 - larger torch sweeps that compare all GNN architectures with ranking,

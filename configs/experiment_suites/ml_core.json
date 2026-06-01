@@ -1,0 +1,58 @@
+{
+  "name": "ml_core",
+  "description": "Dependency-light AgentProp ML/RL quality suite inspired by ml-intern-style reproducible recipes.",
+  "runtime": {
+    "kind": "local",
+    "requires_gpu": false,
+    "env": {
+      "optional": [
+        "MODAL_TOKEN_ID",
+        "MODAL_TOKEN_SECRET",
+        "TOKEN_ROUTER_API_KEY"
+      ],
+      "required": []
+    }
+  },
+  "artifacts": {
+    "root": "results/ml_core",
+    "save_traces": true,
+    "private_by_default": true
+  },
+  "runs": [
+    {
+      "id": "ml_generalization_mlp",
+      "module": "experiments.evaluate_ml_generalization",
+      "args": {
+        "--model": "mlp",
+        "--budget": 2,
+        "--trials": 10,
+        "--epochs": 40,
+        "--out": "{artifact_root}/generalization_mlp.json"
+      }
+    },
+    {
+      "id": "routing_baselines",
+      "module": "experiments.evaluate_routing_baselines",
+      "args": {
+        "--workflows": "chain,star,tree,generic_dag,layered_pipeline",
+        "--budget": 2,
+        "--trials": 10,
+        "--episodes": 20,
+        "--epochs": 20,
+        "--max-steps": 8,
+        "--out": "{artifact_root}/routing_baselines.json"
+      }
+    },
+    {
+      "id": "rl_policy_ppo",
+      "module": "experiments.run_rl_routing",
+      "args": {
+        "--policy": "ppo",
+        "--trials": 10,
+        "--episodes": 20,
+        "--max-steps": 8,
+        "--out": "{artifact_root}/rl_ppo_trajectories.json"
+      }
+    }
+  ]
+}
