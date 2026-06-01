@@ -6,18 +6,18 @@
     "verifier"
   ],
   "status": "partial",
-  "tasks_done": 6,
+  "tasks_done": 14,
   "broadcast": {
-    "correct": 5,
-    "accuracy": 0.8333,
-    "total_tokens": 18932
+    "correct": 11,
+    "accuracy": 0.7857,
+    "total_tokens": 54113
   },
   "agentprop": {
-    "correct": 5,
-    "accuracy": 0.8333,
-    "total_tokens": 15870
+    "correct": 11,
+    "accuracy": 0.7857,
+    "total_tokens": 43293
   },
-  "measured_total_token_saving": 0.1617,
+  "measured_total_token_saving": 0.2,
   "rows": [
     {
       "task_id": "q001",
@@ -78,6 +78,86 @@
       "agentprop_tokens": 3052,
       "broadcast_answer": "Peruvian Sol",
       "agentprop_answer": "Peruvian sol"
+    },
+    {
+      "task_id": "q007",
+      "gold": "C",
+      "broadcast_correct": false,
+      "agentprop_correct": false,
+      "broadcast_tokens": 7207,
+      "agentprop_tokens": 4258,
+      "broadcast_answer": "None",
+      "agentprop_answer": "None"
+    },
+    {
+      "task_id": "q008",
+      "gold": "6",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 3889,
+      "agentprop_tokens": 3433,
+      "broadcast_answer": "6",
+      "agentprop_answer": "6"
+    },
+    {
+      "task_id": "q009",
+      "gold": "Swahili",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 4105,
+      "agentprop_tokens": 3041,
+      "broadcast_answer": "Swahili and English",
+      "agentprop_answer": "Swahili and English"
+    },
+    {
+      "task_id": "q010",
+      "gold": "4",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 4095,
+      "agentprop_tokens": 3618,
+      "broadcast_answer": "4",
+      "agentprop_answer": "4"
+    },
+    {
+      "task_id": "q011",
+      "gold": "1900s",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 3556,
+      "agentprop_tokens": 2789,
+      "broadcast_answer": "1900s",
+      "agentprop_answer": "1900s"
+    },
+    {
+      "task_id": "q013",
+      "gold": "14",
+      "broadcast_correct": false,
+      "agentprop_correct": false,
+      "broadcast_tokens": 5436,
+      "agentprop_tokens": 4736,
+      "broadcast_answer": "6",
+      "agentprop_answer": "6"
+    },
+    {
+      "task_id": "q015",
+      "gold": "6",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 3271,
+      "agentprop_tokens": 2895,
+      "broadcast_answer": "6",
+      "agentprop_answer": "6"
+    },
+    {
+      "task_id": "q017",
+      "gold": "Vinci",
+      "broadcast_correct": true,
+      "agentprop_correct": true,
+      "broadcast_tokens": 3622,
+      "agentprop_tokens": 2653,
+      "broadcast_answer": "Vinci",
+      "agentprop_answer": "Vinci"
     }
   ]
 }
