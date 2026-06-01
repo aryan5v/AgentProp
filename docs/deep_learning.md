@@ -111,6 +111,18 @@ PYTHONPATH=src:. python experiments/run_experiment_suite.py \
   --dry-run
 ```
 
+Run a small local sweep:
+
+```bash
+PYTHONPATH=src:. python experiments/run_ml_rl_sweep.py \
+  --config configs/sweeps/ml_rl_smoke.json \
+  --artifact-root results/ml_rl_smoke
+```
+
+The sweep runner expands grid parameters, executes each configured experiment,
+writes a `sweep_manifest.json`, registers metric artifacts, and reuses the model
+registry hooks in training scripts for checkpoints.
+
 Run one recipe:
 
 ```bash

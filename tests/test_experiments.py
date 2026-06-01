@@ -11,6 +11,7 @@ from experiments import (
     run_benchmark,
     run_case_study,
     run_experiment_suite,
+    run_ml_rl_sweep,
     run_rl_routing,
     train_edge_pruning_scorer,
     train_learned_propagation,
@@ -97,6 +98,59 @@ def test_run_experiment_suite_writes_dry_run_manifest(tmp_path: Path) -> None:
     assert payload["artifact_root"] == str(artifact_root)
     assert payload["runs"][0]["id"] == "ml_generalization_mlp"
     assert payload["runs"][0]["output"].endswith("generalization_mlp.json")
+
+
+def test_run_ml_rl_sweep_writes_manifest_registry_and_metrics(tmp_path: Path) -> None:
+    artifact_root = tmp_path / "sweep_artifacts"
+    manifest = tmp_path / "sweep_manifest.json"
+
+    exit_code = run_ml_rl_sweep.main(
+        [
+            "--config",
+            "configs/sweeps/ml_rl_smoke.json",
+            "--artifact-root",
+            str(artifact_root),
+            "--only",
+            "mlp_seed_lr",
+            "--manifest",
+            str(manifest),
+        ]
+    )
+    payload = json.loads(manifest.read_text())
+    records = load_artifact_registry(artifact_root / "model_registry" / "registry.json")
+
+    assert exit_code == 0
+    assert payload["sweep"] == "ml_rl_smoke"
+    assert payload["run_count"] == 2
+    assert payload["success_count"] == 2
+    assert payload["best_runs"]["run_id"]
+    assert all(Path(run["output"]).exists() for run in payload["runs"])
+    assert any(record.kind == "ml-model" for record in records)
+    assert any(record.kind == "metrics" for record in records)
+
+
+def test_run_ml_rl_sweep_dry_run_expands_grid(tmp_path: Path) -> None:
+    manifest = tmp_path / "dry_sweep_manifest.json"
+
+    exit_code = run_ml_rl_sweep.main(
+        [
+            "--config",
+            "configs/sweeps/ml_rl_smoke.json",
+            "--artifact-root",
+            str(tmp_path / "dry_artifacts"),
+            "--only",
+            "ppo_episode_sweep",
+            "--dry-run",
+            "--manifest",
+            str(manifest),
+        ]
+    )
+    payload = json.loads(manifest.read_text())
+
+    assert exit_code == 0
+    assert payload["dry_run"]
+    assert payload["run_count"] == 2
+    assert all("--episodes" in run["argv"] for run in payload["runs"])
 
 
 def test_run_case_study_writes_offline_artifacts(tmp_path: Path) -> None:

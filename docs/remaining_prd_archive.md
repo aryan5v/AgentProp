@@ -177,6 +177,9 @@ Progress:
 - Added `configs/experiment_suites/ml_core.json` and
   `experiments/run_experiment_suite.py` as an `ml-intern`-inspired recipe layer
   for reproducible ML/RL artifact runs.
+- Added `configs/sweeps/ml_rl_smoke.json` and
+  `experiments/run_ml_rl_sweep.py` for local hyperparameter sweeps with
+  manifests, metrics artifacts, checkpoints, and registry entries.
 
 ### Immediate DL Additions
 
@@ -219,7 +222,8 @@ No CUDA/GPU is needed for the current tiny alpha models. Modal GPU compute
 becomes useful when we add:
 
 - larger synthetic graph sweeps
-- hyperparameter searches
+- hyperparameter searches: local dependency-light sweep runner added; larger DL
+  searches still need optional torch/Modal recipes
 - larger optional torch GNN sweeps
 - learned propagation from many traces
 

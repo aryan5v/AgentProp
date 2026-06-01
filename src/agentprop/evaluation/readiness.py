@@ -156,6 +156,8 @@ def build_v1_readiness_report() -> ReadinessReport:
                 "as JSON checkpoints.",
                 "ML/RL training scripts can register checkpoints and metrics in an "
                 "artifact registry.",
+                "A config-driven local ML/RL sweep runner writes manifests, metrics, "
+                "checkpoints, and registry records.",
             ),
         ),
         ReadinessItem(
