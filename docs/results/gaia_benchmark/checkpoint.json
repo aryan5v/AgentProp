@@ -1,1 +1,10 @@
-{"timestamp":"2026-06-01T05:14:23Z","status":"completed","tasks_done":13,"broadcast_correct":11,"agentprop_correct":10}
+{
+  "timestamp": "2026-06-01 05:15 UTC",
+  "tasks_done": 13,
+  "broadcast_correct": 11,
+  "agentprop_correct": 10,
+  "broadcast_tokens": 60820,
+  "agentprop_tokens": 45297,
+  "token_saving_pct": 25.5,
+  "status": "completed"
+}
