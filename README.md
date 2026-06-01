@@ -10,6 +10,8 @@
 
 <p align="center">
   <a href="https://github.com/aryan5v/AgentProp/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/aryan5v/AgentProp/actions/workflows/ci.yml/badge.svg" /></a>
+  <a href="https://pypi.org/project/agentprop/"><img alt="PyPI" src="https://img.shields.io/pypi/v/agentprop.svg" /></a>
+  <a href="https://github.com/aryan5v/AgentProp/security"><img alt="Security" src="https://img.shields.io/badge/security-policy-black" /></a>
   <img alt="Version" src="https://img.shields.io/badge/version-0.1.0a1-black" />
   <img alt="License" src="https://img.shields.io/badge/license-Apache--2.0-black" />
   <img alt="Status" src="https://img.shields.io/badge/status-public_alpha-12c95b" />
@@ -47,8 +49,12 @@ agentprop readiness
 ## Install
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
+python -m pip install agentprop
+```
+
+For local development:
+
+```bash
 python -m pip install -e ".[dev]"
 ```
 
@@ -197,6 +203,8 @@ and a saved artifact.
 - [ML/DL/RL guide](docs/deep_learning.md)
 - [Coding-agent integration](docs/coding_agents.md)
 - [Framework integrations](docs/framework_integrations.md)
+- [Publishing](docs/publishing.md)
+- [Security policy](SECURITY.md)
 - [Contributing](CONTRIBUTING.md)
 
 ## Development
