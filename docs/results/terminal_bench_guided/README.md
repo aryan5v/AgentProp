@@ -45,9 +45,9 @@ into passes:
 
 | Task | Baseline | AgentProp-guided | What changed |
 |---|---:|---:|---|
-| `build-pov-ray` | 0.0 | 1.0 | Converted a legacy build task from fail to pass while using fewer raw input+output tokens than the baseline artifact. |
-| `caffe-cifar-10` | 0.0 | 1.0 | Converted a long-running build/train/verify task from timeout/fail to pass with lower reported cost in the matched artifacts. |
-| `sanitize-git-repo` | 0.0 | 1.0 | Converted a repository-hygiene task from fail to pass by keeping the search, edit, and verification loop explicit. |
+| `build-pov-ray` | 0.0 | 1.0 | Legacy build task converted from fail to pass; used fewer raw input+output tokens than baseline. |
+| `caffe-cifar-10` | 0.0 | 1.0 | Long-running build/train/verify task converted from timeout to pass with lower reported cost. |
+| `sanitize-git-repo` | 0.0 | 1.0 | Repository-hygiene task converted from fail to pass via explicit search, edit, and verification loop. |
 
 Two baseline passes regressed in the guided run, leaving a net improvement of
 one pass on the completed matched subset. The useful signal is the shape of the
