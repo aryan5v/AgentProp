@@ -231,10 +231,10 @@ class AgentPropRuntimeController:
             return [self.graph.node(str(node_id)) for node_id in node_ids]
         if not self.config.allow_cycles:
             raise ValueError(
-        if not nx.is_directed_acyclic_graph(nx_graph):
-            raise ValueError("The workflow graph contains cycles, which is not supported for single-pass execution.")
-        node_ids = list(nx.topological_sort(nx_graph))
-        return [self.graph.node(str(node_id)) for node_id in node_ids]
+                "The workflow graph contains cycles, which is not supported "
+                "for single-pass execution."
+            )
+        return self.graph.nodes()
 
     def _visible_context(
         self,
