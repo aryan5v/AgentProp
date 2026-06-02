@@ -132,6 +132,7 @@ def calibrate_expected_success(
     """
 
     outcomes = []
+    high_context_plan_outcomes = []
     high_context_outcomes: dict[str, list[float]] = defaultdict(list)
     low_context_outcomes: dict[str, list[float]] = defaultdict(list)
 
@@ -146,6 +147,11 @@ def calibrate_expected_success(
         context_ratios = _row_context_ratios(row)
         for seed in _string_list(row.get("selected_seeds")):
             context_ratios.setdefault(seed, 1.0)
+        high_context_plan = context_ratios and all(
+            ratio >= high_context_threshold for ratio in context_ratios.values()
+        )
+        if high_context_plan:
+            high_context_plan_outcomes.append(outcome)
         for node_id, ratio in context_ratios.items():
             if ratio >= high_context_threshold:
                 high_context_outcomes[node_id].append(outcome)
@@ -160,7 +166,7 @@ def calibrate_expected_success(
             example_count=0,
         )
 
-    baseline = mean(outcomes)
+    baseline = mean(high_context_plan_outcomes) if high_context_plan_outcomes else mean(outcomes)
     penalties = {}
     for node_id in sorted(set(high_context_outcomes) | set(low_context_outcomes)):
         high = high_context_outcomes.get(node_id)

@@ -102,6 +102,7 @@ def test_expected_success_calibration_learns_context_sensitive_failure() -> None
     )
 
     assert profile.example_count == 2
+    assert profile.default_success == 1.0
     assert profile.node_context_penalties["coder"] == 1.0
     assert full_score > compressed_score
 
