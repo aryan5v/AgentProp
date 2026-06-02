@@ -116,11 +116,12 @@ class ControlledAgentLoop:
 
         tracker = _tracker_from_events(initial_events)
         active_strategy = strategy or self._initial_strategy()
+        features = self._features(tracker)
         request = AgentTurnRequest(
             task=task,
             step=step or (len(initial_events) + 1),
             strategy=active_strategy,
-            features=tracker.features(),
+            features=features,
             transcript=tuple(tracker.events),
             metadata=dict(metadata or {}),
         )
@@ -149,7 +150,7 @@ class ControlledAgentLoop:
         run_metadata = dict(metadata or {})
 
         for step in range(1, self.config.max_steps + 1):
-            features = tracker.features()
+            features = self._features(tracker)
             decision = self.controller.decide(features)
             decisions.append(decision)
             request = AgentTurnRequest(
@@ -187,12 +188,13 @@ class ControlledAgentLoop:
             self._observe_result(tracker, result)
             final_output = result.output or final_output
 
-        features = tracker.features()
+        features = self._features(tracker)
         passed = True if features.evaluator_passed else _last_verifier_result(tracker.events)
         reward_row = self._record_reward(
             strategy=strategy,
             passed=passed,
             features=features,
+            action=decisions[-1].action if decisions else None,
         )
         return AgentLoopResult(
             strategy=strategy,
@@ -235,6 +237,7 @@ class ControlledAgentLoop:
         strategy: str,
         passed: bool | None,
         features: ExecutionStateFeatures,
+        action: str | None,
     ) -> Mapping[str, object] | None:
         if (
             self.reward_logger is None
@@ -254,6 +257,17 @@ class ControlledAgentLoop:
             ),
             quality_score=self.config.quality_score,
             features=features,
+            action=action,
+            outcome={
+                "total_tokens": features.total_tokens,
+                "elapsed_s": features.elapsed_s,
+            },
+        )
+
+    def _features(self, tracker: ExecutionStateTracker) -> ExecutionStateFeatures:
+        return tracker.features(
+            token_budget=self.controller.config.token_budget,
+            wall_time_budget_s=self.controller.config.wall_time_budget_s,
         )
 
 

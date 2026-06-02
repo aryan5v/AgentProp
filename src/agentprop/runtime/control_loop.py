@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import json
+from collections.abc import Mapping
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Literal
 
 from agentprop.rl import CategoryBanditRoutingPolicy
@@ -41,6 +44,8 @@ class ExecutionStateFeatures:
     evaluator_passed: bool
     final_answer_written: bool
     last_error_signature: str | None = None
+    token_budget_fraction: float | None = None
+    wall_time_budget_fraction: float | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -75,7 +80,12 @@ class ExecutionStateTracker:
         self.events.append(event)
         return self.features()
 
-    def features(self) -> ExecutionStateFeatures:
+    def features(
+        self,
+        *,
+        token_budget: int | None = None,
+        wall_time_budget_s: float | None = None,
+    ) -> ExecutionStateFeatures:
         """Extract controller features from observed events."""
 
         if not self.events:
@@ -90,13 +100,17 @@ class ExecutionStateTracker:
                 last_exit_code=None,
                 evaluator_passed=False,
                 final_answer_written=False,
+                token_budget_fraction=_budget_fraction(0, token_budget),
+                wall_time_budget_fraction=_budget_fraction(0.0, wall_time_budget_s),
             )
 
         latest = self.events[-1]
+        total_tokens = sum(event.tokens_used for event in self.events)
+        elapsed_s = sum(event.elapsed_s for event in self.events)
         return ExecutionStateFeatures(
             step_count=len(self.events),
-            total_tokens=sum(event.tokens_used for event in self.events),
-            elapsed_s=sum(event.elapsed_s for event in self.events),
+            total_tokens=total_tokens,
+            elapsed_s=elapsed_s,
             steps_since_verifier=_steps_since(self.events, lambda event: event.verifier_run),
             steps_since_progress=_steps_since(self.events, lambda event: event.progress_made),
             repeated_error_count=_trailing_repeated_errors(self.events),
@@ -107,6 +121,8 @@ class ExecutionStateTracker:
             evaluator_passed=any(event.verifier_passed is True for event in self.events),
             final_answer_written=any(event.final_answer_written for event in self.events),
             last_error_signature=latest.error_signature,
+            token_budget_fraction=_budget_fraction(total_tokens, token_budget),
+            wall_time_budget_fraction=_budget_fraction(elapsed_s, wall_time_budget_s),
         )
 
 
@@ -147,6 +163,7 @@ class RuntimeRewardLogger:
     """Log real outcomes and update category-conditioned routing bandits."""
 
     bandit: CategoryBanditRoutingPolicy
+    jsonl_path: Path | None = None
     rows: list[dict[str, object]] = field(default_factory=list)
 
     def record(
@@ -159,6 +176,8 @@ class RuntimeRewardLogger:
         token_savings: float,
         quality_score: float | None = None,
         features: ExecutionStateFeatures | None = None,
+        action: str | None = None,
+        outcome: Mapping[str, object] | None = None,
     ) -> dict[str, object]:
         """Record one real task outcome and update the bandit arm."""
 
@@ -173,27 +192,53 @@ class RuntimeRewardLogger:
             "task_id": task_id,
             "category": category,
             "strategy": strategy,
+            "action": action or "COMPLETE",
             "passed": passed,
             "token_savings": token_savings,
             "quality_score": quality_score,
+            "outcome": {
+                "passed": passed,
+                "token_savings": token_savings,
+                "quality_score": quality_score,
+                **dict(outcome or {}),
+            },
             "bandit_values": self.bandit.values(category),
         }
         if features is not None:
-            row["features"] = {
-                "step_count": features.step_count,
-                "total_tokens": features.total_tokens,
-                "elapsed_s": features.elapsed_s,
-                "steps_since_verifier": features.steps_since_verifier,
-                "steps_since_progress": features.steps_since_progress,
-                "repeated_error_count": features.repeated_error_count,
-                "verifier_failed_count": features.verifier_failed_count,
-                "last_exit_code": features.last_exit_code,
-                "evaluator_passed": features.evaluator_passed,
-                "final_answer_written": features.final_answer_written,
-                "last_error_signature": features.last_error_signature,
-            }
+            row["state"] = execution_features_to_dict(features)
+            row["features"] = row["state"]
         self.rows.append(row)
+        if self.jsonl_path is not None:
+            self.jsonl_path.parent.mkdir(parents=True, exist_ok=True)
+            with self.jsonl_path.open("a", encoding="utf-8") as handle:
+                handle.write(json.dumps(row, sort_keys=True) + "\n")
         return row
+
+
+def execution_features_to_dict(features: ExecutionStateFeatures) -> dict[str, object]:
+    """Serialize execution-state features for training logs and reports."""
+
+    return {
+        "step_count": features.step_count,
+        "total_tokens": features.total_tokens,
+        "elapsed_s": features.elapsed_s,
+        "steps_since_verifier": features.steps_since_verifier,
+        "steps_since_progress": features.steps_since_progress,
+        "repeated_error_count": features.repeated_error_count,
+        "verifier_failed_count": features.verifier_failed_count,
+        "last_exit_code": features.last_exit_code,
+        "evaluator_passed": features.evaluator_passed,
+        "final_answer_written": features.final_answer_written,
+        "last_error_signature": features.last_error_signature,
+        "token_budget_fraction": features.token_budget_fraction,
+        "wall_time_budget_fraction": features.wall_time_budget_fraction,
+    }
+
+
+def _budget_fraction(used: float, budget: float | None) -> float | None:
+    if budget is None or budget <= 0:
+        return None
+    return min(max(used / budget, 0.0), 1.0)
 
 
 def _steps_since(events: list[ExecutionEvent], predicate: object) -> int:

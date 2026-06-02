@@ -16,6 +16,7 @@ from agentprop.runtime.control_loop import (
     RuntimeRewardLogger,
     StoppingController,
     StoppingControllerConfig,
+    execution_features_to_dict,
 )
 from agentprop.runtime.controller import (
     AgentPropRuntimeController,
@@ -44,4 +45,5 @@ __all__ = [
     "RuntimeRunResult",
     "StoppingController",
     "StoppingControllerConfig",
+    "execution_features_to_dict",
 ]

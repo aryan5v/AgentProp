@@ -1,3 +1,5 @@
+import json
+
 from agentprop.core import NodeType
 from agentprop.rl import CategoryBanditRoutingPolicy
 from agentprop.runtime import (
@@ -105,6 +107,20 @@ def test_execution_state_tracker_extracts_real_loop_features() -> None:
     assert features.last_exit_code == 1
 
 
+def test_execution_state_tracker_exposes_normalized_budget_features() -> None:
+    tracker = ExecutionStateTracker(
+        [
+            ExecutionEvent(step=1, tokens_used=25, elapsed_s=2.0),
+            ExecutionEvent(step=2, tokens_used=25, elapsed_s=3.0),
+        ]
+    )
+
+    features = tracker.features(token_budget=100, wall_time_budget_s=20)
+
+    assert features.token_budget_fraction == 0.5
+    assert features.wall_time_budget_fraction == 0.25
+
+
 def test_stopping_controller_forces_verify_and_switches_strategy() -> None:
     controller = StoppingController(
         StoppingControllerConfig(max_steps_without_verifier=2, repeated_error_threshold=3)
@@ -127,12 +143,11 @@ def test_stopping_controller_forces_verify_and_switches_strategy() -> None:
     assert controller.decide(repeated).action == "SWITCH_STRATEGY"
 
 
-def test_runtime_reward_logger_updates_bandit_from_real_outcome() -> None:
+def test_runtime_reward_logger_updates_bandit_from_real_outcome(tmp_path) -> None:
+    log_path = tmp_path / "rewards.jsonl"
     logger = RuntimeRewardLogger(
-        CategoryBanditRoutingPolicy(
-            arms=("baseline", "agentprop_controller"),
-            epsilon=0.0,
-        )
+        CategoryBanditRoutingPolicy(arms=("baseline", "agentprop_controller"), epsilon=0.0),
+        jsonl_path=log_path,
     )
     features = ExecutionStateTracker(
         [ExecutionEvent(step=1, verifier_run=True, verifier_passed=True)]
@@ -145,9 +160,15 @@ def test_runtime_reward_logger_updates_bandit_from_real_outcome() -> None:
         passed=True,
         token_savings=0.12,
         features=features,
+        action="FINALIZE",
     )
+    logged = json.loads(log_path.read_text(encoding="utf-8"))
 
     assert row["features"]["evaluator_passed"] is True
+    assert row["state"]["evaluator_passed"] is True
+    assert row["action"] == "FINALIZE"
+    assert logged["action"] == "FINALIZE"
+    assert logged["outcome"]["passed"] is True
     assert logger.bandit.choose("incomplete-answer") == "agentprop_controller"
 
 
@@ -183,6 +204,51 @@ def test_controlled_agent_loop_forces_stale_verification() -> None:
     ]
     assert result.passed is True
     assert result.features.total_tokens == 15
+
+
+def test_controlled_agent_loop_logs_budgeted_state_action_outcome(tmp_path) -> None:
+    logger = RuntimeRewardLogger(
+        CategoryBanditRoutingPolicy(arms=("agentprop_controller",), epsilon=0.0),
+        jsonl_path=tmp_path / "runtime-rewards.jsonl",
+    )
+    loop = ControlledAgentLoop(
+        controller=StoppingController(
+            StoppingControllerConfig(max_steps_without_verifier=1, token_budget=20)
+        ),
+        config=AgentLoopConfig(
+            max_steps=3,
+            task_id="demo-task",
+            category="coding",
+            baseline_tokens=40,
+        ),
+        reward_logger=logger,
+    )
+
+    def turn_executor(request: AgentTurnRequest) -> AgentTurnResult:
+        return AgentTurnResult(
+            event=ExecutionEvent(step=request.step, tokens_used=10, elapsed_s=2.0),
+            output="draft",
+        )
+
+    def verifier(request: AgentTurnRequest) -> AgentTurnResult:
+        return AgentTurnResult(
+            event=ExecutionEvent(
+                step=request.step,
+                verifier_run=True,
+                verifier_passed=True,
+                tokens_used=5,
+                elapsed_s=1.0,
+            ),
+            output="PASS",
+        )
+
+    result = loop.run(task="demo", turn_executor=turn_executor, verifier=verifier)
+    logged = json.loads((tmp_path / "runtime-rewards.jsonl").read_text(encoding="utf-8"))
+
+    assert result.reward_row is not None
+    assert logged["state"]["token_budget_fraction"] == 0.75
+    assert logged["action"] == "FINALIZE"
+    assert logged["outcome"]["passed"] is True
 
 
 def test_controlled_agent_loop_switches_strategy_after_repeated_errors() -> None:
