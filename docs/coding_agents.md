@@ -106,10 +106,40 @@ result = controller.run(
 )
 ```
 
+For terminal-style agents, wrap the outer execution loop as well. This lets
+AgentProp react to real progress, repeated errors, verifier failures, and token
+use instead of only selecting an initial prompt shape.
+
+```python
+from agentprop.runtime import (
+    AgentLoopConfig,
+    AgentTurnResult,
+    ControlledAgentLoop,
+    ExecutionEvent,
+    StoppingController,
+    StoppingControllerConfig,
+)
+
+loop = ControlledAgentLoop(
+    controller=StoppingController(
+        StoppingControllerConfig(max_steps_without_verifier=4),
+    ),
+    config=AgentLoopConfig(task_id=task_id, category=task_category),
+)
+
+result = loop.run(
+    task=task_prompt,
+    turn_executor=my_agent_turn,
+    verifier=my_verifier,
+    strategy_switcher=my_strategy_switcher,
+)
+```
+
 Private benchmark adapters should translate `RuntimeNodeRequest` into the local
-agent or Harbor/Terminal-Bench action, then persist `result.trace_events` next to
-the benchmark outcome. Keep model keys, task sandboxes, and machine-local retry
-state out of the public repository.
+agent or Harbor/Terminal-Bench action, translate terminal/model observations into
+`ExecutionEvent`, then persist runtime traces next to the benchmark outcome. Keep
+model keys, task sandboxes, and machine-local retry state out of the public
+repository.
 
 ## MCP Server Shape
 

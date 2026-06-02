@@ -1,7 +1,11 @@
 from agentprop.core import NodeType
 from agentprop.rl import CategoryBanditRoutingPolicy
 from agentprop.runtime import (
+    AgentLoopConfig,
     AgentPropRuntimeController,
+    AgentTurnRequest,
+    AgentTurnResult,
+    ControlledAgentLoop,
     ExecutionEvent,
     ExecutionStateTracker,
     RuntimeControllerConfig,
@@ -145,6 +149,113 @@ def test_runtime_reward_logger_updates_bandit_from_real_outcome() -> None:
 
     assert row["features"]["evaluator_passed"] is True
     assert logger.bandit.choose("incomplete-answer") == "agentprop_controller"
+
+
+def test_controlled_agent_loop_forces_stale_verification() -> None:
+    loop = ControlledAgentLoop(
+        controller=StoppingController(StoppingControllerConfig(max_steps_without_verifier=1)),
+        config=AgentLoopConfig(max_steps=4),
+    )
+
+    def turn_executor(request: AgentTurnRequest) -> AgentTurnResult:
+        return AgentTurnResult(
+            event=ExecutionEvent(step=request.step, tokens_used=10),
+            output="draft",
+        )
+
+    def verifier(request: AgentTurnRequest) -> AgentTurnResult:
+        return AgentTurnResult(
+            event=ExecutionEvent(
+                step=request.step,
+                verifier_run=True,
+                verifier_passed=True,
+                tokens_used=5,
+            ),
+            output="PASS",
+        )
+
+    result = loop.run(task="demo", turn_executor=turn_executor, verifier=verifier)
+
+    assert [decision.action for decision in result.decisions] == [
+        "CONTINUE",
+        "FORCE_VERIFY",
+        "FINALIZE",
+    ]
+    assert result.passed is True
+    assert result.features.total_tokens == 15
+
+
+def test_controlled_agent_loop_switches_strategy_after_repeated_errors() -> None:
+    loop = ControlledAgentLoop(
+        controller=StoppingController(StoppingControllerConfig(repeated_error_threshold=2)),
+        config=AgentLoopConfig(max_steps=5, fallback_strategy="broadcast"),
+    )
+    seen_strategies: list[str] = []
+
+    def turn_executor(request: AgentTurnRequest) -> AgentTurnResult:
+        seen_strategies.append(request.strategy)
+        if request.strategy == "broadcast":
+            return AgentTurnResult(
+                event=ExecutionEvent(
+                    step=request.step,
+                    verifier_run=True,
+                    verifier_passed=True,
+                    final_answer_written=True,
+                    tokens_used=20,
+                ),
+                output="fixed",
+            )
+        return AgentTurnResult(
+            event=ExecutionEvent(
+                step=request.step,
+                exit_code=1,
+                tokens_used=12,
+                error_signature="missing-edge-case",
+            ),
+            output="still failing",
+        )
+
+    result = loop.run(task="demo", turn_executor=turn_executor)
+
+    assert "SWITCH_STRATEGY" in {decision.action for decision in result.decisions}
+    assert result.strategy == "broadcast"
+    assert seen_strategies == ["agentprop_controller", "agentprop_controller", "broadcast"]
+    assert result.passed is True
+
+
+def test_controlled_agent_loop_records_bandit_reward() -> None:
+    bandit = CategoryBanditRoutingPolicy(
+        arms=("agentprop_controller", "baseline"),
+        epsilon=0.0,
+    )
+    logger = RuntimeRewardLogger(bandit)
+    loop = ControlledAgentLoop(
+        config=AgentLoopConfig(
+            max_steps=2,
+            task_id="dna-insert",
+            category="constraint-heavy",
+            baseline_tokens=100,
+        ),
+        bandit=bandit,
+        reward_logger=logger,
+    )
+
+    def turn_executor(request: AgentTurnRequest) -> AgentTurnResult:
+        return AgentTurnResult(
+            event=ExecutionEvent(
+                step=request.step,
+                verifier_run=True,
+                verifier_passed=True,
+                tokens_used=60,
+            ),
+            output="PASS",
+        )
+
+    result = loop.run(task="demo", turn_executor=turn_executor)
+
+    assert result.reward_row is not None
+    assert result.reward_row["token_savings"] == 0.4
+    assert logger.bandit.choose("constraint-heavy") == "agentprop_controller"
 
 
 def test_runtime_controller_can_reject_cycles_in_strict_mode() -> None:
