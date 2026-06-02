@@ -8,11 +8,14 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TypeAlias
 
+from agentprop.rl.feature_policy import GraphFeaturePolicy
 from agentprop.rl.ppo import PPOPolicy
 from agentprop.rl.q_learning import TabularQPolicy
 from agentprop.rl.reinforce import ReinforcePolicy
 
-RLCheckpointPolicy: TypeAlias = TabularQPolicy | ReinforcePolicy | PPOPolicy
+RLCheckpointPolicy: TypeAlias = (
+    TabularQPolicy | ReinforcePolicy | PPOPolicy | GraphFeaturePolicy
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,6 +70,8 @@ def _policy_kind(policy: RLCheckpointPolicy) -> str:
         return "reinforce_policy"
     if isinstance(policy, PPOPolicy):
         return "ppo_policy"
+    if isinstance(policy, GraphFeaturePolicy):
+        return "graph_feature_policy"
     raise TypeError(f"Unsupported RL policy type: {type(policy).__name__}")
 
 
@@ -87,6 +92,11 @@ def _policy_payload(policy: RLCheckpointPolicy) -> dict[str, object]:
             "values": dict(sorted(policy.values.items())),
             "expanded_actions": policy.expanded_actions,
         }
+    if isinstance(policy, GraphFeaturePolicy):
+        return {
+            "weights": list(policy.weights),
+            "feature_names": list(policy.feature_names),
+        }
     raise TypeError(f"Unsupported RL policy type: {type(policy).__name__}")
 
 
@@ -106,6 +116,11 @@ def _policy_from_payload(kind: str, payload: Mapping[str, object]) -> RLCheckpoi
             preferences=_tuple_table(payload.get("preferences")),
             values=_value_table(payload.get("values")),
             expanded_actions=_bool_value(payload.get("expanded_actions")),
+        )
+    if kind == "graph_feature_policy":
+        return GraphFeaturePolicy(
+            weights=_float_list(payload.get("weights")),
+            feature_names=_string_list(payload.get("feature_names")),
         )
     raise ValueError(f"Unsupported RL checkpoint kind: {kind}")
 
@@ -133,6 +148,18 @@ def _value_table(value: object) -> dict[str, float]:
     if isinstance(value, Mapping):
         return {str(key): _float_value(item) for key, item in value.items()}
     raise ValueError("value table must be an object")
+
+
+def _float_list(value: object) -> list[float]:
+    if isinstance(value, list):
+        return [_float_value(item) for item in value]
+    raise ValueError("checkpoint field must be a numeric list")
+
+
+def _string_list(value: object) -> list[str]:
+    if isinstance(value, list):
+        return [_string(item) for item in value]
+    raise ValueError("checkpoint field must be a string list")
 
 
 def _mapping(value: object) -> Mapping[str, object]:

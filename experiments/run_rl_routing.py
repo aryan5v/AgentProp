@@ -10,6 +10,9 @@ from typing import Any, TypeAlias
 from agentprop.evaluation import quality_cost_summary, register_artifact, safe_artifact_id
 from agentprop.rl import (
     AgentRoutingEnv,
+    FeaturePolicyConfig,
+    FeaturePolicyTrainingResult,
+    GraphFeaturePolicy,
     GreedyCoveragePolicy,
     PPOConfig,
     PPOPolicy,
@@ -25,21 +28,29 @@ from agentprop.rl import (
     TabularQPolicy,
     calibrate_routing_reward_profile,
     save_rl_policy,
+    train_feature_policy,
     train_ppo_policy,
     train_q_policy,
     train_reinforce_policy,
 )
 from agentprop.workflows import WORKFLOW_TEMPLATES
 
-RoutingPolicy: TypeAlias = TabularQPolicy | ReinforcePolicy | PPOPolicy | GreedyCoveragePolicy
-TrainingResult: TypeAlias = QLearningTrainingResult | ReinforceTrainingResult | PPOTrainingResult
+RoutingPolicy: TypeAlias = (
+    TabularQPolicy | ReinforcePolicy | PPOPolicy | GraphFeaturePolicy | GreedyCoveragePolicy
+)
+TrainingResult: TypeAlias = (
+    QLearningTrainingResult
+    | ReinforceTrainingResult
+    | PPOTrainingResult
+    | FeaturePolicyTrainingResult
+)
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Run AgentProp sequential routing policies.")
     parser.add_argument(
         "--policy",
-        choices=["q-learning", "reinforce", "ppo", "greedy"],
+        choices=["q-learning", "reinforce", "ppo", "feature-policy", "greedy"],
         default="q-learning",
     )
     parser.add_argument("--budget", type=int, default=2)
@@ -109,6 +120,17 @@ def main(argv: list[str] | None = None) -> int:
                 ),
             )
             env.reset()
+        elif args.policy == "feature-policy":
+            policy, training = train_feature_policy(
+                env,
+                config=FeaturePolicyConfig(
+                    episodes=args.episodes,
+                    learning_rate=args.learning_rate,
+                    epsilon=args.epsilon,
+                    max_steps=args.max_steps,
+                ),
+            )
+            env.reset()
         else:
             policy = GreedyCoveragePolicy()
 
@@ -169,8 +191,14 @@ def main(argv: list[str] | None = None) -> int:
                 row["training"]["truncated_episodes"] = training.truncated_episodes
                 row["preferences"] = policy.to_dict()
                 row["values"] = policy.values_to_dict()
+            if isinstance(training, FeaturePolicyTrainingResult) and isinstance(
+                policy, GraphFeaturePolicy
+            ):
+                row["training"]["feature_count"] = training.feature_count
+                row["training"]["truncated_episodes"] = training.truncated_episodes
+                row["feature_policy"] = policy.to_dict()
             if checkpoint_dir is not None and isinstance(
-                policy, TabularQPolicy | ReinforcePolicy | PPOPolicy
+                policy, TabularQPolicy | ReinforcePolicy | PPOPolicy | GraphFeaturePolicy
             ):
                 artifact_id = safe_artifact_id(
                     f"{args.run_id}-{workflow_name}"

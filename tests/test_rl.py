@@ -1,6 +1,8 @@
 from agentprop.rl import (
     AgentRoutingEnv,
     CategoryBanditRoutingPolicy,
+    FeaturePolicyConfig,
+    GraphFeaturePolicy,
     GreedyCoveragePolicy,
     PPOConfig,
     PPOPolicy,
@@ -17,6 +19,7 @@ from agentprop.rl import (
     parse_routing_action,
     replay_actions,
     save_rl_policy,
+    train_feature_policy,
     train_ppo_policy,
     train_q_policy,
     train_reinforce_policy,
@@ -279,6 +282,27 @@ def test_ppo_can_train_with_expanded_actions() -> None:
     assert result.value_count > 0
 
 
+def test_graph_feature_policy_trains_transferable_action_scores() -> None:
+    graph = planner_coder_tester_reviewer()
+    env = AgentRoutingEnv(graph, budget=2, trials=3)
+
+    policy, result = train_feature_policy(
+        env,
+        config=FeaturePolicyConfig(episodes=8, learning_rate=0.05, epsilon=0.3, seed=1),
+    )
+    env.reset()
+    action = policy.act(env)
+
+    assert isinstance(policy, GraphFeaturePolicy)
+    assert result.episodes == 8
+    assert result.feature_count == len(policy.feature_names)
+    assert result.feature_count > 0
+    assert any(weight != 0.0 for weight in policy.weights)
+    assert "current_coverage" in policy.feature_names
+    assert action in env.action_space
+    assert action != RoutingAction.STOP.value
+
+
 def test_rl_policy_checkpoint_round_trips_action(tmp_path) -> None:  # type: ignore[no-untyped-def]
     graph = planner_coder_tester_reviewer()
     env = AgentRoutingEnv(graph, budget=2, trials=3)
@@ -299,6 +323,30 @@ def test_rl_policy_checkpoint_round_trips_action(tmp_path) -> None:  # type: ign
     assert loaded.metadata["workflow"] == "planner_coder_tester_reviewer"
     assert isinstance(loaded.policy, PPOPolicy)
     assert loaded.policy.values == policy.values
+    assert loaded.policy.act(env) == before
+
+
+def test_graph_feature_policy_checkpoint_round_trips_action(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    graph = planner_coder_tester_reviewer()
+    env = AgentRoutingEnv(graph, budget=2, trials=3)
+    policy, _ = train_feature_policy(
+        env,
+        config=FeaturePolicyConfig(episodes=8, learning_rate=0.05, epsilon=0.3, seed=1),
+    )
+    env.reset()
+    before = policy.act(env)
+
+    path = save_rl_policy(
+        policy,
+        tmp_path / "feature_policy.json",
+        metadata={"workflow": "planner_coder_tester_reviewer"},
+    )
+    loaded = load_rl_policy(path)
+
+    assert loaded.metadata["workflow"] == "planner_coder_tester_reviewer"
+    assert isinstance(loaded.policy, GraphFeaturePolicy)
+    assert loaded.policy.feature_names == policy.feature_names
+    assert loaded.policy.weights == policy.weights
     assert loaded.policy.act(env) == before
 
 

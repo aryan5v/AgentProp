@@ -9,6 +9,11 @@ AgentProp includes a small sequential routing environment and four policies:
 - `PPOPolicy`: trained with a dependency-light clipped policy-gradient update
   and a tabular value baseline. This is a research baseline, not a neural PPO
   implementation with function approximation.
+- `GraphFeaturePolicy`: trained with policy-gradient updates over reusable
+  graph/node/state features instead of stringified state-action tables. This is
+  the dependency-light bridge between the ML feature stack and RL routing; it is
+  transferable across workflow graphs but is still a linear policy, not a neural
+  GNN policy.
 
 Run the trainable policy:
 
@@ -28,9 +33,18 @@ Run the clipped policy-gradient baseline:
 PYTHONPATH=src:. python experiments/run_rl_routing.py --policy ppo --episodes 100 --out results/rl/ppo_policy.json
 ```
 
-The Q-learning, REINFORCE, and PPO loops optimize over complete routing
-trajectories. The default action set selects context seed nodes or stops. The
-expanded action set supports:
+Run the graph-feature-conditioned policy:
+
+```bash
+PYTHONPATH=src:. python experiments/run_rl_routing.py --policy feature-policy --episodes 100 --out results/rl/feature_policy.json
+```
+
+The Q-learning, REINFORCE, PPO, and graph-feature policy loops optimize over
+complete routing trajectories. The default action set selects context seed nodes
+or stops. The graph-feature policy currently uses the seed-selection action set
+and scores each candidate node with normalized graph features plus compact state
+features such as remaining budget and current coverage. The expanded action set
+for tabular policies supports:
 
 - `SEND_CONTEXT(node)`
 - `ACTIVATE_VERIFIER(node)`
@@ -55,6 +69,9 @@ save_rl_policy(policy, "results/models/ppo_routing_policy.json", metadata={"poli
 checkpoint = load_rl_policy("results/models/ppo_routing_policy.json")
 policy = checkpoint.policy
 ```
+
+`GraphFeaturePolicy` checkpoints store feature names and linear weights, which
+keeps runs inspectable and compatible with the model registry.
 
 Compare RL with broadcast, classical graph algorithms, and ML/GNN-style
 baselines:
