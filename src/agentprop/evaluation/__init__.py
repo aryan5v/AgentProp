@@ -63,9 +63,11 @@ from agentprop.evaluation.reporting import (
 )
 from agentprop.evaluation.routing import (
     ContextCompressionProfile,
+    ExpectedSuccessProfile,
     QualityAwareRoutingObjective,
     RoutingRisk,
     calibrate_context_compression,
+    calibrate_expected_success,
     estimate_expected_success,
     graded_context_allocations,
     routing_risks,
@@ -99,6 +101,7 @@ __all__ = [
     "ContextCompressionProfile",
     "DEFAULT_BUDGET_POLICIES",
     "ExactMatchScorer",
+    "ExpectedSuccessProfile",
     "FailureCategory",
     "FailureClassification",
     "HarborTrialSummary",
@@ -130,6 +133,7 @@ __all__ = [
     "build_v1_readiness_report",
     "budget_policy_by_category",
     "calibrate_context_compression",
+    "calibrate_expected_success",
     "classify_benchmark_failure",
     "collect_harbor_trial_results",
     "compare_routing",
