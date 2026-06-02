@@ -28,6 +28,7 @@
         "--budget": 2,
         "--trials": 10,
         "--epochs": 40,
+        "--allow-heuristic-labels": true,
         "--out": "{artifact_root}/models/mlp_seed_scorer_metrics.json",
         "--registry-root": "{artifact_root}/model_registry",
         "--run-id": "mlp_seed_scorer"

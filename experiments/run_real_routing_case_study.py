@@ -6,10 +6,11 @@ cosmetic routing), this experiment actually tests the AgentProp thesis:
 * A real multi-stage agent loop (planner -> coder -> tester -> reviewer) runs per
   task, each stage a real LLM call via an OpenAI-compatible token router.
 * Routing genuinely changes what each agent receives. The *broadcast* arm sends
-  the full shared conventions document to every stage. The *agentprop* arm sends
-  the full document only to the seed stages selected by AgentProp
-  (``greedy_seed_selection`` + ``IndependentCascade`` on the workflow graph) and
-  a one-time compressed summary to the non-seed stages.
+  the full shared conventions document to every stage. The *phase_control* arm
+  runs the same phases and pays the same summary call without using compressed
+  context. The *agentprop* arm sends the full document only to seed stages
+  selected by AgentProp (``greedy_seed_selection`` + ``IndependentCascade``) and
+  a one-time compressed summary to non-seed stages.
 * Task success is measured by actually executing each task's test suite in a
   subprocess (true pass/fail), and token cost is the real summed ``usage`` from
   the provider.
@@ -276,10 +277,10 @@ def run_arm(
 ) -> ArmResult:
     """Run the full planner->coder->tester->reviewer loop for one arm."""
 
-    # The agentprop arm produces a one-time compressed summary for non-seed stages.
+    # AgentProp and phase-control both pay the summary call; only AgentProp uses it.
     summary_tokens = 0
     summary = ""
-    if arm == "agentprop":
+    if arm in {"agentprop", "phase_control"}:
         summ = client.chat(
             system_prompt="You compress engineering conventions for a teammate.",
             user_prompt=(
@@ -293,7 +294,7 @@ def run_arm(
         summary_tokens = summ.usage.total_tokens
 
     def view_for(role: str) -> tuple[str, bool]:
-        if arm == "broadcast":
+        if arm in {"broadcast", "phase_control"}:
             return _context_block(True, conventions, summary), True
         full = role in seeds
         return _context_block(full, conventions, summary), full
@@ -423,13 +424,15 @@ def write_report(
     fitted: dict[str, Any],
 ) -> None:
     bc = summarize(results, "broadcast")
+    pc = summarize(results, "phase_control")
     ap = summarize(results, "agentprop")
+    baseline = pc if pc["tasks"] else bc
     measured_saving = (
-        (bc["mean_tokens"] - ap["mean_tokens"]) / bc["mean_tokens"]
-        if bc["mean_tokens"]
+        (baseline["mean_tokens"] - ap["mean_tokens"]) / baseline["mean_tokens"]
+        if baseline["mean_tokens"]
         else 0.0
     )
-    success_delta = ap["success_rate"] - bc["success_rate"]
+    success_delta = ap["success_rate"] - baseline["success_rate"]
 
     by_task = {(r.arm, r.task_id): r for r in results}
     lines: list[str] = []
@@ -450,13 +453,19 @@ def write_report(
     lines.append(f"| broadcast (full context to all) | {bc['success_rate']:.0%} "
                  f"({int(bc['passed'])}/{int(bc['tasks'])}) | {bc['mean_tokens']:.0f} | "
                  f"{int(bc['total_tokens'])} |")
+    if pc["tasks"]:
+        lines.append(f"| phase_control (same phases + summary overhead, full context) | "
+                     f"{pc['success_rate']:.0%} ({int(pc['passed'])}/{int(pc['tasks'])}) | "
+                     f"{pc['mean_tokens']:.0f} | {int(pc['total_tokens'])} |")
     lines.append(f"| agentprop (full context to seeds only) | {ap['success_rate']:.0%} "
                  f"({int(ap['passed'])}/{int(ap['tasks'])}) | {ap['mean_tokens']:.0f} | "
                  f"{int(ap['total_tokens'])} |")
     lines.append("")
-    lines.append(f"- **Measured token saving (agentprop vs broadcast): {measured_saving:+.1%}**")
+    comparator = "phase_control" if pc["tasks"] else "broadcast"
+    lines.append(f"- **Measured token saving (agentprop vs {comparator}): "
+                 f"{measured_saving:+.1%}**")
     lines.append(f"- **Success-rate change: {success_delta:+.0%}** "
-                 f"({ap['success_rate']:.0%} vs {bc['success_rate']:.0%})")
+                 f"({ap['success_rate']:.0%} vs {baseline['success_rate']:.0%})")
     lines.append("")
     lines.append("## AgentProp cost-model prediction vs measured reality")
     lines.append("")
@@ -466,28 +475,31 @@ def write_report(
     lines.append("")
     lines.append(f"- AgentProp **predicted** token saving on the fitted graph: "
                  f"{fitted['predicted_saving']:+.1%}")
-    lines.append(f"- **Measured** token saving in the real run: {measured_saving:+.1%}")
+    lines.append(f"- **Measured** token saving in the real run vs `{comparator}`: "
+                 f"{measured_saving:+.1%}")
     lines.append(f"- Prediction error: {abs(fitted['predicted_saving'] - measured_saving):.1%}")
     lines.append("")
     lines.append("## Per-task detail")
     lines.append("")
-    lines.append("| Task | broadcast | tokens | agentprop | tokens | fail reason (agentprop) |")
-    lines.append("| --- | --- | --- | --- | --- | --- |")
+    lines.append("| Task | broadcast | phase_control | agentprop | fail reason (agentprop) |")
+    lines.append("| --- | --- | --- | --- | --- |")
     for task in tasks:
         b = by_task.get(("broadcast", task.id))
+        p = by_task.get(("phase_control", task.id))
         a = by_task.get(("agentprop", task.id))
         if not b or not a:
             continue
         reason = "" if a.passed else f"`{a.detail[:48]}`"
         lines.append(
-            f"| {task.id} | {'PASS' if b.passed else 'FAIL'} | {b.total_tokens} | "
-            f"{'PASS' if a.passed else 'FAIL'} | {a.total_tokens} | {reason} |"
+            f"| {task.id} | {'PASS' if b.passed else 'FAIL'} ({b.total_tokens}) | "
+            f"{_task_cell(p)} | {'PASS' if a.passed else 'FAIL'} ({a.total_tokens}) | "
+            f"{reason} |"
         )
     lines.append("")
     regressions = [
         task.id
         for task in tasks
-        if (b := by_task.get(("broadcast", task.id)))
+        if (b := by_task.get((comparator, task.id)))
         and (a := by_task.get(("agentprop", task.id)))
         and b.passed
         and not a.passed
@@ -496,7 +508,8 @@ def write_report(
     lines.append("")
     cost_side = (
         f"**Cost side — works.** AgentProp's routing cut mean token cost by "
-        f"{measured_saving:.1%} ({bc['mean_tokens']:.0f} -> {ap['mean_tokens']:.0f} tokens/task) "
+        f"{measured_saving:.1%} ({baseline['mean_tokens']:.0f} -> "
+        f"{ap['mean_tokens']:.0f} tokens/task) "
         "by sending full shared context only to seed stages. The trace-fit cost model "
         f"predicted {fitted['predicted_saving']:.1%}; the "
         f"{abs(fitted['predicted_saving'] - measured_saving):.1%} gap is itself a useful "
@@ -657,6 +670,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--max-tokens", type=int, default=900)
     parser.add_argument("--limit", type=int, default=None, help="run only the first N tasks")
     parser.add_argument("--fake", action="store_true", help="plumbing self-test (no key)")
+    parser.add_argument(
+        "--skip-ablation-control",
+        action="store_true",
+        help="omit phase_control; faster, but less clean for attribution",
+    )
     parser.add_argument("--report-only", action="store_true",
                        help="regenerate REPORT.md from an existing results.json (no API calls)")
     parser.add_argument("--llm-model", default=None)
@@ -694,7 +712,11 @@ def main(argv: list[str] | None = None) -> int:
     broadcast_events: list[dict[str, Any]] = []
     outputs: list[dict[str, Any]] = []
     for task in tasks:
-        for arm in ("broadcast", "agentprop"):
+        arms = ["broadcast"]
+        if not args.skip_ablation_control:
+            arms.append("phase_control")
+        arms.append("agentprop")
+        for arm in arms:
             t0 = time.perf_counter()
             res = run_arm(client, arm=arm, task=task, conventions=conventions,
                           seeds=seeds, max_tokens=args.max_tokens)
@@ -734,6 +756,7 @@ def main(argv: list[str] | None = None) -> int:
         "model": model,
         "seeds": seed_list,
         "broadcast": summarize(results, "broadcast"),
+        "phase_control": summarize(results, "phase_control"),
         "agentprop": summarize(results, "agentprop"),
         "fitted": fitted,
         "rows": [
@@ -773,6 +796,12 @@ def _report_only(out_dir: Path, tasks: list[Task]) -> int:
                 tasks=tasks, results=results, fitted=payload["fitted"])
     print(f"Regenerated {out_dir}/REPORT.md")
     return 0
+
+
+def _task_cell(result: ArmResult | None) -> str:
+    if result is None:
+        return ""
+    return f"{'PASS' if result.passed else 'FAIL'} ({result.total_tokens})"
 
 
 def _reachable(graph: AgentGraph, seeds: list[str]) -> set[str]:

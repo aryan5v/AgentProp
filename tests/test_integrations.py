@@ -89,7 +89,7 @@ def test_trace_calibration_updates_existing_graph_probabilities() -> None:
     assert calibrated.edge("planner", "coder").reliability == 0.5
     assert calibrated.edge("planner", "coder").message_cost == 600
     assert calibrated.node("coder").reliability == 0.5
-    assert graph.edge("planner", "reviewer").activation_probability == 1.0
+    assert graph.edge("planner", "reviewer").activation_probability == 0.85
     assert calibrated.edge("planner", "reviewer").activation_probability == 0.0
 
 

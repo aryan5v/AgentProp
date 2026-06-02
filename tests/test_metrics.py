@@ -167,3 +167,31 @@ def test_quality_aware_objective_can_use_empirical_success_profile() -> None:
         cost=cost,
         context_ratios=compressed,
     )
+
+
+def test_expected_success_fallback_uses_graph_declared_context_sensitivity() -> None:
+    graph = planner_coder_tester_reviewer()
+    coder = graph.node("coder")
+    graph.add_node(
+        "coder",
+        type=coder.type,
+        name=coder.name,
+        role=coder.role,
+        token_cost=coder.token_cost,
+        latency=coder.latency,
+        reliability=coder.reliability,
+        error_rate=coder.error_rate,
+        context_capacity=coder.context_capacity,
+        tool_access=coder.tool_access,
+        importance_score=coder.importance_score,
+        success_prior=0.95,
+        context_sensitivity=1.0,
+    )
+    full = {"planner": 1.0, "coder": 1.0, "tester": 1.0, "reviewer": 1.0}
+    compressed = dict(full)
+    compressed["coder"] = 0.25
+
+    assert estimate_expected_success(graph, context_ratios=full) > estimate_expected_success(
+        graph,
+        context_ratios=compressed,
+    )

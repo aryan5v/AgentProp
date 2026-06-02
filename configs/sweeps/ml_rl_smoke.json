@@ -15,6 +15,7 @@
         "--budget": 2,
         "--trials": 5,
         "--epochs": 8,
+        "--allow-heuristic-labels": true,
         "--out": "{artifact_root}/metrics/{run_id}.json",
         "--registry-root": "{registry_root}",
         "--run-id": "{run_id}"
