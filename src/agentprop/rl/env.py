@@ -9,6 +9,7 @@ from agentprop.core import AgentGraph, NodeType
 from agentprop.evaluation.metrics import seeded_routing_cost
 from agentprop.propagation import IndependentCascade, PropagationModel
 from agentprop.rl.rewards import (
+    RoutingRewardProfile,
     WorkflowControlReward,
     propagation_reward,
     workflow_control_reward,
@@ -66,6 +67,7 @@ class AgentRoutingEnv:
         *,
         budget: int,
         propagation_model: PropagationModel | None = None,
+        reward_profile: RoutingRewardProfile | None = None,
         trials: int = 50,
     ) -> None:
         if budget < 1:
@@ -73,6 +75,7 @@ class AgentRoutingEnv:
         self.graph = graph
         self.budget = budget
         self.propagation_model = propagation_model or IndependentCascade(seed=0)
+        self.reward_profile = reward_profile or RoutingRewardProfile()
         self.trials = trials
         self._eligible_nodes = [node.id for node in graph.nodes() if node.type != NodeType.OUTPUT]
         self._selected: list[str] = []
@@ -180,6 +183,10 @@ class AgentRoutingEnv:
             token_cost=self._state.token_cost,
             message_cost=self._state.message_cost,
             propagation_time=self._state.propagation_time,
+            coverage_weight=self.reward_profile.coverage_weight,
+            token_cost_weight=self.reward_profile.token_cost_weight,
+            message_cost_weight=self.reward_profile.message_cost_weight,
+            time_weight=self.reward_profile.time_weight,
         )
         control_component = self._control_reward(decision)
         reward = propagation_component + control_component.total
@@ -323,6 +330,7 @@ class AgentRoutingEnv:
             node = self.graph.node(_required_node(decision))
             return workflow_control_reward(
                 activated_verifier_risk=(1.0 - node.reliability) + node.error_rate,
+                verifier_weight=self.reward_profile.verifier_weight,
             )
         if decision.action_type == RoutingAction.PRUNE_EDGE:
             edge = self.graph.edge(*_required_edge(decision))
@@ -331,17 +339,21 @@ class AgentRoutingEnv:
             return workflow_control_reward(
                 safe_pruning_savings=safe_savings,
                 risky_pruning_exposure=risky_exposure,
+                safe_pruning_weight=self.reward_profile.safe_pruning_weight,
+                risky_pruning_weight=self.reward_profile.risky_pruning_weight,
             )
         if decision.action_type == RoutingAction.CALL_TOOL:
             node = self.graph.node(_required_node(decision))
             return workflow_control_reward(
                 tool_reliability_gain=max(node.reliability - node.error_rate, 0.0),
+                tool_weight=self.reward_profile.tool_weight,
             )
         if decision.action_type == RoutingAction.REQUEST_SUMMARY:
             node = self.graph.node(_required_node(decision))
             importance = node.importance_score or 0.0
             return workflow_control_reward(
                 summary_token_savings=0.9 * node.token_cost * max(1.0 - importance, 0.0),
+                summary_weight=self.reward_profile.summary_weight,
             )
         return WorkflowControlReward()
 

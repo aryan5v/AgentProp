@@ -8,8 +8,10 @@ from agentprop.rl import (
     ReinforceConfig,
     ReinforcePolicy,
     RoutingAction,
+    RoutingRewardProfile,
     TabularQPolicy,
     actions_from_exported_trajectory,
+    calibrate_routing_reward_profile,
     format_routing_action,
     load_rl_policy,
     parse_routing_action,
@@ -32,6 +34,52 @@ def test_agent_routing_env_selects_seed_and_stops_at_budget() -> None:
     assert state.coverage > 0
     assert reward != 0
     assert info["selected_seeds"] == ("planner",)
+
+
+def test_routing_env_uses_calibrated_reward_profile() -> None:
+    graph = planner_coder_tester_reviewer()
+    default_env = AgentRoutingEnv(graph, budget=1, trials=3)
+    calibrated_env = AgentRoutingEnv(
+        graph,
+        budget=1,
+        trials=3,
+        reward_profile=RoutingRewardProfile(token_cost_weight=0.01, source="test"),
+    )
+
+    _, default_reward, _, _ = default_env.step("planner")
+    _, calibrated_reward, _, _ = calibrated_env.step("planner")
+
+    assert calibrated_reward < default_reward
+    assert calibrated_env.reward_profile.source == "test"
+
+
+def test_calibrate_routing_reward_profile_from_empirical_rows() -> None:
+    profile = calibrate_routing_reward_profile(
+        [
+            {
+                "verification_passed": True,
+                "token_cost": 1000,
+                "message_cost": 200,
+                "latency": 10,
+            },
+            {
+                "verification_passed": False,
+                "token_cost": 3000,
+                "message_cost": 400,
+                "latency": 30,
+            },
+            {
+                "verification_passed": False,
+                "token_cost": 100,
+                "retry_recommended": True,
+            },
+        ]
+    )
+
+    assert profile.source == "empirical"
+    assert profile.example_count == 2
+    assert profile.token_cost_weight > 0
+    assert profile.time_weight > 0
 
 
 def test_category_bandit_updates_routing_policy_by_task_type() -> None:

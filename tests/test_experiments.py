@@ -688,6 +688,49 @@ def test_rl_routing_experiment_writes_trajectory(tmp_path: Path) -> None:
     assert output.exists()
     assert payload[0]["summary"]["total_reward"] != 0
     assert "cost_adjusted_success" in payload[0]["summary"]
+
+
+def test_rl_routing_experiment_uses_empirical_reward_calibration(tmp_path: Path) -> None:
+    output = tmp_path / "rl_calibrated.json"
+    rows = tmp_path / "reward_rows.json"
+    rows.write_text(
+        json.dumps(
+            [
+                {
+                    "verification_passed": True,
+                    "token_cost": 1000,
+                    "message_cost": 100,
+                    "latency": 5,
+                },
+                {
+                    "verification_passed": False,
+                    "token_cost": 3000,
+                    "message_cost": 500,
+                    "latency": 25,
+                },
+            ]
+        )
+    )
+
+    exit_code = run_rl_routing.main(
+        [
+            "--policy",
+            "greedy",
+            "--trials",
+            "2",
+            "--max-steps",
+            "2",
+            "--reward-calibration-rows",
+            str(rows),
+            "--out",
+            str(output),
+        ]
+    )
+    payload = json.loads(output.read_text())
+
+    assert exit_code == 0
+    assert payload[0]["reward_profile"]["source"] == "empirical"
+    assert payload[0]["reward_profile"]["example_count"] == 2
     assert "cumulative_reward" in payload[0]["trajectory"][0]
 
 
