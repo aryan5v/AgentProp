@@ -1,0 +1,295 @@
+"""Per-command terminal control loop for real agent execution."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from dataclasses import dataclass, field
+from typing import Protocol
+
+from agentprop.rl import CategoryBanditRoutingPolicy
+from agentprop.runtime.control_loop import (
+    ControlDecision,
+    ExecutionEvent,
+    ExecutionStateFeatures,
+    ExecutionStateTracker,
+    RuntimeRewardLogger,
+    StoppingController,
+)
+
+
+class TerminalCommandProposer(Protocol):
+    """Propose the next terminal command without executing it."""
+
+    def __call__(self, request: TerminalTurnRequest) -> TerminalCommandProposal:
+        """Return a candidate command for the current task state."""
+
+
+class TerminalCommandExecutor(Protocol):
+    """Execute a command that AgentProp allowed through the control gate."""
+
+    def __call__(
+        self,
+        request: TerminalTurnRequest,
+        proposal: TerminalCommandProposal,
+    ) -> TerminalCommandResult:
+        """Execute the proposed command and return the observed event."""
+
+
+class TerminalVerifier(Protocol):
+    """Run a verifier when AgentProp decides verification is required."""
+
+    def __call__(
+        self,
+        request: TerminalTurnRequest,
+        blocked_proposal: TerminalCommandProposal | None = None,
+    ) -> TerminalCommandResult:
+        """Run verification instead of the pending command."""
+
+
+class TerminalStrategySwitcher(Protocol):
+    """Choose a new strategy after AgentProp requests a strategy switch."""
+
+    def __call__(
+        self,
+        request: TerminalTurnRequest,
+        proposal: TerminalCommandProposal,
+        decision: ControlDecision,
+    ) -> str:
+        """Return the next strategy name."""
+
+
+@dataclass(frozen=True, slots=True)
+class TerminalTurnRequest:
+    """State visible before one terminal command is proposed or executed."""
+
+    task: str
+    step: int
+    strategy: str
+    features: ExecutionStateFeatures
+    transcript: tuple[ExecutionEvent, ...]
+    metadata: Mapping[str, object] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
+class TerminalCommandProposal:
+    """A terminal command proposed by an agent but not yet executed."""
+
+    command: str
+    metadata: Mapping[str, object] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
+class TerminalCommandResult:
+    """Observed result from an executed terminal command or verifier."""
+
+    event: ExecutionEvent
+    stdout: str = ""
+    stderr: str = ""
+    metadata: Mapping[str, object] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
+class TerminalLoopConfig:
+    """Execution settings for a controlled terminal loop."""
+
+    max_steps: int = 64
+    default_strategy: str = "agentprop_controller"
+    fallback_strategy: str = "baseline"
+    task_id: str | None = None
+    category: str | None = None
+    baseline_tokens: int | None = None
+    quality_score: float | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class TerminalLoopResult:
+    """Complete trace from a command-gated terminal loop."""
+
+    strategy: str
+    decisions: tuple[ControlDecision, ...]
+    proposals: tuple[TerminalCommandProposal, ...]
+    events: tuple[ExecutionEvent, ...]
+    stdout: str
+    stderr: str
+    passed: bool | None
+    features: ExecutionStateFeatures
+    reward_row: Mapping[str, object] | None = None
+
+
+@dataclass(slots=True)
+class ControlledTerminalLoop:
+    """Gate every proposed terminal command through AgentProp control."""
+
+    controller: StoppingController = field(default_factory=StoppingController)
+    config: TerminalLoopConfig = field(default_factory=TerminalLoopConfig)
+    bandit: CategoryBanditRoutingPolicy | None = None
+    reward_logger: RuntimeRewardLogger | None = None
+
+    def run(
+        self,
+        *,
+        task: str,
+        proposer: TerminalCommandProposer,
+        executor: TerminalCommandExecutor,
+        verifier: TerminalVerifier | None = None,
+        strategy_switcher: TerminalStrategySwitcher | None = None,
+        initial_events: tuple[ExecutionEvent, ...] = (),
+        metadata: Mapping[str, object] | None = None,
+    ) -> TerminalLoopResult:
+        """Run a terminal agent while AgentProp controls every command boundary."""
+
+        tracker = _tracker_from_events(initial_events)
+        decisions: list[ControlDecision] = []
+        proposals: list[TerminalCommandProposal] = []
+        stdout_parts: list[str] = []
+        stderr_parts: list[str] = []
+        strategy = self._initial_strategy()
+        run_metadata = dict(metadata or {})
+
+        for step in range(1, self.config.max_steps + 1):
+            request = TerminalTurnRequest(
+                task=task,
+                step=step,
+                strategy=strategy,
+                features=self._features(tracker),
+                transcript=tuple(tracker.events),
+                metadata=run_metadata,
+            )
+            proposal = proposer(request)
+            proposals.append(proposal)
+            decision = self.controller.decide(request.features)
+            decisions.append(decision)
+
+            if decision.action == "FINALIZE":
+                break
+            if decision.action == "FORCE_VERIFY" and verifier is not None:
+                result = verifier(request, proposal)
+                self._observe_result(tracker, result, stdout_parts, stderr_parts)
+                continue
+            if decision.action == "SWITCH_STRATEGY":
+                strategy = self._switch_strategy(
+                    request=request,
+                    proposal=proposal,
+                    decision=decision,
+                    strategy_switcher=strategy_switcher,
+                )
+                tracker.observe(
+                    ExecutionEvent(
+                        step=step,
+                        command="agentprop:switch_strategy",
+                        progress_made=True,
+                    )
+                )
+                continue
+
+            result = executor(request, proposal)
+            self._observe_result(tracker, result, stdout_parts, stderr_parts)
+
+        features = self._features(tracker)
+        passed = True if features.evaluator_passed else _last_verifier_result(tracker.events)
+        reward_row = self._record_reward(
+            strategy=strategy,
+            passed=passed,
+            features=features,
+            action=decisions[-1].action if decisions else None,
+        )
+        return TerminalLoopResult(
+            strategy=strategy,
+            decisions=tuple(decisions),
+            proposals=tuple(proposals),
+            events=tuple(tracker.events),
+            stdout="".join(stdout_parts),
+            stderr="".join(stderr_parts),
+            passed=passed,
+            features=features,
+            reward_row=reward_row,
+        )
+
+    def _initial_strategy(self) -> str:
+        if self.bandit is not None and self.config.category is not None:
+            return self.bandit.choose(self.config.category)
+        return self.config.default_strategy
+
+    def _switch_strategy(
+        self,
+        *,
+        request: TerminalTurnRequest,
+        proposal: TerminalCommandProposal,
+        decision: ControlDecision,
+        strategy_switcher: TerminalStrategySwitcher | None,
+    ) -> str:
+        if strategy_switcher is not None:
+            return strategy_switcher(request, proposal, decision)
+        return decision.strategy or self.config.fallback_strategy
+
+    def _observe_result(
+        self,
+        tracker: ExecutionStateTracker,
+        result: TerminalCommandResult | None,
+        stdout_parts: list[str],
+        stderr_parts: list[str],
+    ) -> None:
+        if result is None:
+            raise RuntimeError("terminal executor returned None")
+        tracker.observe(result.event)
+        stdout_parts.append(result.stdout)
+        stderr_parts.append(result.stderr)
+
+    def _record_reward(
+        self,
+        *,
+        strategy: str,
+        passed: bool | None,
+        features: ExecutionStateFeatures,
+        action: str | None,
+    ) -> Mapping[str, object] | None:
+        if (
+            self.reward_logger is None
+            or self.config.task_id is None
+            or self.config.category is None
+            or passed is None
+        ):
+            return None
+        return self.reward_logger.record(
+            task_id=self.config.task_id,
+            category=self.config.category,
+            strategy=strategy,
+            passed=passed,
+            token_savings=_token_savings(
+                baseline_tokens=self.config.baseline_tokens,
+                observed_tokens=features.total_tokens,
+            ),
+            quality_score=self.config.quality_score,
+            features=features,
+            action=action,
+            outcome={
+                "total_tokens": features.total_tokens,
+                "elapsed_s": features.elapsed_s,
+            },
+        )
+
+    def _features(self, tracker: ExecutionStateTracker) -> ExecutionStateFeatures:
+        return tracker.features(
+            token_budget=self.controller.config.token_budget,
+            wall_time_budget_s=self.controller.config.wall_time_budget_s,
+        )
+
+
+def _tracker_from_events(events: tuple[ExecutionEvent, ...]) -> ExecutionStateTracker:
+    tracker = ExecutionStateTracker()
+    for event in events:
+        tracker.observe(event)
+    return tracker
+
+
+def _last_verifier_result(events: list[ExecutionEvent]) -> bool | None:
+    for event in reversed(events):
+        if event.verifier_passed is not None:
+            return event.verifier_passed
+    return None
+
+
+def _token_savings(*, baseline_tokens: int | None, observed_tokens: int) -> float:
+    if baseline_tokens is None or baseline_tokens <= 0:
+        return 0.0
+    return (baseline_tokens - observed_tokens) / baseline_tokens

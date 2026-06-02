@@ -27,14 +27,18 @@ algorithms, optional GNN-style policies, and reinforcement learning to optimize:
 - how much cost is saved versus broadcast routing
 - how learned routing policies compare with graph-theoretic baselines
 
-AgentProp is not an agent orchestrator. It is an analysis and optimization layer
-for workflows you already have, want to inspect, or want to study.
+AgentProp is not a full agent framework. It is a graph controller and
+optimization layer for workflows you already have, want to inspect, or want to
+study. You can use it in analysis-only mode, or use the runtime controller to
+execute graph nodes with AgentProp-managed context routing and verifier
+interception.
 
 ## Status
 
 AgentProp is usable as a public alpha framework. The graph backbone, CLI,
 reports, workflow templates, ML/RL baselines, MCP/coding-agent briefs,
-checkpoints, and experiment artifact registry are implemented and tested.
+runtime controller, checkpoints, and experiment artifact registry are
+implemented and tested.
 
 ## First Benchmark
 
@@ -93,6 +97,45 @@ python -m pip install -e ".[rl]"  # optional Gymnasium ecosystem compatibility
 
 CUDA/GPU is not required for the current dependency-light alpha workflows.
 Modal/GPU becomes useful for larger torch sweeps and hyperparameter searches.
+
+## Runtime Controller
+
+Use `AgentPropRuntimeController` when you want AgentProp to control execution,
+not merely generate guidance for another agent. The controller chooses seed
+nodes, allocates full versus compressed context, runs graph nodes through an
+injected executor, forces verifier nodes to receive full context by default, and
+records per-node trace events.
+
+```python
+from agentprop.runtime import (
+    AgentPropRuntimeController,
+    RuntimeControllerConfig,
+    RuntimeNodeResult,
+)
+from agentprop.workflows import planner_coder_tester_reviewer
+
+graph = planner_coder_tester_reviewer()
+controller = AgentPropRuntimeController(
+    graph,
+    config=RuntimeControllerConfig(seed_budget=2, fixed_seeds=("coder", "tester")),
+    compressor=lambda context, *, task, target_ratio: context[:400],
+)
+
+def executor(request):
+    # Call your model, tool, verifier, or benchmark harness here.
+    return RuntimeNodeResult(node_id=request.node.id, output="node output")
+
+result = controller.run(
+    task="Implement the benchmark task",
+    shared_context="Full task spec, constraints, traces, and prior outputs",
+    executor=executor,
+)
+```
+
+Terminal-Bench-specific launchers, model keys, and machine-local run state should
+live in private benchmark operations repos until the evidence is ready to
+publish. The public contract is the runtime controller API and the saved trace
+shape.
 
 ## First Recipes
 

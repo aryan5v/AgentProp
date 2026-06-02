@@ -1,10 +1,10 @@
 # Coding Agent Integration
 
-AgentProp should be used by coding agents as an analysis layer before they
-change a multi-agent workflow. It does not replace Claude Code, Codex, or an
-orchestrator. It tells those agents which workflow nodes should receive full
-context, which verifiers should intercept mistakes, and which edges are safe
-candidates for pruning or summarization.
+AgentProp can be used in two ways by coding agents. In analysis mode, it tells
+agents which workflow nodes should receive full context, which verifiers should
+intercept mistakes, and which edges are safe candidates for pruning or
+summarization. In runtime-controller mode, AgentProp directly controls the
+context visible to each graph node and records the execution trace.
 
 ## One-Shot Workflow Brief
 
@@ -81,8 +81,65 @@ A Codex plugin should expose the same core actions:
 - `run_ml_core_suite(artifact_root)`
 - `analyze_case_study(results_path)`
 
-The current CLI is intentionally enough to back these actions without adding a
-runtime dependency.
+The CLI is enough for analysis-mode integrations. Runtime-controller integrations
+should call `agentprop.runtime.AgentPropRuntimeController` and inject their own
+model/tool executor.
+
+## Runtime Controller Shape
+
+Use this path when benchmarking or running a real workflow. The coding agent is
+no longer just reading an AgentProp brief; the executor receives a concrete
+`RuntimeNodeRequest` with the context that AgentProp selected for that node.
+
+```python
+from agentprop.runtime import AgentPropRuntimeController, RuntimeControllerConfig
+
+controller = AgentPropRuntimeController(
+    workflow_graph,
+    config=RuntimeControllerConfig(seed_budget=2),
+    compressor=my_context_compressor,
+)
+result = controller.run(
+    task=task_prompt,
+    shared_context=full_task_context,
+    executor=my_node_executor,
+)
+```
+
+For terminal-style agents, wrap the outer execution loop as well. This lets
+AgentProp react to real progress, repeated errors, verifier failures, and token
+use instead of only selecting an initial prompt shape.
+
+```python
+from agentprop.runtime import (
+    AgentLoopConfig,
+    AgentTurnResult,
+    ControlledAgentLoop,
+    ExecutionEvent,
+    StoppingController,
+    StoppingControllerConfig,
+)
+
+loop = ControlledAgentLoop(
+    controller=StoppingController(
+        StoppingControllerConfig(max_steps_without_verifier=4),
+    ),
+    config=AgentLoopConfig(task_id=task_id, category=task_category),
+)
+
+result = loop.run(
+    task=task_prompt,
+    turn_executor=my_agent_turn,
+    verifier=my_verifier,
+    strategy_switcher=my_strategy_switcher,
+)
+```
+
+Private benchmark adapters should translate `RuntimeNodeRequest` into the local
+agent or Harbor/Terminal-Bench action, translate terminal/model observations into
+`ExecutionEvent`, then persist runtime traces next to the benchmark outcome. Keep
+model keys, task sandboxes, and machine-local retry state out of the public
+repository.
 
 ## MCP Server Shape
 
