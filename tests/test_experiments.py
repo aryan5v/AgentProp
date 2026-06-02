@@ -16,6 +16,7 @@ from experiments import (
     train_edge_pruning_scorer,
     train_learned_propagation,
     train_seed_scorer,
+    train_torch_gnn,
 )
 
 from agentprop.evaluation import LLMExecutionResult, LLMUsage, load_artifact_registry
@@ -665,6 +666,79 @@ def test_train_seed_scorer_experiment_uses_empirical_verifier_rows(
     assert payload["task"] == "verifier"
     assert payload["label_source"] == "empirical-outcome"
     assert payload["weights"]
+
+
+def test_train_torch_gnn_builds_empirical_seed_examples(tmp_path: Path) -> None:
+    rows = tmp_path / "torch_empirical_rows.json"
+    rows.write_text(
+        json.dumps(
+            {
+                "rows": [
+                    {
+                        "task_id": "task-pass",
+                        "policy": "quality_aware_greedy",
+                        "selected_seeds": ["coder"],
+                        "context_allocations": {"coder": 1.0},
+                        "verification_passed": True,
+                    },
+                    {
+                        "task_id": "task-fail",
+                        "policy": "greedy",
+                        "selected_seeds": ["planner"],
+                        "context_allocations": {"planner": 1.0, "coder": 0.25},
+                        "verification_passed": False,
+                    },
+                ]
+            }
+        )
+    )
+
+    examples, label_source = train_torch_gnn._build_training_examples(
+        task="seed",
+        workflow="planner_coder_tester_reviewer",
+        empirical_results=rows,
+        budget=2,
+        trials=2,
+    )
+
+    assert label_source == "empirical-outcome"
+    assert len(examples) == 2
+    assert examples[0].labels["coder"] == 1.0
+    assert examples[1].labels["planner"] == 0.0
+    assert examples[0].edge_features is not None
+
+
+def test_train_torch_gnn_builds_empirical_verifier_examples(tmp_path: Path) -> None:
+    rows = tmp_path / "torch_empirical_verifier_rows.json"
+    rows.write_text(
+        json.dumps(
+            [
+                {
+                    "task_id": "task-pass",
+                    "activated_verifiers": ["tester"],
+                    "verification_passed": True,
+                },
+                {
+                    "task_id": "task-fail",
+                    "activated_verifiers": ["reviewer"],
+                    "verification_passed": False,
+                },
+            ]
+        )
+    )
+
+    examples, label_source = train_torch_gnn._build_training_examples(
+        task="verifier",
+        workflow="planner_coder_tester_reviewer",
+        empirical_results=rows,
+        budget=2,
+        trials=2,
+    )
+
+    assert label_source == "empirical-outcome"
+    assert len(examples) == 2
+    assert examples[0].labels["tester"] == 1.0
+    assert examples[1].labels["reviewer"] == 0.0
 
 
 def test_train_edge_pruning_scorer_experiment_writes_model(tmp_path: Path) -> None:
