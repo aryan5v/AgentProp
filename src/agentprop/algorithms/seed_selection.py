@@ -168,6 +168,31 @@ def greedy_seed_selection(
     return selected
 
 
+def pure_greedy_seed_selection(
+    graph: AgentGraph,
+    k: int,
+    *,
+    propagation_model: PropagationModel | None = None,
+    trials: int = 100,
+) -> list[str]:
+    """Greedily maximize propagation coverage/time without role-critical reweighting.
+
+    This is the theory-preserving influence-maximization baseline. Under the
+    standard IC/LT assumptions, the plain expected-coverage objective is the one
+    associated with the classical greedy approximation guarantee. Role-critical
+    pre-seeding and importance reweighting are intentionally disabled here.
+    """
+
+    return greedy_seed_selection(
+        graph,
+        k,
+        propagation_model=propagation_model,
+        trials=trials,
+        importance_weight=0.0,
+        protect_critical_nodes=False,
+    )
+
+
 def quality_aware_greedy_seed_selection(
     graph: AgentGraph,
     k: int,

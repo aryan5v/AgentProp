@@ -6,6 +6,7 @@ The core package exposes:
 
 - graph feature extraction
 - greedy-labeled seed-selection examples
+- empirical outcome-labeled routing examples
 - pairwise seed-ranking examples
 - marginal-gain regression targets
 - a lightweight trainable scorer
@@ -44,6 +45,24 @@ edge-pruning models into torch GNN training so `edge_conditioned` sees workflow
 cost, reliability, and dependency signals during both training and inference. It
 is intentionally small enough to inspect while still using real `torch.nn.Module`
 models and gradient descent.
+
+Greedy-labeled examples are behavior-cloning baselines: they test whether a
+model can approximate graph heuristics, not whether it can beat them. To train
+against real task success, pass empirical routed rows with task outcomes,
+selected seeds, and context allocations:
+
+```bash
+PYTHONPATH=src:. python experiments/train_seed_scorer.py \
+  --model linear \
+  --empirical-results results/case_study/results.json \
+  --workflow planner_coder_tester_reviewer \
+  --out results/ml/empirical_seed_scorer.json
+```
+
+Empirical training skips retry-recommended infra/timeout rows, then labels
+high-context or selected-seed nodes by observed task success or quality score.
+That is the path for learned policies to disagree with topology-only baselines
+using real evidence.
 
 Dependency-light ML baselines include:
 

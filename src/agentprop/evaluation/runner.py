@@ -13,6 +13,7 @@ from agentprop.algorithms import (
     greedy_seed_selection,
     k_core_seed_selection,
     pagerank_seed_selection,
+    pure_greedy_seed_selection,
     quality_aware_greedy_seed_selection,
     random_seed_selection,
 )
@@ -133,6 +134,13 @@ def select_seeds(
         return k_core_seed_selection(graph, budget)
     if algorithm == "greedy":
         return greedy_seed_selection(graph, budget, propagation_model=model, trials=trials)
+    if algorithm == "pure-greedy":
+        return pure_greedy_seed_selection(
+            graph,
+            budget,
+            propagation_model=model,
+            trials=trials,
+        )
     if algorithm == "celf":
         return celf_seed_selection(graph, budget, propagation_model=model, trials=trials)
     if algorithm == "cost-aware-greedy":

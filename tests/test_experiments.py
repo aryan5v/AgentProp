@@ -529,6 +529,58 @@ def test_train_seed_scorer_experiment_writes_regression_model(tmp_path: Path) ->
     assert payload["weights"]
 
 
+def test_train_seed_scorer_experiment_uses_empirical_rows(tmp_path: Path) -> None:
+    rows = tmp_path / "empirical_rows.json"
+    output = tmp_path / "empirical_model.json"
+    rows.write_text(
+        json.dumps(
+            [
+                {
+                    "task_id": "task-pass",
+                    "policy": "quality_aware_greedy",
+                    "selected_seeds": ["coder", "tester"],
+                    "context_allocations": {"coder": 1.0, "tester": 1.0},
+                    "verification_passed": True,
+                    "cost_adjusted_success": 0.8,
+                },
+                {
+                    "task_id": "task-fail",
+                    "policy": "greedy",
+                    "selected_seeds": ["planner"],
+                    "context_allocations": {"planner": 1.0, "coder": 0.25},
+                    "verification_passed": False,
+                },
+                {
+                    "task_id": "task-infra",
+                    "policy": "greedy",
+                    "selected_seeds": ["planner"],
+                    "verification_passed": False,
+                    "retry_recommended": True,
+                },
+            ]
+        )
+    )
+
+    exit_code = train_seed_scorer.main(
+        [
+            "--model",
+            "linear",
+            "--empirical-results",
+            str(rows),
+            "--epochs",
+            "2",
+            "--out",
+            str(output),
+        ]
+    )
+    payload = json.loads(output.read_text())
+
+    assert exit_code == 0
+    assert payload["label_source"] == "empirical-outcome"
+    assert payload["model"] == "linear"
+    assert payload["weights"]
+
+
 def test_train_edge_pruning_scorer_experiment_writes_model(tmp_path: Path) -> None:
     output = tmp_path / "edge_model.json"
     registry_root = tmp_path / "edge_registry"

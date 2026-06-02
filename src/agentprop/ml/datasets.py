@@ -63,6 +63,25 @@ class VerifierPlacementExample:
     edge_features: EdgeFeatures | None = None
 
 
+@dataclass(slots=True)
+class EmpiricalRoutingExample:
+    """Node-policy example labeled by real task outcome instead of a heuristic teacher."""
+
+    features: GraphFeatures
+    labels: dict[str, float]
+    outcome_score: float
+    task_id: str
+    policy: str
+    selected_seeds: list[str]
+    context_allocations: dict[str, float]
+    budget: int
+    task_category: str | None = None
+    cost_adjusted_success: float | None = None
+    sample_weight: float = 1.0
+    neighbors: dict[str, list[str]] | None = None
+    edge_features: EdgeFeatures | None = None
+
+
 def build_seed_selection_example(
     graph: AgentGraph,
     *,
@@ -94,6 +113,84 @@ def build_seed_selection_example(
         neighbors=neighbors,
         edge_features=extract_edge_features(graph),
     )
+
+
+def build_empirical_routing_example(
+    graph: AgentGraph,
+    row: dict[str, object],
+    *,
+    high_context_threshold: float = 0.80,
+    default_budget: int | None = None,
+) -> EmpiricalRoutingExample | None:
+    """Build a node-label example from a real routed task row.
+
+    Rows with retryable infra/timeout labels are skipped because they should not
+    train correctness or routing quality. Positive labels come from high-context
+    or selected-seed nodes in successful rows; the same choices receive zero
+    labels when the task failed.
+    """
+
+    if bool(row.get("retry_recommended")):
+        return None
+
+    outcome = _empirical_outcome(row)
+    if outcome is None:
+        return None
+
+    selected_seeds = _string_list(row.get("selected_seeds"))
+    context_allocations = _string_float_dict(row.get("context_allocations"))
+    budget = default_budget if default_budget is not None else max(1, len(selected_seeds))
+    features = extract_graph_features(graph)
+    labels = {}
+    credited_nodes = set(selected_seeds)
+    credited_nodes.update(
+        node_id
+        for node_id, ratio in context_allocations.items()
+        if ratio >= high_context_threshold
+    )
+    for node_id in features.node_features:
+        labels[node_id] = outcome if node_id in credited_nodes else 0.0
+
+    return EmpiricalRoutingExample(
+        features=features,
+        labels=labels,
+        outcome_score=outcome,
+        task_id=str(row.get("task_id") or row.get("task_name") or "unknown-task"),
+        policy=str(row.get("policy") or "unknown-policy"),
+        selected_seeds=selected_seeds,
+        context_allocations=context_allocations,
+        budget=budget,
+        task_category=_optional_string(row.get("category")),
+        cost_adjusted_success=_optional_float(row.get("cost_adjusted_success")),
+        sample_weight=_empirical_sample_weight(row),
+        neighbors={
+            node_id: sorted({*graph.predecessors(node_id), *graph.successors(node_id)})
+            for node_id in features.node_features
+        },
+        edge_features=extract_edge_features(graph),
+    )
+
+
+def build_empirical_routing_examples(
+    graph: AgentGraph,
+    rows: list[dict[str, object]],
+    *,
+    high_context_threshold: float = 0.80,
+    default_budget: int | None = None,
+) -> list[EmpiricalRoutingExample]:
+    """Build all usable empirical node-policy examples from result rows."""
+
+    examples = []
+    for row in rows:
+        example = build_empirical_routing_example(
+            graph,
+            row,
+            high_context_threshold=high_context_threshold,
+            default_budget=default_budget,
+        )
+        if example is not None:
+            examples.append(example)
+    return examples
 
 
 def build_seed_ranking_example(
@@ -195,3 +292,55 @@ def _single_seed_utility(
     result = model.simulate(graph, [node_id], trials=trials)
     propagation_time = result.expected_propagation_time or result.propagation_time
     return result.coverage - 0.02 * float(propagation_time)
+
+
+def _empirical_outcome(row: dict[str, object]) -> float | None:
+    verification = row.get("verification_passed")
+    if isinstance(verification, bool):
+        return 1.0 if verification else 0.0
+    quality_passed = row.get("quality_passed")
+    if isinstance(quality_passed, bool):
+        return 1.0 if quality_passed else 0.0
+    quality_score = _optional_float(row.get("quality_score"))
+    if quality_score is not None:
+        return max(0.0, min(1.0, quality_score))
+    passed = row.get("passed")
+    if isinstance(passed, bool):
+        return 1.0 if passed else 0.0
+    return None
+
+
+def _empirical_sample_weight(row: dict[str, object]) -> float:
+    cost_adjusted = _optional_float(row.get("cost_adjusted_success"))
+    if cost_adjusted is None:
+        return 1.0
+    return max(0.05, min(2.0, 1.0 + cost_adjusted))
+
+
+def _string_list(value: object) -> list[str]:
+    if isinstance(value, list):
+        return [str(item) for item in value if isinstance(item, str)]
+    if isinstance(value, tuple):
+        return [str(item) for item in value if isinstance(item, str)]
+    return []
+
+
+def _string_float_dict(value: object) -> dict[str, float]:
+    if not isinstance(value, dict):
+        return {}
+    result = {}
+    for key, raw_value in value.items():
+        numeric = _optional_float(raw_value)
+        if numeric is not None:
+            result[str(key)] = max(0.0, min(1.0, numeric))
+    return result
+
+
+def _optional_float(value: object) -> float | None:
+    if isinstance(value, int | float):
+        return float(value)
+    return None
+
+
+def _optional_string(value: object) -> str | None:
+    return value if isinstance(value, str) else None

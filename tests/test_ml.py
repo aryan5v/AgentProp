@@ -5,6 +5,7 @@ from agentprop.ml import (
     MLPNodeScorer,
     PairwiseNodeRanker,
     build_edge_pruning_example,
+    build_empirical_routing_example,
     build_seed_ranking_example,
     build_seed_selection_example,
     build_verifier_placement_example,
@@ -35,6 +36,50 @@ def test_linear_node_scorer_trains_on_seed_example() -> None:
 
     assert set(example.positive_seeds)
     assert all(0.0 <= score <= 1.0 for score in scores.values())
+
+
+def test_empirical_routing_example_uses_task_outcome_labels() -> None:
+    graph = planner_coder_tester_reviewer()
+    success = build_empirical_routing_example(
+        graph,
+        {
+            "task_id": "roman-to-int",
+            "policy": "quality_aware_greedy",
+            "selected_seeds": ["coder"],
+            "context_allocations": {"coder": 1.0, "tester": 0.85},
+            "verification_passed": True,
+            "cost_adjusted_success": 0.91,
+        },
+        default_budget=2,
+    )
+    failure = build_empirical_routing_example(
+        graph,
+        {
+            "task_id": "roman-to-int",
+            "policy": "greedy",
+            "selected_seeds": ["planner"],
+            "context_allocations": {"planner": 1.0, "coder": 0.25},
+            "verification_passed": False,
+        },
+        default_budget=2,
+    )
+    retryable = build_empirical_routing_example(
+        graph,
+        {
+            "task_id": "browser-flake",
+            "selected_seeds": ["planner"],
+            "verification_passed": False,
+            "retry_recommended": True,
+        },
+    )
+
+    assert success is not None
+    assert success.labels["coder"] == 1.0
+    assert success.labels["tester"] == 1.0
+    assert success.sample_weight > 1.0
+    assert failure is not None
+    assert failure.labels["planner"] == 0.0
+    assert retryable is None
 
 
 def test_mlp_node_scorer_trains_on_seed_example() -> None:
