@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from agentprop.evaluation.artifacts import register_artifact
+from agentprop.evaluation.budgeting import DEFAULT_BUDGET_POLICIES, render_budget_policy_markdown
 
 
 @dataclass(frozen=True, slots=True)
@@ -68,6 +69,9 @@ class HarborTrialSummary:
     cache_tokens: int
     output_tokens: int
     cost_usd: float
+    elapsed_time_s: float
+    command_count: int
+    model_call_count: int
     result_path: str
 
     @property
@@ -86,6 +90,9 @@ class HarborTrialSummary:
             "output_tokens": self.output_tokens,
             "total_tokens": self.total_tokens,
             "cost_usd": self.cost_usd,
+            "elapsed_time_s": self.elapsed_time_s,
+            "command_count": self.command_count,
+            "model_call_count": self.model_call_count,
             "result_path": self.result_path,
         }
 
@@ -105,6 +112,9 @@ class TerminalBenchSummary:
     output_tokens: int
     total_tokens: int
     cost_usd: float
+    elapsed_time_s: float
+    command_count: int
+    model_call_count: int
     timeout_rate: float
     cost_adjusted_success: float
 
@@ -121,6 +131,9 @@ class TerminalBenchSummary:
             "output_tokens": self.output_tokens,
             "total_tokens": self.total_tokens,
             "cost_usd": self.cost_usd,
+            "elapsed_time_s": self.elapsed_time_s,
+            "command_count": self.command_count,
+            "model_call_count": self.model_call_count,
             "timeout_rate": self.timeout_rate,
             "cost_adjusted_success": self.cost_adjusted_success,
         }
@@ -159,6 +172,7 @@ def write_terminal_bench_launch_bundle(
             "idle_timeout_s": config.watchdog.idle_timeout_s,
             "poll_interval_s": config.watchdog.poll_interval_s,
         },
+        "budget_policies": [policy.to_dict() for policy in DEFAULT_BUDGET_POLICIES],
         "report_after_run": [
             "python",
             "experiments/summarize_harbor_results.py",
@@ -233,6 +247,21 @@ def load_harbor_trial_result(path: str | Path) -> HarborTrialSummary | None:
         cache_tokens=_int(agent_result.get("n_cache_tokens")),
         output_tokens=_int(agent_result.get("n_output_tokens")),
         cost_usd=_float(agent_result.get("cost_usd")),
+        elapsed_time_s=_extract_float(
+            payload,
+            agent_result,
+            keys=("elapsed_time_s", "duration_s", "wall_time_s", "runtime_s"),
+        ),
+        command_count=_extract_int(
+            payload,
+            agent_result,
+            keys=("command_count", "n_commands", "num_commands", "tool_call_count"),
+        ),
+        model_call_count=_extract_int(
+            payload,
+            agent_result,
+            keys=("model_call_count", "n_model_calls", "num_model_calls", "llm_call_count"),
+        ),
         result_path=str(result_path),
     )
 
@@ -270,6 +299,9 @@ def summarize_terminal_bench_results(
     cache_tokens = sum(row.cache_tokens for row in rows)
     output_tokens = sum(row.output_tokens for row in rows)
     cost_usd = sum(row.cost_usd for row in rows)
+    elapsed_time_s = sum(row.elapsed_time_s for row in rows)
+    command_count = sum(row.command_count for row in rows)
+    model_call_count = sum(row.model_call_count for row in rows)
     cost_adjusted_success = pass_rate - cost_weight * cost_usd - timeout_weight * timeout_rate
     return TerminalBenchSummary(
         task_count=len(rows),
@@ -283,6 +315,9 @@ def summarize_terminal_bench_results(
         output_tokens=output_tokens,
         total_tokens=input_tokens + output_tokens,
         cost_usd=cost_usd,
+        elapsed_time_s=elapsed_time_s,
+        command_count=command_count,
+        model_call_count=model_call_count,
         timeout_rate=timeout_rate,
         cost_adjusted_success=cost_adjusted_success,
     )
@@ -415,7 +450,8 @@ python experiments/run_with_watchdog.py \\
 
 
 def _render_extra_instructions() -> str:
-    return """# AgentProp Benchmark Guidance
+    budget_policy = render_budget_policy_markdown()
+    return f"""# AgentProp Benchmark Guidance
 
 Use AgentProp routing discipline, but keep it budget-aware.
 
@@ -430,6 +466,8 @@ Use AgentProp routing discipline, but keep it budget-aware.
 - If a task is direct-answer or perception-heavy, avoid heavyweight process loops.
 - Preserve evidence: commands run, files changed, verification output, and any
   unresolved risk.
+
+{budget_policy}
 
 ## Regression Fixes From The First AgentProp Run
 
@@ -478,13 +516,16 @@ def _render_summary_markdown(
         f"- Output tokens: {summary.output_tokens:,}",
         f"- Total input+output tokens: {summary.total_tokens:,}",
         f"- Reported cost: ${summary.cost_usd:.2f}",
+        f"- Elapsed time: {summary.elapsed_time_s:.1f}s",
+        f"- Commands: {summary.command_count:,}",
+        f"- Model calls: {summary.model_call_count:,}",
         f"- Timeout rate: {summary.timeout_rate:.1%}",
         f"- Cost-adjusted success: {summary.cost_adjusted_success:.3f}",
         "",
         "## Task Results",
         "",
-        "| Task | Reward | Passed | Exception | Tokens | Cost |",
-        "|---|---:|---:|---|---:|---:|",
+        "| Task | Reward | Passed | Exception | Tokens | Cost | Time | Commands | Model calls |",
+        "|---|---:|---:|---|---:|---:|---:|---:|---:|",
     ]
     for row in rows:
         reward = "" if row.reward is None else f"{row.reward:.3f}"
@@ -492,13 +533,16 @@ def _render_summary_markdown(
         exception = row.exception_name or "-"
         lines.append(
             f"| `{row.task_name}` | {reward} | {passed} | {exception} | "
-            f"{row.total_tokens} | ${row.cost_usd:.4f} |"
+            f"{row.total_tokens} | ${row.cost_usd:.4f} | {row.elapsed_time_s:.1f}s | "
+            f"{row.command_count} | {row.model_call_count} |"
         )
     return "\n".join(lines).rstrip() + "\n"
 
 
 def _write_trial_csv(path: Path, rows: list[HarborTrialSummary]) -> None:
-    fieldnames = list(HarborTrialSummary("", "", None, None, None, 0, 0, 0, 0.0, "").to_dict())
+    fieldnames = list(
+        HarborTrialSummary("", "", None, None, None, 0, 0, 0, 0.0, 0.0, 0, 0, "").to_dict()
+    )
     with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
@@ -529,4 +573,24 @@ def _int(value: object) -> int:
         return value
     if isinstance(value, float):
         return int(value)
+    return 0
+
+
+def _extract_float(*payloads: dict[str, Any], keys: tuple[str, ...]) -> float:
+    for payload in payloads:
+        for key in keys:
+            value = payload.get(key)
+            if isinstance(value, int | float):
+                return float(value)
+    return 0.0
+
+
+def _extract_int(*payloads: dict[str, Any], keys: tuple[str, ...]) -> int:
+    for payload in payloads:
+        for key in keys:
+            value = payload.get(key)
+            if isinstance(value, int):
+                return value
+            if isinstance(value, float):
+                return int(value)
     return 0

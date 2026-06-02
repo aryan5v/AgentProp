@@ -31,6 +31,8 @@ def test_terminal_bench_prepare_writes_dry_run_bundle(tmp_path: Path) -> None:
     instructions = paths["extra_instructions"].read_text()
     assert "enumerate the full answer set" in instructions
     assert "Limit candidate sweeps to a small fixed budget" in instructions
+    assert "Budget-Aware Stop Conditions" in instructions
+    assert manifest["budget_policies"][0]["category"] == "direct-answer"
     assert (tmp_path / "registry" / "registry.json").exists()
 
 
@@ -44,6 +46,9 @@ def test_terminal_bench_summary_reads_harbor_task_results(tmp_path: Path) -> Non
         30,
         0.05,
         exception_name="AgentTimeoutError",
+        elapsed_time_s=1800.0,
+        command_count=12,
+        model_call_count=5,
     )
     (tmp_path / "result.json").write_text(json.dumps({"aggregate": True}))
 
@@ -56,6 +61,9 @@ def test_terminal_bench_summary_reads_harbor_task_results(tmp_path: Path) -> Non
     assert summary.timeout_rate == 0.5
     assert summary.input_tokens == 300
     assert summary.output_tokens == 50
+    assert summary.elapsed_time_s == 1800.0
+    assert summary.command_count == 12
+    assert summary.model_call_count == 5
 
 
 def test_terminal_bench_summary_skips_partial_json(tmp_path: Path) -> None:
@@ -76,6 +84,7 @@ def test_terminal_bench_summary_report_writes_artifacts(tmp_path: Path) -> None:
     paths = write_terminal_bench_summary_report(tmp_path / "run", tmp_path / "report")
 
     assert json.loads(paths["summary"].read_text())["summary"]["pass_count"] == 1
+    assert "Commands" in paths["report"].read_text()
     assert "Task Results" in paths["report"].read_text()
     assert "task_name" in paths["csv"].read_text()
 
@@ -169,6 +178,9 @@ def _write_result(
     cost_usd: float = 0.0,
     *,
     exception_name: str | None = None,
+    elapsed_time_s: float = 0.0,
+    command_count: int = 0,
+    model_call_count: int = 0,
 ) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
@@ -181,6 +193,9 @@ def _write_result(
                     "n_cache_tokens": input_tokens // 2,
                     "n_output_tokens": output_tokens,
                     "cost_usd": cost_usd,
+                    "duration_s": elapsed_time_s,
+                    "n_commands": command_count,
+                    "n_model_calls": model_call_count,
                 },
                 "verifier_result": {"rewards": {"reward": reward}},
                 "exception_info": (
