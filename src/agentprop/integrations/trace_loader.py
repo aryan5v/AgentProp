@@ -31,6 +31,14 @@ class TraceGraphCalibrationResult:
     message_count: int
 
 
+@dataclass(frozen=True, slots=True)
+class TraceEmpiricalRowsResult:
+    """Empirical training rows derived from workflow execution traces."""
+
+    rows: list[dict[str, Any]]
+    skipped_trace_count: int
+
+
 def graph_from_trace(path: str | Path) -> TraceLoadResult:
     """Load an AgentGraph from a trace JSON file."""
 
@@ -113,6 +121,89 @@ def calibrate_graph_from_trace_dict(
         calibrated_edge_count=calibrated_edges,
         message_count=len(events),
     )
+
+
+def empirical_row_from_trace_dict(
+    data: dict[str, Any],
+    *,
+    outcome_row: dict[str, Any] | None = None,
+    default_summary_ratio: float = 0.35,
+) -> dict[str, Any] | None:
+    """Build one empirical ML/RL training row from a trace and outcome fields.
+
+    The resulting row is accepted by empirical seed, verifier, torch GNN, and
+    RL reward-calibration paths. Traces without pass/fail or quality signal are
+    skipped because they cannot provide a task-success training target.
+    """
+
+    outcome = outcome_row or {}
+    merged = {**data, **outcome}
+    outcome_score = _trace_outcome(merged)
+    if outcome_score is None:
+        return None
+
+    events = data.get("events", data.get("messages", []))
+    if not isinstance(events, list):
+        raise ValueError("trace must contain an events or messages list")
+
+    selected_seeds = _trace_selected_seeds(data, events)
+    context_allocations = _trace_context_allocations(
+        data,
+        events,
+        default_summary_ratio=default_summary_ratio,
+    )
+    row: dict[str, Any] = {
+        "task_id": str(merged.get("task_id") or merged.get("task_name") or "unknown-task"),
+        "policy": str(merged.get("policy") or "unknown-policy"),
+        "selected_seeds": selected_seeds,
+        "context_allocations": context_allocations,
+        "verification_passed": _optional_bool(merged.get("verification_passed")),
+        "quality_score": _optional_float(merged.get("quality_score")),
+        "quality_passed": _optional_bool(merged.get("quality_passed")),
+        "token_cost": _optional_float(
+            merged.get("token_cost"),
+            merged.get("total_llm_tokens"),
+            merged.get("total_tokens"),
+        ),
+        "message_cost": _optional_float(merged.get("message_cost")),
+        "latency": _optional_float(merged.get("latency"), merged.get("latency_s")),
+        "cost_adjusted_success": _optional_float(merged.get("cost_adjusted_success")),
+    }
+    category = merged.get("category")
+    if isinstance(category, str):
+        row["category"] = category
+    activated_verifiers = _trace_activated_verifiers(merged)
+    if activated_verifiers:
+        row["activated_verifiers"] = activated_verifiers
+    pruned_edges = _trace_pruned_edges(merged)
+    if pruned_edges:
+        row["pruned_edges"] = pruned_edges
+    return {key: value for key, value in row.items() if value is not None}
+
+
+def empirical_rows_from_trace_dicts(
+    traces: list[dict[str, Any]],
+    *,
+    outcome_rows: list[dict[str, Any]] | None = None,
+    default_summary_ratio: float = 0.35,
+) -> TraceEmpiricalRowsResult:
+    """Build empirical training rows from traces and optional result rows."""
+
+    outcomes = _outcome_lookup(outcome_rows or [])
+    rows = []
+    skipped = 0
+    for trace in traces:
+        outcome = _matching_outcome(trace, outcomes)
+        row = empirical_row_from_trace_dict(
+            trace,
+            outcome_row=outcome,
+            default_summary_ratio=default_summary_ratio,
+        )
+        if row is None:
+            skipped += 1
+        else:
+            rows.append(row)
+    return TraceEmpiricalRowsResult(rows=rows, skipped_trace_count=skipped)
 
 
 def graph_from_trace_dict(data: dict[str, Any]) -> TraceLoadResult:
@@ -297,3 +388,156 @@ def _metadata(payload: dict[str, Any]) -> dict[str, Any]:
     replacement: dict[str, Any] = {}
     payload["metadata"] = replacement
     return replacement
+
+
+def _trace_selected_seeds(data: dict[str, Any], events: list[Any]) -> list[str]:
+    selected = _string_list(data.get("selected_seeds"))
+    if selected:
+        return selected
+    seeds = []
+    for event in events:
+        if not isinstance(event, dict):
+            continue
+        source = event.get("source")
+        target = event.get("target")
+        if source == "task" and isinstance(target, str) and target != "final":
+            seeds.append(target)
+    return _unique_strings(seeds)
+
+
+def _trace_context_allocations(
+    data: dict[str, Any],
+    events: list[Any],
+    *,
+    default_summary_ratio: float,
+) -> dict[str, float]:
+    explicit = _string_float_dict(data.get("context_allocations") or data.get("context_ratios"))
+    if explicit:
+        return explicit
+    allocations: dict[str, float] = {}
+    for event in events:
+        if not isinstance(event, dict):
+            continue
+        target = event.get("target")
+        if not isinstance(target, str) or target == "final":
+            continue
+        ratio = _optional_float(event.get("context_ratio"))
+        if ratio is None:
+            full_context = event.get("full_context")
+            if isinstance(full_context, bool):
+                ratio = 1.0 if full_context else default_summary_ratio
+            elif event.get("source") == "task":
+                ratio = 1.0
+        if ratio is not None:
+            allocations[target] = max(0.0, min(1.0, ratio))
+    return allocations
+
+
+def _trace_activated_verifiers(data: dict[str, Any]) -> list[str]:
+    for key in ("activated_verifiers", "verifier_nodes", "verifier_placements"):
+        values = _string_list(data.get(key))
+        if values:
+            return values
+    return []
+
+
+def _trace_pruned_edges(data: dict[str, Any]) -> list[tuple[str, str]]:
+    raw_edges = data.get("pruned_edges")
+    if not isinstance(raw_edges, list | tuple):
+        return []
+    edges = []
+    for item in raw_edges:
+        if isinstance(item, list | tuple) and len(item) == 2:
+            source, target = item
+            if isinstance(source, str) and isinstance(target, str):
+                edges.append((source, target))
+        elif isinstance(item, dict):
+            source = item.get("source")
+            target = item.get("target")
+            if isinstance(source, str) and isinstance(target, str):
+                edges.append((source, target))
+    return edges
+
+
+def _trace_outcome(row: dict[str, Any]) -> float | None:
+    verification = _optional_bool(row.get("verification_passed"))
+    if verification is not None:
+        return 1.0 if verification else 0.0
+    quality_passed = _optional_bool(row.get("quality_passed"))
+    if quality_passed is not None:
+        return 1.0 if quality_passed else 0.0
+    quality_score = _optional_float(row.get("quality_score"))
+    if quality_score is not None:
+        return max(0.0, min(1.0, quality_score))
+    passed = _optional_bool(row.get("passed"))
+    if passed is not None:
+        return 1.0 if passed else 0.0
+    return None
+
+
+def _outcome_lookup(rows: list[dict[str, Any]]) -> dict[tuple[str, str | None], dict[str, Any]]:
+    lookup = {}
+    for row in rows:
+        task_id = row.get("task_id") or row.get("task_name")
+        if not isinstance(task_id, str):
+            continue
+        policy = row.get("policy")
+        lookup[(task_id, policy if isinstance(policy, str) else None)] = row
+    return lookup
+
+
+def _matching_outcome(
+    trace: dict[str, Any],
+    outcomes: dict[tuple[str, str | None], dict[str, Any]],
+) -> dict[str, Any] | None:
+    task_id = trace.get("task_id") or trace.get("task_name")
+    if not isinstance(task_id, str):
+        return None
+    policy = trace.get("policy")
+    if isinstance(policy, str) and (task_id, policy) in outcomes:
+        return outcomes[(task_id, policy)]
+    return outcomes.get((task_id, None))
+
+
+def _string_list(value: Any) -> list[str]:
+    if isinstance(value, list | tuple):
+        return [item for item in value if isinstance(item, str)]
+    return []
+
+
+def _unique_strings(values: list[str]) -> list[str]:
+    seen = set()
+    result = []
+    for value in values:
+        if value not in seen:
+            seen.add(value)
+            result.append(value)
+    return result
+
+
+def _string_float_dict(value: Any) -> dict[str, float]:
+    if not isinstance(value, dict):
+        return {}
+    result = {}
+    for key, raw_value in value.items():
+        if isinstance(key, str):
+            numeric = _optional_float(raw_value)
+            if numeric is not None:
+                result[key] = max(0.0, min(1.0, numeric))
+    return result
+
+
+def _optional_bool(value: Any) -> bool | None:
+    return value if isinstance(value, bool) else None
+
+
+def _optional_float(*values: Any) -> float | None:
+    for value in values:
+        if isinstance(value, int | float) and not isinstance(value, bool):
+            return float(value)
+        if isinstance(value, str):
+            try:
+                return float(value)
+            except ValueError:
+                continue
+    return None
