@@ -116,14 +116,37 @@ def greedy_seed_selection(
     propagation_model: PropagationModel | None = None,
     trials: int = 100,
     objective: Callable[[float, float], float] | None = None,
+    importance_weight: float = 1.0,
+    protect_critical_nodes: bool = True,
+    critical_importance_threshold: float = 0.80,
 ) -> list[str]:
-    """Greedily choose seeds that maximize propagation utility."""
+    """Greedily choose seeds that maximize propagation and role-critical utility.
+
+    Nodes with high ``importance_score`` are context-sensitive: starving them of
+    full context is likely to hurt task quality even when topology coverage looks
+    good. By default, critical nodes are protected before the propagation-only
+    greedy loop runs.
+    """
 
     _validate_budget(k)
+    if importance_weight < 0:
+        raise ValueError("importance_weight must be non-negative")
+    if not 0 <= critical_importance_threshold <= 1:
+        raise ValueError("critical_importance_threshold must be between 0 and 1")
     model = propagation_model or IndependentCascade(seed=0)
     score_fn = objective or _default_objective
-    selected: list[str] = []
     candidates = _seed_eligible_nodes(graph)
+    selected: list[str] = []
+
+    if protect_critical_nodes:
+        selected.extend(
+            _critical_seed_candidates(
+                graph,
+                candidates,
+                budget=k,
+                threshold=critical_importance_threshold,
+            )
+        )
 
     while len(selected) < min(k, len(candidates)):
         best_node = None
@@ -134,6 +157,7 @@ def greedy_seed_selection(
             result = model.simulate(graph, [*selected, node_id], trials=trials)
             propagation_time = result.expected_propagation_time or result.propagation_time
             score = score_fn(result.coverage, propagation_time)
+            score *= 1.0 + importance_weight * _node_importance(graph, node_id)
             if score > best_score:
                 best_score = score
                 best_node = node_id
@@ -142,6 +166,62 @@ def greedy_seed_selection(
         selected.append(best_node)
 
     return selected
+
+
+def pure_greedy_seed_selection(
+    graph: AgentGraph,
+    k: int,
+    *,
+    propagation_model: PropagationModel | None = None,
+    trials: int = 100,
+) -> list[str]:
+    """Greedily maximize propagation coverage/time without role-critical reweighting.
+
+    This is the theory-preserving influence-maximization baseline. Under the
+    standard IC/LT assumptions, the plain expected-coverage objective is the one
+    associated with the classical greedy approximation guarantee. Role-critical
+    pre-seeding and importance reweighting are intentionally disabled here.
+    """
+
+    return greedy_seed_selection(
+        graph,
+        k,
+        propagation_model=propagation_model,
+        trials=trials,
+        importance_weight=0.0,
+        protect_critical_nodes=False,
+    )
+
+
+def quality_aware_greedy_seed_selection(
+    graph: AgentGraph,
+    k: int,
+    *,
+    propagation_model: PropagationModel | None = None,
+    trials: int = 100,
+    cost_weight: float = 0.001,
+    quality_weight: float = 1.0,
+    importance_weight: float = 1.0,
+) -> list[str]:
+    """Select seeds for expected task success minus token cost.
+
+    This is the public bridge between topology-first influence maximization and
+    empirical quality-aware routing. It uses existing node metadata now and can be
+    swapped to learned expected-success estimators as trace data accumulates.
+    """
+
+    def objective(coverage: float, propagation_time: float) -> float:
+        return quality_weight * coverage - 0.02 * propagation_time
+
+    return greedy_seed_selection(
+        graph,
+        k,
+        propagation_model=propagation_model,
+        trials=trials,
+        objective=objective,
+        importance_weight=importance_weight + cost_weight,
+        protect_critical_nodes=True,
+    )
 
 
 def cost_aware_greedy_seed_selection(
@@ -246,6 +326,41 @@ def _top_k(scores: ScoreMap, k: int) -> list[str]:
 
 def _default_objective(coverage: float, propagation_time: float) -> float:
     return coverage - 0.02 * propagation_time
+
+
+def _critical_seed_candidates(
+    graph: AgentGraph,
+    candidates: list[str],
+    *,
+    budget: int,
+    threshold: float,
+) -> list[str]:
+    candidate_set = set(candidates)
+    ranked = sorted(
+        (
+            (node.id, _node_importance(graph, node.id))
+            for node in graph.nodes()
+            if node.id in candidate_set
+        ),
+        key=lambda item: (-item[1], item[0]),
+    )
+    return [node_id for node_id, score in ranked if score >= threshold][:budget]
+
+
+def _node_importance(graph: AgentGraph, node_id: str) -> float:
+    node = graph.node(node_id)
+    if node.importance_score is not None:
+        return max(0.0, min(1.0, float(node.importance_score)))
+    role = (node.role or node.id).lower()
+    if node.type == NodeType.EXECUTOR or "coder" in role or "implement" in role:
+        return 0.90
+    if node.type == NodeType.VERIFIER or "test" in role or "verif" in role:
+        return 0.80
+    if node.type == NodeType.REVIEWER:
+        return 0.65
+    if node.type == NodeType.PLANNER:
+        return 0.55
+    return 0.35
 
 
 def _cost_aware_greedy(

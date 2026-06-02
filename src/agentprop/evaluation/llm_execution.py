@@ -132,6 +132,37 @@ class OpenAICompatibleChatClient:
         )
 
 
+def openai_compatible_env_status(
+    *,
+    model: str | None = None,
+    base_url: str | None = None,
+) -> dict[str, Any]:
+    """Return credential/model readiness for OpenAI-compatible case-study runs."""
+
+    api_key_env = _first_present_env("TOKEN_ROUTER_API_KEY", "OPENAI_API_KEY")
+    resolved_model = model or os.environ.get("TOKEN_ROUTER_MODEL") or os.environ.get(
+        "OPENAI_MODEL"
+    )
+    resolved_base_url = (
+        base_url
+        or os.environ.get("TOKEN_ROUTER_BASE_URL")
+        or os.environ.get("OPENAI_BASE_URL")
+        or "https://api.openai.com/v1"
+    )
+    missing = []
+    if api_key_env is None:
+        missing.append("TOKEN_ROUTER_API_KEY or OPENAI_API_KEY")
+    if not resolved_model:
+        missing.append("--llm-model, TOKEN_ROUTER_MODEL, or OPENAI_MODEL")
+    return {
+        "ready": not missing,
+        "api_key_env": api_key_env,
+        "model": resolved_model,
+        "base_url": resolved_base_url,
+        "missing": missing,
+    }
+
+
 def _extract_message(payload: dict[str, Any]) -> str:
     choices = payload.get("choices", [])
     if not isinstance(choices, list) or not choices:
@@ -158,3 +189,10 @@ def _extract_usage(raw_usage: Any) -> LLMUsage:
         completion_tokens=completion_tokens,
         total_tokens=total_tokens,
     )
+
+
+def _first_present_env(*names: str) -> str | None:
+    for name in names:
+        if os.environ.get(name):
+            return name
+    return None

@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
+import sys
 from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
+from importlib import import_module
+from importlib.util import find_spec
+from inspect import Parameter, signature
 from typing import Any
 
 from agentprop.core import AgentGraph, NodeType
@@ -14,6 +19,30 @@ SUPPORTED_FRAMEWORKS = {
     "openai-agents",
     "llamaindex",
 }
+
+
+@dataclass(frozen=True, slots=True)
+class NativeFrameworkStatus:
+    """Availability status for an optional native framework adapter."""
+
+    framework: str
+    import_names: tuple[str, ...]
+    available: bool
+    native_adapter: bool
+    notes: tuple[str, ...] = ()
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "framework": self.framework,
+            "import_names": list(self.import_names),
+            "available": self.available,
+            "native_adapter": self.native_adapter,
+            "notes": list(self.notes),
+        }
+
+
+class NativeFrameworkUnavailable(RuntimeError):
+    """Raised when a requested native framework adapter cannot be built."""
 
 
 def to_framework_dict(graph: AgentGraph, framework: str) -> dict[str, Any]:
@@ -30,6 +59,44 @@ def to_framework_dict(graph: AgentGraph, framework: str) -> dict[str, Any]:
         return to_openai_agents_dict(graph)
     if normalized == "llamaindex":
         return to_llamaindex_dict(graph)
+    raise ValueError(f"Unsupported framework: {framework}")
+
+
+def native_framework_status(frameworks: Iterable[str] | None = None) -> list[NativeFrameworkStatus]:
+    """Report optional native adapter availability without requiring heavy dependencies."""
+
+    targets = [
+        _normalize_framework(framework)
+        for framework in frameworks or sorted(SUPPORTED_FRAMEWORKS)
+    ]
+    return [_native_status(framework) for framework in targets]
+
+
+def to_native_framework(graph: AgentGraph, framework: str) -> Any:
+    """Build a best-effort native workflow object for an installed framework.
+
+    The base package keeps these dependencies optional. If the framework package
+    is not installed, or its runtime API needs user-supplied execution objects,
+    this function raises NativeFrameworkUnavailable with a concrete next step.
+    """
+
+    normalized = _normalize_framework(framework)
+    if normalized == "langgraph":
+        return _to_native_langgraph(graph)
+    if normalized == "crewai":
+        return _to_native_crewai(graph)
+    if normalized == "openai-agents":
+        return _to_native_openai_agents(graph)
+    if normalized == "autogen":
+        raise NativeFrameworkUnavailable(
+            "AutoGen native execution requires model clients and agent runtime wiring; "
+            "use to_autogen_dict() for interchange until a configured runtime builder is added."
+        )
+    if normalized == "llamaindex":
+        raise NativeFrameworkUnavailable(
+            "LlamaIndex Workflow native classes require user-defined step functions; "
+            "use to_llamaindex_dict() for interchange until a configured runtime builder is added."
+        )
     raise ValueError(f"Unsupported framework: {framework}")
 
 
@@ -220,6 +287,86 @@ def graph_from_llamaindex_dict(data: Mapping[str, Any]) -> AgentGraph:
     )
 
 
+def _to_native_langgraph(graph: AgentGraph) -> Any:
+    module = _import_first("langgraph.graph")
+    state_graph_cls = getattr(module, "StateGraph", None)
+    if state_graph_cls is None:
+        raise NativeFrameworkUnavailable("Installed langgraph package does not expose StateGraph.")
+    builder = state_graph_cls(dict)
+    for node_id in _node_ids(graph):
+        builder.add_node(node_id, _passthrough_node(node_id))
+    for edge in graph.edges():
+        builder.add_edge(edge.source, edge.target)
+    for entrypoint in _entrypoints(graph):
+        _call_if_present(builder, "set_entry_point", entrypoint)
+    for output_node in _output_nodes(graph):
+        _call_if_present(builder, "set_finish_point", output_node)
+    return builder
+
+
+def _to_native_crewai(graph: AgentGraph) -> Any:
+    module = _import_first("crewai")
+    agent_cls = getattr(module, "Agent", None)
+    task_cls = getattr(module, "Task", None)
+    crew_cls = getattr(module, "Crew", None)
+    if agent_cls is None or task_cls is None or crew_cls is None:
+        raise NativeFrameworkUnavailable(
+            "Installed crewai package must expose Agent, Task, and Crew."
+        )
+
+    agents_by_id = {}
+    for node_id in _node_ids(graph):
+        node = graph.node(node_id)
+        if node.type == NodeType.OUTPUT:
+            continue
+        agents_by_id[node_id] = _call_with_supported_kwargs(
+            agent_cls,
+            role=node.name or node.id,
+            goal=node.role or f"Handle the {node.id} workflow step.",
+            backstory=f"AgentProp node {node.id}",
+            allow_delegation=True,
+        )
+
+    tasks = []
+    for edge in graph.edges():
+        if edge.target not in agents_by_id:
+            continue
+        tasks.append(
+            _call_with_supported_kwargs(
+                task_cls,
+                description=f"Process context from {edge.source} for {edge.target}.",
+                expected_output=f"Output for {edge.target}.",
+                agent=agents_by_id[edge.target],
+            )
+        )
+    return _call_with_supported_kwargs(
+        crew_cls,
+        agents=list(agents_by_id.values()),
+        tasks=tasks,
+    )
+
+
+def _to_native_openai_agents(graph: AgentGraph) -> list[Any]:
+    module = _import_first("agents", "openai_agents")
+    agent_cls = getattr(module, "Agent", None)
+    if agent_cls is None:
+        raise NativeFrameworkUnavailable("Installed OpenAI Agents package does not expose Agent.")
+    agents = []
+    for node_id in _node_ids(graph):
+        node = graph.node(node_id)
+        if node.type == NodeType.OUTPUT:
+            continue
+        agents.append(
+            _call_with_supported_kwargs(
+                agent_cls,
+                name=node.name or node.id,
+                instructions=node.role or f"Handle the {node.id} workflow step.",
+                handoff_description=f"AgentProp node {node.id}",
+            )
+        )
+    return agents
+
+
 def _graph_from_node_edge_payloads(
     nodes: Iterable[Mapping[str, Any]],
     edges: Iterable[Mapping[str, Any]],
@@ -352,6 +499,86 @@ def _normalize_framework(framework: str) -> str:
     if normalized not in SUPPORTED_FRAMEWORKS:
         raise ValueError(f"Unsupported framework: {framework}")
     return normalized
+
+
+def _native_status(framework: str) -> NativeFrameworkStatus:
+    import_names = _native_import_names(framework)
+    available = any(_can_import(name) for name in import_names)
+    native_adapter = framework in {"langgraph", "crewai", "openai-agents"}
+    notes: tuple[str, ...] = ()
+    if not native_adapter:
+        notes = ("Native runtime builder needs user-supplied runtime functions or model clients.",)
+    elif not available:
+        notes = ("Optional framework package is not installed.",)
+    return NativeFrameworkStatus(
+        framework=framework,
+        import_names=import_names,
+        available=available,
+        native_adapter=native_adapter,
+        notes=notes,
+    )
+
+
+def _native_import_names(framework: str) -> tuple[str, ...]:
+    if framework == "langgraph":
+        return ("langgraph.graph",)
+    if framework == "autogen":
+        return ("autogen_agentchat", "autogen")
+    if framework == "crewai":
+        return ("crewai",)
+    if framework == "openai-agents":
+        return ("agents", "openai_agents")
+    if framework == "llamaindex":
+        return ("llama_index.core.workflow", "llama_index")
+    raise ValueError(f"Unsupported framework: {framework}")
+
+
+def _import_first(*names: str) -> Any:
+    for name in names:
+        try:
+            return import_module(name)
+        except ImportError:
+            continue
+    joined = ", ".join(names)
+    raise NativeFrameworkUnavailable(f"Install one of these optional packages first: {joined}")
+
+
+def _can_import(name: str) -> bool:
+    if name in sys.modules:
+        return True
+    try:
+        return find_spec(name) is not None
+    except (ImportError, ValueError):
+        return False
+
+
+def _call_if_present(obj: Any, method_name: str, *args: Any) -> None:
+    method = getattr(obj, method_name, None)
+    if callable(method):
+        method(*args)
+
+
+def _call_with_supported_kwargs(factory: Any, **kwargs: Any) -> Any:
+    try:
+        params = signature(factory).parameters
+    except (TypeError, ValueError):
+        return factory(**kwargs)
+    accepts_kwargs = any(param.kind == Parameter.VAR_KEYWORD for param in params.values())
+    supported = (
+        kwargs
+        if accepts_kwargs
+        else {key: value for key, value in kwargs.items() if key in params}
+    )
+    return factory(**supported)
+
+
+def _passthrough_node(node_id: str) -> Any:
+    def run(state: Mapping[str, Any]) -> dict[str, Any]:
+        next_state = dict(state)
+        next_state["agentprop_last_node"] = node_id
+        return next_state
+
+    return run
 
 
 def _id_from_payload(payload: Mapping[str, Any]) -> str:

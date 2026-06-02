@@ -3,7 +3,7 @@ import pytest
 from agentprop.core import NodeType
 from agentprop.dl import GraphEncoderConfig, TorchBackendUnavailable, TorchGNNSeedScorer
 from agentprop.dl.encoders import require_torch
-from agentprop.dl.torch_gnn import train_torch_seed_scorer
+from agentprop.dl.torch_gnn import _graph_to_tensors, train_torch_seed_scorer
 from agentprop.ml import build_seed_selection_example
 from agentprop.workflows import planner_coder_tester_reviewer
 
@@ -14,6 +14,16 @@ def test_graph_encoder_config_has_research_defaults() -> None:
     assert config.architecture == "graphsage"
     assert config.hidden_dim == 64
     assert config.task == "seed"
+    assert config.edge_feature_dim == 9
+
+
+def test_seed_examples_preserve_edge_features_for_gnn_training() -> None:
+    graph = planner_coder_tester_reviewer()
+    example = build_seed_selection_example(graph, budget=2, trials=3)
+
+    assert example.edge_features is not None
+    assert "message_cost_norm" in example.edge_features.feature_names
+    assert "dependency_strength" in example.edge_features.feature_names
 
 
 def test_require_torch_raises_clear_error_without_torch() -> None:
@@ -50,6 +60,19 @@ def test_torch_gnn_training_loop_when_torch_is_installed() -> None:
 
     assert result.epochs == 2
     assert set(scores) == {node.id for node in graph.nodes() if node.type != NodeType.OUTPUT}
+
+
+def test_torch_graph_tensors_include_rich_edge_features_when_torch_is_installed() -> None:
+    torch = pytest.importorskip("torch")
+    graph = planner_coder_tester_reviewer()
+
+    batch = _graph_to_tensors(torch, graph, edge_feature_dim=9)
+    planner = batch["node_ids"].index("planner")
+    coder = batch["node_ids"].index("coder")
+
+    assert batch["edge_features"].shape[-1] == 9
+    assert batch["edge_features"][planner, coder, 0] > 0
+    assert batch["edge_features"][planner, coder, 5] == 1.0
 
 
 @pytest.mark.parametrize(

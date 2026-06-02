@@ -2,7 +2,7 @@
 
 Release date: 2026-05-31
 
-AgentProp `0.1.0-alpha.1` is the first private alpha release of the framework.
+AgentProp `0.1.0-alpha.1` is the first public alpha release of the framework.
 
 ## Highlights
 
@@ -17,7 +17,7 @@ AgentProp `0.1.0-alpha.1` is the first private alpha release of the framework.
 - Saved v1 benchmark table and first SVG plot.
 - Optional torch GNN seed scorers for GCN, GraphSAGE, and GAT.
 - Q-learning policy for sequential routing beyond greedy lookahead.
-- PRD, literature review, tutorial, docs index, case-study protocol, and paper
+- Literature review, tutorial, docs index, case-study protocol, and paper
   outline.
 
 ## Validation
@@ -39,10 +39,8 @@ PYTHONPATH=src:. python experiments/train_torch_gnn.py --architecture graphsage 
 
 ## Known Limitations
 
-- Real LLM case-study results are not yet attached.
+- Real LLM case-study results should be treated as directional until larger,
+  repeated studies are published.
 - Learned policies are v1 baselines, not tuned production optimizers.
-- Remaining PRD work is archived in `docs/remaining_prd_archive.md`, with the
-  next emphasis on graph-theory depth, ML/DL policies, RL control, and real LLM
-  validation.
-- The public-release recommendation is to stay private until the first real LLM
-  case study is complete, or publish as alpha with this limitation explicit.
+- The next emphasis is graph-theory depth, ML/DL policies, RL control, and
+  stronger real LLM validation.

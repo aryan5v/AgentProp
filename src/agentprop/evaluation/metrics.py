@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Any
 
 import networkx as nx
 
@@ -41,6 +42,9 @@ class RecommendationReport:
     verifier_candidates: list[str]
     robustness: RobustnessSummary | None = None
     pruning_risk: PruningRiskSummary | None = None
+    context_allocations: dict[str, float] = field(default_factory=dict)
+    routing_risks: list[Any] = field(default_factory=list)
+    quality_objective_score: float | None = None
 
 
 @dataclass(slots=True)
@@ -148,6 +152,8 @@ def seeded_routing_cost(
     graph: AgentGraph,
     seeds: list[str],
     activated_nodes: set[str],
+    *,
+    context_ratios: dict[str, float] | None = None,
 ) -> CostSummary:
     """Estimate cost for giving full context to seeds and routing only activated edges."""
 
@@ -159,8 +165,10 @@ def seeded_routing_cost(
             token_cost += node.token_cost
             latency += node.latency
         elif node.id in activated_nodes:
-            token_cost += node.token_cost * 0.35
-            latency += node.latency * 0.5
+            ratio = context_ratios.get(node.id, 0.35) if context_ratios is not None else 0.35
+            ratio = max(0.0, min(1.0, ratio))
+            token_cost += node.token_cost * ratio
+            latency += node.latency * max(0.25, ratio)
 
     message_cost = 0.0
     message_count = 0
@@ -192,11 +200,34 @@ def compare_routing(
 ) -> RecommendationReport:
     """Compare broadcast routing with a seed-based selective routing plan."""
 
+    from agentprop.evaluation.routing import (
+        QualityAwareRoutingObjective,
+        graded_context_allocations,
+        routing_risks,
+    )
+
+    context_allocations = graded_context_allocations(
+        graph,
+        seeds=seeds,
+        activated_nodes=propagation.activated_nodes,
+    )
     broadcast = broadcast_cost(graph)
-    optimized = seeded_routing_cost(graph, seeds, propagation.activated_nodes)
+    optimized = seeded_routing_cost(
+        graph,
+        seeds,
+        propagation.activated_nodes,
+        context_ratios=context_allocations,
+    )
     estimated_savings = 0.0
     if broadcast.total_cost > 0:
         estimated_savings = (broadcast.total_cost - optimized.total_cost) / broadcast.total_cost
+    quality_score = QualityAwareRoutingObjective().score(
+        graph,
+        seeds=seeds,
+        activated_nodes=propagation.activated_nodes,
+        cost=optimized,
+        context_ratios=context_allocations,
+    )
 
     return RecommendationReport(
         seeds=seeds,
@@ -210,6 +241,9 @@ def compare_routing(
         verifier_candidates=verifier_candidates or [],
         robustness=robustness if robustness is not None else robustness_under_failures(graph),
         pruning_risk=pruning_risk,
+        context_allocations=context_allocations,
+        routing_risks=routing_risks(graph, context_ratios=context_allocations),
+        quality_objective_score=quality_score,
     )
 
 

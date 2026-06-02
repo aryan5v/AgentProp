@@ -1,0 +1,44 @@
+{
+  "name": "ml_rl_smoke",
+  "description": "Small local ML/RL sweep for dependency-light AgentProp policies.",
+  "artifacts": {
+    "root": "results/ml_rl_smoke",
+    "private_by_default": true
+  },
+  "sweeps": [
+    {
+      "id": "mlp_seed_lr",
+      "module": "experiments.train_seed_scorer",
+      "args": {
+        "--model": "mlp",
+        "--task": "seed",
+        "--budget": 2,
+        "--trials": 5,
+        "--epochs": 8,
+        "--out": "{artifact_root}/metrics/{run_id}.json",
+        "--registry-root": "{registry_root}",
+        "--run-id": "{run_id}"
+      },
+      "grid": {
+        "--learning-rate": [0.02, 0.05]
+      }
+    },
+    {
+      "id": "ppo_episode_sweep",
+      "module": "experiments.run_rl_routing",
+      "args": {
+        "--policy": "ppo",
+        "--budget": 2,
+        "--trials": 3,
+        "--learning-rate": 0.05,
+        "--max-steps": 5,
+        "--out": "{artifact_root}/metrics/{run_id}.json",
+        "--registry-root": "{registry_root}",
+        "--run-id": "{run_id}"
+      },
+      "grid": {
+        "--episodes": [3, 5]
+      }
+    }
+  ]
+}

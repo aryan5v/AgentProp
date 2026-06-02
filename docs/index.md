@@ -11,22 +11,23 @@ AgentProp is a graph optimization framework for multi-agent LLM workflows.
 - [Visualization](visualization.md)
 - [Reinforcement learning routing](reinforcement_learning.md)
 - [Routing baseline evaluation](routing_baseline_evaluation.md)
+- [Quality-aware routing](routing_quality.md)
 - [Verifier semantics](verifier_semantics.md)
 - [Quality scoring](quality_scoring.md)
 - [Framework integrations](framework_integrations.md)
 - [Coding agent integration](coding_agents.md)
+- [Publishing](publishing.md)
 
-## Product and Research
+## Research and Evaluation
 
-- [Product requirements](PRD.md)
-- [Remaining PRD archive](remaining_prd_archive.md)
 - [Literature review](research/literature_review.md)
+- [AgentProp research backlog](research/agentprop_research_backlog.md)
 - [Real LLM case-study protocol](research/case_study_protocol.md)
 - [Paper outline](research/paper_outline.md)
 - [v1 benchmark artifacts](results/v1/README.md)
-- [v1 release checklist](release_checklist.md)
-- [Deep learning roadmap](deep_learning.md)
-- [Public release decision](public_release_decision.md)
+- [Terminal-Bench guided benchmark](results/terminal_bench_guided/README.md)
+- [Terminal-Bench 2.1 preparation](terminal_bench_21.md)
+- [Deep learning guide](deep_learning.md)
 
 ## Common Commands
 

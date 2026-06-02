@@ -1,7 +1,13 @@
 import json
+import sys
 from pathlib import Path
+from types import ModuleType
 
 from agentprop.integrations import (
+    NativeFrameworkUnavailable,
+    calibrate_graph_from_trace_dict,
+    empirical_row_from_trace_dict,
+    empirical_rows_from_trace_dicts,
     graph_from_autogen_dict,
     graph_from_crewai_dict,
     graph_from_framework_dict,
@@ -9,11 +15,13 @@ from agentprop.integrations import (
     graph_from_llamaindex_dict,
     graph_from_openai_agents_dict,
     graph_from_trace,
+    native_framework_status,
     to_autogen_dict,
     to_crewai_dict,
     to_framework_dict,
     to_langgraph_dict,
     to_llamaindex_dict,
+    to_native_framework,
     to_openai_agents_dict,
 )
 from agentprop.workflows import planner_coder_tester_reviewer
@@ -50,6 +58,109 @@ def test_graph_from_trace_aggregates_messages(tmp_path: Path) -> None:
     assert result.total_token_cost == 800
     assert result.graph.node("tester").error_rate == 1.0
     assert result.graph.edge("planner", "coder").message_cost == 500
+
+
+def test_trace_calibration_updates_existing_graph_probabilities() -> None:
+    graph = planner_coder_tester_reviewer()
+    trace = {
+        "events": [
+            {
+                "source": "planner",
+                "target": "coder",
+                "token_cost": 500,
+                "latency": 0.7,
+                "success": True,
+            },
+            {
+                "source": "planner",
+                "target": "coder",
+                "token_cost": 700,
+                "latency": 0.9,
+                "success": False,
+            },
+        ]
+    }
+
+    result = calibrate_graph_from_trace_dict(graph, trace, smoothing=0.0)
+    calibrated = result.graph
+
+    assert result.calibrated_edge_count == 1
+    assert calibrated.edge("planner", "coder").activation_probability == 1.0
+    assert calibrated.edge("planner", "coder").reliability == 0.5
+    assert calibrated.edge("planner", "coder").message_cost == 600
+    assert calibrated.node("coder").reliability == 0.5
+    assert graph.edge("planner", "reviewer").activation_probability == 1.0
+    assert calibrated.edge("planner", "reviewer").activation_probability == 0.0
+
+
+def test_empirical_row_from_trace_uses_trace_context_and_outcome() -> None:
+    trace = {
+        "task_id": "roman-to-int",
+        "policy": "quality_aware_greedy",
+        "quality_score": 0.9,
+        "quality_passed": True,
+        "cost_adjusted_success": 0.8,
+        "events": [
+            {
+                "source": "task",
+                "target": "coder",
+                "full_context": True,
+                "token_cost": 1000,
+            },
+            {
+                "source": "predecessor_summaries",
+                "target": "reviewer",
+                "full_context": False,
+                "token_cost": 300,
+            },
+        ],
+    }
+
+    row = empirical_row_from_trace_dict(trace)
+
+    assert row is not None
+    assert row["task_id"] == "roman-to-int"
+    assert row["policy"] == "quality_aware_greedy"
+    assert row["selected_seeds"] == ["coder"]
+    assert row["context_allocations"]["coder"] == 1.0
+    assert row["context_allocations"]["reviewer"] == 0.35
+    assert row["quality_score"] == 0.9
+    assert row["quality_passed"] is True
+    assert row["cost_adjusted_success"] == 0.8
+
+
+def test_empirical_rows_from_traces_join_outcome_rows_and_skip_unlabeled() -> None:
+    traces = [
+        {
+            "task_id": "task-a",
+            "policy": "optimized_greedy",
+            "events": [{"source": "task", "target": "planner"}],
+        },
+        {
+            "task_id": "task-b",
+            "policy": "optimized_greedy",
+            "events": [{"source": "task", "target": "coder"}],
+        },
+    ]
+    outcomes = [
+        {
+            "task_id": "task-a",
+            "policy": "optimized_greedy",
+            "verification_passed": False,
+            "token_cost": 1200,
+            "latency": 4.0,
+        }
+    ]
+
+    result = empirical_rows_from_trace_dicts(traces, outcome_rows=outcomes)
+
+    assert result.skipped_trace_count == 1
+    assert len(result.rows) == 1
+    assert result.rows[0]["task_id"] == "task-a"
+    assert result.rows[0]["selected_seeds"] == ["planner"]
+    assert result.rows[0]["context_allocations"]["planner"] == 1.0
+    assert result.rows[0]["verification_passed"] is False
+    assert result.rows[0]["token_cost"] == 1200
 
 
 def test_langgraph_adapter_exports_and_imports_node_edge_spec() -> None:
@@ -119,3 +230,108 @@ def test_generic_framework_adapter_dispatches_aliases() -> None:
 
     assert payload["framework"] == "openai-agents"
     assert imported.edge_count >= graph.edge_count
+
+
+def test_native_framework_status_reports_optional_packages() -> None:
+    statuses = native_framework_status(["langgraph", "autogen"])
+
+    by_name = {status.framework: status for status in statuses}
+    assert by_name["langgraph"].native_adapter is True
+    assert by_name["autogen"].native_adapter is False
+    assert by_name["langgraph"].import_names == ("langgraph.graph",)
+
+
+def test_native_langgraph_builder_uses_installed_state_graph(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    graph_module = ModuleType("langgraph.graph")
+
+    class FakeStateGraph:
+        def __init__(self, state_type):
+            self.state_type = state_type
+            self.nodes = {}
+            self.edges = []
+            self.entrypoints = []
+            self.finish_points = []
+
+        def add_node(self, name, handler):
+            self.nodes[name] = handler
+
+        def add_edge(self, source, target):
+            self.edges.append((source, target))
+
+        def set_entry_point(self, name):
+            self.entrypoints.append(name)
+
+        def set_finish_point(self, name):
+            self.finish_points.append(name)
+
+    graph_module.StateGraph = FakeStateGraph
+    monkeypatch.setitem(sys.modules, "langgraph", ModuleType("langgraph"))
+    monkeypatch.setitem(sys.modules, "langgraph.graph", graph_module)
+
+    native = to_native_framework(planner_coder_tester_reviewer(), "langgraph")
+
+    assert native.state_type is dict
+    assert "planner" in native.nodes
+    assert ("planner", "coder") in native.edges
+    assert "planner" in native.entrypoints
+    assert "final" in native.finish_points
+
+
+def test_native_crewai_builder_uses_installed_classes(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    crewai_module = ModuleType("crewai")
+
+    class FakeAgent:
+        def __init__(self, role, goal, backstory, allow_delegation):
+            self.role = role
+            self.goal = goal
+            self.backstory = backstory
+            self.allow_delegation = allow_delegation
+
+    class FakeTask:
+        def __init__(self, description, expected_output, agent):
+            self.description = description
+            self.expected_output = expected_output
+            self.agent = agent
+
+    class FakeCrew:
+        def __init__(self, agents, tasks):
+            self.agents = agents
+            self.tasks = tasks
+
+    crewai_module.Agent = FakeAgent
+    crewai_module.Task = FakeTask
+    crewai_module.Crew = FakeCrew
+    monkeypatch.setitem(sys.modules, "crewai", crewai_module)
+
+    native = to_native_framework(planner_coder_tester_reviewer(), "crewai")
+
+    assert len(native.agents) == 4
+    assert native.tasks
+    assert any(task.agent.role == "coder" for task in native.tasks)
+
+
+def test_native_openai_agents_builder_uses_installed_agent_class(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    agents_module = ModuleType("agents")
+
+    class FakeAgent:
+        def __init__(self, name, instructions, handoff_description):
+            self.name = name
+            self.instructions = instructions
+            self.handoff_description = handoff_description
+
+    agents_module.Agent = FakeAgent
+    monkeypatch.setitem(sys.modules, "agents", agents_module)
+
+    native = to_native_framework(planner_coder_tester_reviewer(), "openai")
+
+    assert [agent.name for agent in native] == ["planner", "coder", "tester", "reviewer"]
+    assert native[0].handoff_description == "AgentProp node planner"
+
+
+def test_native_runtime_builder_explains_unsupported_framework() -> None:
+    try:
+        to_native_framework(planner_coder_tester_reviewer(), "autogen")
+    except NativeFrameworkUnavailable as exc:
+        assert "model clients" in str(exc)
+    else:
+        raise AssertionError("expected NativeFrameworkUnavailable")

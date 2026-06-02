@@ -26,11 +26,15 @@ from agentprop.evaluation.metrics import (
     seeded_routing_cost,
 )
 from agentprop.ml import (
+    EmpiricalRoutingExample,
+    EmpiricalVerifierPlacementExample,
     LinearNodeRegressor,
     LinearNodeScorer,
     MessagePassingNodeScorer,
     MLPNodeScorer,
     PairwiseNodeRanker,
+    SeedSelectionExample,
+    VerifierPlacementExample,
     build_seed_ranking_example,
     build_seed_selection_example,
     extract_graph_features,
@@ -38,11 +42,14 @@ from agentprop.ml import (
 from agentprop.propagation import IndependentCascade
 from agentprop.rl import (
     AgentRoutingEnv,
+    FeaturePolicyConfig,
+    NodeScorerRoutingPolicy,
     PPOConfig,
     QLearningConfig,
     ReinforceConfig,
     RoutingAction,
     RoutingState,
+    train_feature_policy,
     train_ppo_policy,
     train_q_policy,
     train_reinforce_policy,
@@ -50,6 +57,12 @@ from agentprop.rl import (
 from agentprop.workflows import WORKFLOW_TEMPLATES
 
 SeedSelector = Callable[[AgentGraph], list[str]]
+NodeTrainingExample = (
+    SeedSelectionExample
+    | VerifierPlacementExample
+    | EmpiricalRoutingExample
+    | EmpiricalVerifierPlacementExample
+)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -95,6 +108,13 @@ def main(argv: list[str] | None = None) -> int:
                 seed=args.seed,
             ).items()
         )
+        learned_node_score_maps = _learned_node_score_maps(
+            workflow_name=workflow_name,
+            budget=args.budget,
+            trials=args.trials,
+            epochs=args.epochs,
+            learning_rate=args.learning_rate,
+        )
         rows.extend(
             _evaluate_policy(
                 workflow_name,
@@ -105,12 +125,19 @@ def main(argv: list[str] | None = None) -> int:
                 seed=args.seed,
             )
             for policy_name, seeds in _learned_seed_sets(
+                learned_node_score_maps,
+                budget=args.budget,
+            ).items()
+        )
+        rows.extend(
+            _evaluate_learned_scorer_policies(
                 workflow_name=workflow_name,
+                graph=graph,
+                node_score_maps=learned_node_score_maps,
                 budget=args.budget,
                 trials=args.trials,
-                epochs=args.epochs,
-                learning_rate=args.learning_rate,
-            ).items()
+                max_steps=args.max_steps,
+            )
         )
         rows.extend(
             _evaluate_rl_policies(
@@ -177,14 +204,25 @@ def _classical_selectors(
 
 
 def _learned_seed_sets(
+    node_score_maps: dict[str, dict[str, float]],
+    *,
+    budget: int,
+) -> dict[str, list[str]]:
+    return {
+        policy_name: _top_k(node_scores, budget)
+        for policy_name, node_scores in node_score_maps.items()
+    }
+
+
+def _learned_node_score_maps(
     *,
     workflow_name: str,
     budget: int,
     trials: int,
     epochs: int,
     learning_rate: float,
-) -> dict[str, list[str]]:
-    examples = [
+) -> dict[str, dict[str, float]]:
+    examples: list[NodeTrainingExample] = [
         build_seed_selection_example(builder(), budget=budget, trials=trials)
         for name, builder in WORKFLOW_TEMPLATES.items()
         if name != workflow_name
@@ -217,20 +255,45 @@ def _learned_seed_sets(
         for node_id in features.node_features
     }
     return {
-        "mlp": _top_k(_seed_eligible_scores(graph, mlp.score_nodes(features)), budget),
-        "message_passing_gnn": _top_k(
-            _seed_eligible_scores(graph, message_passing.score_nodes(features, neighbors)),
-            budget,
+        "mlp": _seed_eligible_scores(graph, mlp.score_nodes(features)),
+        "message_passing_gnn": _seed_eligible_scores(
+            graph,
+            message_passing.score_nodes(features, neighbors),
         ),
-        "pairwise_ranker": _top_k(
-            _seed_eligible_scores(graph, ranker.score_nodes(features)),
-            budget,
-        ),
-        "marginal_gain_regressor": _top_k(
-            _seed_eligible_scores(graph, regressor.score_nodes(features)),
-            budget,
-        ),
+        "pairwise_ranker": _seed_eligible_scores(graph, ranker.score_nodes(features)),
+        "marginal_gain_regressor": _seed_eligible_scores(graph, regressor.score_nodes(features)),
     }
+
+
+def _evaluate_learned_scorer_policies(
+    *,
+    workflow_name: str,
+    graph: AgentGraph,
+    node_score_maps: dict[str, dict[str, float]],
+    budget: int,
+    trials: int,
+    max_steps: int,
+) -> list[dict[str, Any]]:
+    rows = []
+    for policy_name, node_scores in node_score_maps.items():
+        env = AgentRoutingEnv(graph, budget=budget, trials=trials)
+        policy = NodeScorerRoutingPolicy(node_scores)
+        state, actions, reward_trace = _rollout_routing_policy(
+            env,
+            policy.act,
+            max_steps=max_steps,
+        )
+        rows.append(
+            _evaluate_rl_state(
+                workflow_name,
+                graph,
+                f"{policy_name}_routing_policy",
+                state,
+                actions,
+                reward_trace,
+            )
+        )
+    return rows
 
 
 def _evaluate_rl_policies(
@@ -310,13 +373,32 @@ def _evaluate_rl_policy_family(
             expanded_actions=expanded_actions,
         ),
     )
-    rows = []
-    for policy_name, env, action_fn in (
+    policy_rows: list[tuple[str, AgentRoutingEnv, Callable[[AgentRoutingEnv], str]]] = [
         (f"q_learning{suffix}", q_env, q_policy.act),
         (f"reinforce{suffix}", reinforce_env, reinforce_policy.act),
         (f"ppo{suffix}", ppo_env, ppo_policy.act),
-    ):
-        state, actions = _rollout_routing_policy(env, action_fn, max_steps=max_steps)
+    ]
+    if not expanded_actions:
+        feature_env = AgentRoutingEnv(graph, budget=budget, trials=trials)
+        feature_policy, _ = train_feature_policy(
+            feature_env,
+            config=FeaturePolicyConfig(
+                episodes=episodes,
+                learning_rate=learning_rate,
+                epsilon=0.2,
+                seed=seed,
+                max_steps=max_steps,
+            ),
+        )
+        policy_rows.append(("feature_policy", feature_env, feature_policy.act))
+
+    rows = []
+    for policy_name, env, action_fn in policy_rows:
+        state, actions, reward_trace = _rollout_routing_policy(
+            env,
+            action_fn,
+            max_steps=max_steps,
+        )
         rows.append(
             _evaluate_rl_state(
                 workflow_name,
@@ -324,6 +406,7 @@ def _evaluate_rl_policy_family(
                 policy_name,
                 state,
                 actions,
+                reward_trace,
             )
         )
     return rows
@@ -334,19 +417,28 @@ def _rollout_routing_policy(
     action_fn: Callable[[AgentRoutingEnv], str],
     *,
     max_steps: int,
-) -> tuple[RoutingState, list[str]]:
+) -> tuple[RoutingState, list[str], list[dict[str, Any]]]:
     state = env.reset()
     actions = []
+    reward_trace = []
     done = False
     steps = 0
     while not done and steps < max_steps:
         action = action_fn(env)
         actions.append(action)
-        state, _, done, _ = env.step(action)
+        state, reward, done, info = env.step(action)
+        reward_trace.append(
+            {
+                "action": action,
+                "reward": reward,
+                "propagation_reward": info.get("propagation_reward", 0.0),
+                "control_reward": info.get("control_reward", {}),
+            }
+        )
         steps += 1
         if action == RoutingAction.STOP.value:
             break
-    return state, actions
+    return state, actions, reward_trace
 
 
 def _evaluate_rl_state(
@@ -355,6 +447,7 @@ def _evaluate_rl_state(
     policy_name: str,
     state: RoutingState,
     actions: list[str],
+    reward_trace: list[dict[str, Any]],
 ) -> dict[str, Any]:
     broadcast = broadcast_cost(graph)
     cost = CostSummary(
@@ -383,6 +476,7 @@ def _evaluate_rl_state(
     row.update(
         {
             "actions": actions,
+            "reward_trace": reward_trace,
             "activated_verifiers": list(state.activated_verifiers),
             "used_edges": [list(edge) for edge in state.used_edges],
             "pruned_edges": [list(edge) for edge in state.pruned_edges],

@@ -21,6 +21,15 @@ mypy src
 pytest
 ```
 
+## Contribution Workflow
+
+- Contributors should open pull requests against `main`.
+- Maintainers can push directly only for release hygiene, CI fixes, or small docs
+  updates; feature work should still go through review.
+- Public claims must link to commands, saved artifacts, or clearly marked
+  limitations.
+- New routing policies should report both cost and quality/risk evidence.
+
 ## Design Principles
 
 - Keep the core package lightweight.
@@ -29,6 +38,7 @@ pytest
 - Every algorithm should be benchmarkable.
 - Every benchmark should be reproducible.
 - Avoid overclaiming zero forcing; treat it as one propagation model among several.
+- Prefer quality-aware defaults when a workflow has context-sensitive roles.
 
 ## Adding Algorithms
 
@@ -39,6 +49,7 @@ When adding a new algorithm:
 - Add the method to the benchmark runner if it selects seeds or routes context.
 - Add tests on at least one built-in workflow.
 - Document what objective the method optimizes.
+- Add routing-risk output if the method can reduce context to critical nodes.
 
 ## Adding Workflow Fixtures
 

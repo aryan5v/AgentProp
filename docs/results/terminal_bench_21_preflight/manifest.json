@@ -1,0 +1,37 @@
+{
+  "agent": "terminus-2",
+  "dataset": "terminal-bench/terminal-bench-2-1",
+  "environment": "modal",
+  "extra_instructions_path": "docs/results/terminal_bench_21_preflight/agentprop-extra-instructions.md",
+  "harbor_command": [
+    "harbor",
+    "run",
+    "-d",
+    "terminal-bench/terminal-bench-2-1",
+    "-a",
+    "terminus-2",
+    "-m",
+    "google/gemini-3.1-pro-preview",
+    "--env",
+    "modal"
+  ],
+  "model": "google/gemini-3.1-pro-preview",
+  "output_root": "benchmark-results/terminal-bench-2.1/terminus-2-agentprop",
+  "purpose": "Prepared Terminal-Bench 2.1 + Terminus-2 launch; not executed.",
+  "report_after_run": [
+    "python",
+    "experiments/summarize_harbor_results.py",
+    "--results-root",
+    "benchmark-results/terminal-bench-2.1/terminus-2-agentprop",
+    "--out-dir",
+    "benchmark-results/terminal-bench-2.1/terminus-2-agentprop/report"
+  ],
+  "run_name": "agentprop-tbench-21-terminus2",
+  "schema_version": 1,
+  "task_count": null,
+  "watchdog": {
+    "idle_timeout_s": 1800,
+    "poll_interval_s": 5.0,
+    "timeout_s": 21600
+  }
+}

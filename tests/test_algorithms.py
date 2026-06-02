@@ -5,6 +5,7 @@ from agentprop.algorithms import (
     bridge_bottlenecks,
     celf_seed_selection,
     closeness_seed_selection,
+    context_sensitive_verifier_placement,
     cost_aware_greedy_seed_selection,
     degree_seed_selection,
     edge_bottlenecks,
@@ -19,6 +20,8 @@ from agentprop.algorithms import (
     observability_scores,
     pagerank_seed_selection,
     pagerank_verifier_placement,
+    pure_greedy_seed_selection,
+    quality_aware_greedy_seed_selection,
     risk_aware_verifier_placement,
     verifier_observability_placement,
 )
@@ -55,6 +58,27 @@ def test_greedy_seed_selection_uses_propagation_model() -> None:
     )
 
     assert len(seeds) == 2
+    assert "coder" in seeds
+
+
+def test_pure_greedy_disables_role_critical_preseeding() -> None:
+    graph = planner_coder_tester_reviewer()
+
+    pure = pure_greedy_seed_selection(
+        graph,
+        1,
+        propagation_model=IndependentCascade(seed=0),
+        trials=5,
+    )
+    role_critical = greedy_seed_selection(
+        graph,
+        1,
+        propagation_model=IndependentCascade(seed=0),
+        trials=5,
+    )
+
+    assert len(pure) == 1
+    assert role_critical == ["coder"]
 
 
 def test_celf_and_cost_aware_seed_selection_return_budgeted_nodes() -> None:
@@ -71,6 +95,19 @@ def test_celf_and_cost_aware_seed_selection_return_budgeted_nodes() -> None:
 
     assert len(celf_seeds) == 2
     assert len(cost_aware_seeds) == 2
+
+
+def test_quality_aware_seed_selection_protects_context_sensitive_nodes() -> None:
+    graph = planner_coder_tester_reviewer()
+
+    seeds = quality_aware_greedy_seed_selection(
+        graph,
+        2,
+        propagation_model=IndependentCascade(seed=0),
+        trials=5,
+    )
+
+    assert seeds == ["coder", "tester"]
 
 
 def test_diagnostics_return_ranked_candidates() -> None:
@@ -111,4 +148,5 @@ def test_richer_verifier_placement_methods_return_budgeted_nodes() -> None:
     assert len(pagerank_verifier_placement(graph, 2)) == 2
     assert len(error_propagation_verifier_placement(graph, 2)) == 2
     assert len(greedy_correction_coverage_placement(graph, 2)) == 2
+    assert len(context_sensitive_verifier_placement(graph, {"coder": 0.25}, 2)) == 2
     assert set(error_propagation_centrality(graph)) == {node.id for node in graph.nodes()}

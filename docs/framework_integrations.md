@@ -31,5 +31,39 @@ The adapter layer preserves:
 - edge cost, latency, relevance, reliability, activation probability, and weight
 - entrypoint/output concepts where the target framework shape has an analogue
 
-These are interchange specs, not runtime launchers. Real framework execution can
-be added later as optional extras that consume the same dictionary contracts.
+The dictionary adapters are interchange specs, not runtime launchers. Native
+execution hooks can be layered on top as optional extras that consume the same
+dictionary contracts.
+
+## Optional Native Builders
+
+AgentProp also exposes best-effort native builders for frameworks where a
+workflow object can be constructed without model credentials or user-defined step
+functions:
+
+```python
+from agentprop.integrations import native_framework_status, to_native_framework
+from agentprop.workflows import planner_coder_tester_reviewer
+
+print([status.to_dict() for status in native_framework_status()])
+
+graph = planner_coder_tester_reviewer()
+langgraph_builder = to_native_framework(graph, "langgraph")
+```
+
+Current native-builder status:
+
+- `langgraph`: builds a `StateGraph` with placeholder pass-through node
+  functions, entrypoint, finish-point, and graph edges.
+- `crewai`: builds `Agent`, `Task`, and `Crew` objects when `crewai` is
+  installed.
+- `openai-agents`: builds a list of `Agent` objects when the OpenAI Agents SDK
+  package is installed.
+- `autogen`: still requires configured model clients and runtime wiring, so the
+  native builder raises `NativeFrameworkUnavailable` with the required next step.
+- `llamaindex`: still requires user-defined workflow step functions, so the
+  native builder raises `NativeFrameworkUnavailable` with the required next step.
+
+These native builders are implementation hooks, not validation evidence. They
+make it easier to plug AgentProp graphs into real framework projects while
+keeping the base package free of heavy orchestration dependencies.

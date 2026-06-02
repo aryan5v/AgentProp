@@ -1,9 +1,29 @@
 """Evaluation metrics and recommendation helpers."""
 
+from agentprop.evaluation.artifacts import (
+    ArtifactKind,
+    ArtifactRecord,
+    load_artifact_registry,
+    register_artifact,
+    safe_artifact_id,
+    write_artifact_registry,
+)
+from agentprop.evaluation.budgeting import (
+    DEFAULT_BUDGET_POLICIES,
+    AgentBudgetPolicy,
+    budget_policy_by_category,
+    render_budget_policy_markdown,
+)
+from agentprop.evaluation.failure_taxonomy import (
+    FailureCategory,
+    FailureClassification,
+    classify_benchmark_failure,
+)
 from agentprop.evaluation.llm_execution import (
     LLMExecutionResult,
     LLMUsage,
     OpenAICompatibleChatClient,
+    openai_compatible_env_status,
 )
 from agentprop.evaluation.metrics import (
     CostSummary,
@@ -29,18 +49,63 @@ from agentprop.evaluation.quality import (
     RubricScorer,
     aggregate_quality_scores,
 )
+from agentprop.evaluation.readiness import (
+    ReadinessItem,
+    ReadinessReport,
+    build_v1_readiness_report,
+    render_v1_readiness_markdown,
+)
 from agentprop.evaluation.reporting import (
     render_html_report,
     render_markdown_report,
     report_to_dict,
     write_report,
 )
+from agentprop.evaluation.routing import (
+    ContextCompressionProfile,
+    ExpectedSuccessProfile,
+    QualityAwareRoutingObjective,
+    RoutingRisk,
+    calibrate_context_compression,
+    calibrate_expected_success,
+    estimate_expected_success,
+    graded_context_allocations,
+    routing_risks,
+)
 from agentprop.evaluation.runner import BenchmarkRow, run_benchmark
+from agentprop.evaluation.terminal_bench import (
+    HarborTrialSummary,
+    HarborWatchdogConfig,
+    TerminalBenchLaunchConfig,
+    TerminalBenchSummary,
+    collect_harbor_trial_results,
+    load_harbor_trial_result,
+    summarize_terminal_bench_results,
+    write_terminal_bench_launch_bundle,
+    write_terminal_bench_summary_report,
+)
+from agentprop.evaluation.verification import (
+    VerificationResult,
+    VerificationStatus,
+    run_python_code_tests,
+    run_verification_command,
+    verification_row_fields,
+)
+from agentprop.evaluation.watchdog import WatchdogResult, run_command_with_watchdog
 
 __all__ = [
     "BenchmarkRow",
+    "ArtifactKind",
+    "ArtifactRecord",
     "CostSummary",
+    "ContextCompressionProfile",
+    "DEFAULT_BUDGET_POLICIES",
     "ExactMatchScorer",
+    "ExpectedSuccessProfile",
+    "FailureCategory",
+    "FailureClassification",
+    "HarborTrialSummary",
+    "HarborWatchdogConfig",
     "HumanLabelScorer",
     "LLMJudgeScorer",
     "LLMExecutionResult",
@@ -51,18 +116,52 @@ __all__ = [
     "QualityCostSummary",
     "QualityScore",
     "QualityScorer",
+    "QualityAwareRoutingObjective",
     "RecommendationReport",
+    "ReadinessItem",
+    "ReadinessReport",
     "RobustnessSummary",
     "RubricScorer",
+    "RoutingRisk",
+    "TerminalBenchLaunchConfig",
+    "TerminalBenchSummary",
+    "VerificationResult",
+    "VerificationStatus",
+    "WatchdogResult",
+    "AgentBudgetPolicy",
     "aggregate_quality_scores",
+    "build_v1_readiness_report",
+    "budget_policy_by_category",
+    "calibrate_context_compression",
+    "calibrate_expected_success",
+    "classify_benchmark_failure",
+    "collect_harbor_trial_results",
     "compare_routing",
+    "estimate_expected_success",
     "evaluate_pruning",
+    "graded_context_allocations",
+    "load_harbor_trial_result",
+    "load_artifact_registry",
     "quality_cost_summary",
+    "openai_compatible_env_status",
     "render_html_report",
     "render_markdown_report",
+    "render_budget_policy_markdown",
+    "render_v1_readiness_markdown",
+    "register_artifact",
     "report_to_dict",
+    "routing_risks",
     "robustness_under_failures",
+    "run_command_with_watchdog",
+    "safe_artifact_id",
+    "run_python_code_tests",
+    "run_verification_command",
     "run_benchmark",
     "summarize_pruning_risk",
+    "summarize_terminal_bench_results",
+    "verification_row_fields",
+    "write_artifact_registry",
+    "write_terminal_bench_launch_bundle",
+    "write_terminal_bench_summary_report",
     "write_report",
 ]

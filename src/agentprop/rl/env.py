@@ -6,9 +6,19 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from agentprop.core import AgentGraph, NodeType
+from agentprop.evaluation import (
+    ExpectedSuccessProfile,
+    estimate_expected_success,
+    graded_context_allocations,
+)
 from agentprop.evaluation.metrics import seeded_routing_cost
 from agentprop.propagation import IndependentCascade, PropagationModel
-from agentprop.rl.rewards import propagation_reward
+from agentprop.rl.rewards import (
+    RoutingRewardProfile,
+    WorkflowControlReward,
+    propagation_reward,
+    workflow_control_reward,
+)
 
 
 class RoutingAction(StrEnum):
@@ -48,6 +58,8 @@ class RoutingState:
     token_cost: float
     message_cost: float
     propagation_time: float
+    expected_success: float | None
+    context_ratios: dict[str, float]
     done: bool
 
 
@@ -62,6 +74,8 @@ class AgentRoutingEnv:
         *,
         budget: int,
         propagation_model: PropagationModel | None = None,
+        reward_profile: RoutingRewardProfile | None = None,
+        success_profile: ExpectedSuccessProfile | None = None,
         trials: int = 50,
     ) -> None:
         if budget < 1:
@@ -69,6 +83,8 @@ class AgentRoutingEnv:
         self.graph = graph
         self.budget = budget
         self.propagation_model = propagation_model or IndependentCascade(seed=0)
+        self.reward_profile = reward_profile or RoutingRewardProfile()
+        self.success_profile = success_profile
         self.trials = trials
         self._eligible_nodes = [node.id for node in graph.nodes() if node.type != NodeType.OUTPUT]
         self._selected: list[str] = []
@@ -171,13 +187,29 @@ class AgentRoutingEnv:
             done = len(self._selected) >= self.budget
 
         self._state = self._evaluate(done=done)
-        reward = propagation_reward(
-            coverage=self._state.coverage,
+        reward_quality = (
+            self._state.expected_success
+            if self._state.expected_success is not None
+            else self._state.coverage
+        )
+        propagation_component = propagation_reward(
+            coverage=reward_quality,
             token_cost=self._state.token_cost,
             message_cost=self._state.message_cost,
             propagation_time=self._state.propagation_time,
+            coverage_weight=self.reward_profile.coverage_weight,
+            token_cost_weight=self.reward_profile.token_cost_weight,
+            message_cost_weight=self.reward_profile.message_cost_weight,
+            time_weight=self.reward_profile.time_weight,
         )
-        return self._state, reward, done, self._info(decision)
+        control_component = self._control_reward(decision)
+        reward = propagation_component + control_component.total
+        info = self._info(decision)
+        info["propagation_reward"] = propagation_component
+        info["reward_quality"] = reward_quality
+        info["reward_target"] = "expected_success" if self.success_profile else "coverage"
+        info["control_reward"] = control_component.to_dict()
+        return self._state, reward, done, info
 
     def step_gymnasium(
         self,
@@ -204,6 +236,8 @@ class AgentRoutingEnv:
             "token_cost": current.token_cost,
             "message_cost": current.message_cost,
             "propagation_time": current.propagation_time,
+            "expected_success": current.expected_success,
+            "context_ratios": dict(current.context_ratios),
             "done": current.done,
         }
 
@@ -219,12 +253,14 @@ class AgentRoutingEnv:
     def _evaluate(self, *, done: bool) -> RoutingState:
         active_seeds = [*self._selected, *self._activated_verifiers]
         effective_graph = _without_edges(self.graph, self._pruned_edges)
+        activated_nodes: set[str] = set()
         if active_seeds:
             result = self.propagation_model.simulate(
                 effective_graph,
                 active_seeds,
                 trials=self.trials,
             )
+            activated_nodes = set(result.activated_nodes)
             cost = seeded_routing_cost(effective_graph, active_seeds, result.activated_nodes)
             coverage = result.coverage
             propagation_time = result.expected_propagation_time or result.propagation_time
@@ -232,6 +268,20 @@ class AgentRoutingEnv:
             cost = seeded_routing_cost(effective_graph, [], set())
             coverage = 0.0
             propagation_time = 0.0
+        context_ratios = graded_context_allocations(
+            effective_graph,
+            seeds=active_seeds,
+            activated_nodes=activated_nodes,
+        )
+        expected_success = (
+            estimate_expected_success(
+                effective_graph,
+                context_ratios=context_ratios,
+                profile=self.success_profile,
+            )
+            if self.success_profile is not None
+            else None
+        )
 
         manual_edge_cost = sum(
             self.graph.edge(source, target).message_cost
@@ -255,6 +305,8 @@ class AgentRoutingEnv:
             token_cost=cost.token_cost + tool_cost + summary_cost,
             message_cost=cost.message_cost + manual_edge_cost,
             propagation_time=float(propagation_time),
+            expected_success=expected_success,
+            context_ratios=context_ratios,
             done=done,
         )
 
@@ -308,6 +360,38 @@ class AgentRoutingEnv:
             "called_tools": tuple(self._called_tools),
             "summary_nodes": tuple(self._summary_nodes),
         }
+
+    def _control_reward(self, decision: RoutingDecision) -> WorkflowControlReward:
+        if decision.action_type == RoutingAction.ACTIVATE_VERIFIER:
+            node = self.graph.node(_required_node(decision))
+            return workflow_control_reward(
+                activated_verifier_risk=(1.0 - node.reliability) + node.error_rate,
+                verifier_weight=self.reward_profile.verifier_weight,
+            )
+        if decision.action_type == RoutingAction.PRUNE_EDGE:
+            edge = self.graph.edge(*_required_edge(decision))
+            safe_savings = edge.message_cost * max(1.0 - edge.relevance, 0.0)
+            risky_exposure = edge.relevance * edge.dependency_strength * edge.reliability
+            return workflow_control_reward(
+                safe_pruning_savings=safe_savings,
+                risky_pruning_exposure=risky_exposure,
+                safe_pruning_weight=self.reward_profile.safe_pruning_weight,
+                risky_pruning_weight=self.reward_profile.risky_pruning_weight,
+            )
+        if decision.action_type == RoutingAction.CALL_TOOL:
+            node = self.graph.node(_required_node(decision))
+            return workflow_control_reward(
+                tool_reliability_gain=max(node.reliability - node.error_rate, 0.0),
+                tool_weight=self.reward_profile.tool_weight,
+            )
+        if decision.action_type == RoutingAction.REQUEST_SUMMARY:
+            node = self.graph.node(_required_node(decision))
+            importance = node.importance_score or 0.0
+            return workflow_control_reward(
+                summary_token_savings=0.9 * node.token_cost * max(1.0 - importance, 0.0),
+                summary_weight=self.reward_profile.summary_weight,
+            )
+        return WorkflowControlReward()
 
 def format_routing_action(
     action_type: RoutingAction,

@@ -150,3 +150,14 @@ def test_cli_prune_emits_json(capsys) -> None:  # type: ignore[no-untyped-def]
     payload = json.loads(capsys.readouterr().out)
     assert payload["removed_edges"]
     assert payload["achieved_cost_reduction"] >= 0.2
+
+
+def test_cli_readiness_emits_json(capsys) -> None:  # type: ignore[no-untyped-def]
+    exit_code = main(["readiness", "--json"])
+
+    assert exit_code == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["overall_score"] >= 0.8
+    assert payload["alpha_ready"] is True
+    assert payload["public_ready"] is False
+    assert "Real routed LLM case-study results" in payload["blockers"]

@@ -18,6 +18,9 @@ full context. Treat verifier candidates as required review/check points.
 - If summarizing or pruning a handoff, state the risk.
 - For policy work, run `experiments/run_experiment_suite.py` and compare learned
   methods against training-free baselines.
+- For external benchmark work, run `agentprop terminal-bench prepare` first so
+  the manifest, watchdog wrapper, and post-run reporting path are reviewed
+  before launch.
 
 ## Before Final Answer
 

@@ -20,6 +20,31 @@
   },
   "runs": [
     {
+      "id": "ml_seed_scorer_checkpoint",
+      "module": "experiments.train_seed_scorer",
+      "args": {
+        "--model": "mlp",
+        "--task": "seed",
+        "--budget": 2,
+        "--trials": 10,
+        "--epochs": 40,
+        "--out": "{artifact_root}/models/mlp_seed_scorer_metrics.json",
+        "--registry-root": "{artifact_root}/model_registry",
+        "--run-id": "mlp_seed_scorer"
+      }
+    },
+    {
+      "id": "ml_edge_pruning_checkpoint",
+      "module": "experiments.train_edge_pruning_scorer",
+      "args": {
+        "--fraction": 0.2,
+        "--epochs": 40,
+        "--out": "{artifact_root}/models/edge_pruning_metrics.json",
+        "--registry-root": "{artifact_root}/model_registry",
+        "--run-id": "edge_pruning_scorer"
+      }
+    },
+    {
       "id": "ml_generalization_mlp",
       "module": "experiments.evaluate_ml_generalization",
       "args": {
@@ -51,7 +76,22 @@
         "--trials": 10,
         "--episodes": 20,
         "--max-steps": 8,
-        "--out": "{artifact_root}/rl_ppo_trajectories.json"
+        "--out": "{artifact_root}/rl_ppo_trajectories.json",
+        "--registry-root": "{artifact_root}/model_registry",
+        "--run-id": "ppo_routing_policy"
+      }
+    },
+    {
+      "id": "rl_policy_feature",
+      "module": "experiments.run_rl_routing",
+      "args": {
+        "--policy": "feature-policy",
+        "--trials": 10,
+        "--episodes": 20,
+        "--max-steps": 8,
+        "--out": "{artifact_root}/rl_feature_policy_trajectories.json",
+        "--registry-root": "{artifact_root}/model_registry",
+        "--run-id": "feature_policy_routing"
       }
     }
   ]
