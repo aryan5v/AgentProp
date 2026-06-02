@@ -57,6 +57,12 @@ PYTHONPATH=src:. python experiments/train_seed_scorer.py \
   --empirical-results results/case_study/results.json \
   --workflow planner_coder_tester_reviewer \
   --out results/ml/empirical_seed_scorer.json
+
+PYTHONPATH=src:. python experiments/train_torch_gnn.py \
+  --architecture edge_conditioned \
+  --empirical-results results/case_study/results.json \
+  --workflow planner_coder_tester_reviewer \
+  --out results/dl/empirical_torch_gnn_seed_scorer.json
 ```
 
 Empirical training skips retry-recommended infra/timeout rows, then labels
@@ -68,6 +74,8 @@ Verifier-placement scorers can also train from empirical rows when rows include
 observed `activated_verifiers`, `verifier_nodes`, or `verifier_placements`.
 Successful verifier activations become positive examples; failed activations
 become negative examples. Rows without observed verifier decisions are skipped.
+This applies to both dependency-light node scorers and optional torch GNN
+training via `experiments/train_torch_gnn.py --task verifier --empirical-results ...`.
 
 Edge-pruning scorers can use the same empirical row format when rows include
 `pruned_edges`. Successful pruned edges become positive examples; failed pruned

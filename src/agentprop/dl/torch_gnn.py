@@ -7,8 +7,20 @@ from typing import Any
 
 from agentprop.core import AgentGraph, NodeType
 from agentprop.dl.encoders import GraphEncoderConfig, require_torch
-from agentprop.ml.datasets import SeedSelectionExample, VerifierPlacementExample
+from agentprop.ml.datasets import (
+    EmpiricalRoutingExample,
+    EmpiricalVerifierPlacementExample,
+    SeedSelectionExample,
+    VerifierPlacementExample,
+)
 from agentprop.ml.features import EdgeFeatures, extract_edge_features, extract_graph_features
+
+TorchNodePolicyExample = (
+    SeedSelectionExample
+    | VerifierPlacementExample
+    | EmpiricalRoutingExample
+    | EmpiricalVerifierPlacementExample
+)
 
 
 @dataclass(slots=True)
@@ -51,13 +63,13 @@ class TorchGNNSeedScorer:
 
 
 def train_torch_seed_scorer(
-    examples: list[SeedSelectionExample | VerifierPlacementExample],
+    examples: list[TorchNodePolicyExample],
     *,
     config: GraphEncoderConfig | None = None,
     epochs: int = 100,
     learning_rate: float = 0.01,
 ) -> tuple[TorchGNNSeedScorer, TorchTrainingResult]:
-    """Train a torch GNN scorer with greedy seed-selection labels."""
+    """Train a torch GNN scorer with heuristic or empirical outcome labels."""
 
     if not examples:
         raise ValueError("examples must not be empty")
@@ -66,7 +78,7 @@ def train_torch_seed_scorer(
     scorer = TorchGNNSeedScorer(config or GraphEncoderConfig(input_dim=feature_count))
     torch = scorer.torch
     optimizer = torch.optim.Adam(scorer.model.parameters(), lr=learning_rate)
-    loss_fn = torch.nn.BCEWithLogitsLoss()
+    loss_fn = torch.nn.BCEWithLogitsLoss(reduction="none")
     losses: list[float] = []
 
     for _ in range(epochs):
@@ -83,7 +95,7 @@ def train_torch_seed_scorer(
                 batch["node_type_ids"],
                 batch["edge_features"],
             )
-            total_loss = total_loss + loss_fn(logits, batch["y"])
+            total_loss = total_loss + loss_fn(logits, batch["y"]).mean() * batch["sample_weight"]
 
         optimizer.zero_grad()
         total_loss.backward()
@@ -140,7 +152,7 @@ def _graph_to_tensors(
 
 def _example_to_tensors(
     torch: Any,
-    example: SeedSelectionExample | VerifierPlacementExample,
+    example: TorchNodePolicyExample,
     *,
     edge_feature_dim: int,
 ) -> dict[str, Any]:
@@ -159,7 +171,7 @@ def _example_to_tensors(
         index,
         edge_feature_dim=edge_feature_dim,
     )
-    for node_id, neighbors in example.neighbors.items():
+    for node_id, neighbors in _example_neighbors(example).items():
         if node_id not in index:
             continue
         source = index[node_id]
@@ -176,10 +188,22 @@ def _example_to_tensors(
         "node_ids": node_ids,
         "x": x,
         "y": y,
+        "sample_weight": torch.tensor(_example_weight(example), dtype=torch.float32),
         "adjacency": adjacency,
         "node_type_ids": node_type_ids,
         "edge_features": edge_features,
     }
+
+
+def _example_neighbors(example: TorchNodePolicyExample) -> dict[str, list[str]]:
+    neighbors = example.neighbors
+    if neighbors is not None:
+        return neighbors
+    return {node_id: [] for node_id in example.features.node_features}
+
+
+def _example_weight(example: TorchNodePolicyExample) -> float:
+    return getattr(example, "sample_weight", 1.0)
 
 
 def _edge_features_to_tensor(
