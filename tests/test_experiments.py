@@ -5,6 +5,7 @@ from pathlib import Path
 
 from experiments import (
     analyze_case_study,
+    build_empirical_rows,
     evaluate_ml_generalization,
     evaluate_routing_baselines,
     replay_rl_trajectory,
@@ -128,6 +129,76 @@ def test_run_ml_rl_sweep_writes_manifest_registry_and_metrics(tmp_path: Path) ->
     assert all(Path(run["output"]).exists() for run in payload["runs"])
     assert any(record.kind == "ml-model" for record in records)
     assert any(record.kind == "metrics" for record in records)
+
+
+def test_build_empirical_rows_converts_trace_and_outcomes(tmp_path: Path) -> None:
+    trace_path = tmp_path / "traces.JSONL"
+    outcomes_path = tmp_path / "results.json"
+    output_path = tmp_path / "empirical_rows.json"
+    trace_path.write_text(
+        "\n".join(
+            [
+                json.dumps(
+                    {
+                        "task_id": "task-pass",
+                        "policy": "quality_aware_greedy",
+                        "events": [
+                            {
+                                "source": "task",
+                                "target": "coder",
+                                "full_context": True,
+                                "token_cost": 1000,
+                            }
+                        ],
+                    }
+                ),
+                json.dumps(
+                    {
+                        "task_id": "task-unlabeled",
+                        "policy": "quality_aware_greedy",
+                        "events": [{"source": "task", "target": "reviewer"}],
+                    }
+                ),
+            ]
+        )
+        + "\n"
+    )
+    outcomes_path.write_text(
+        json.dumps(
+            {
+                "rows": [
+                    {
+                        "task_id": "task-pass",
+                        "policy": "quality_aware_greedy",
+                        "verification_passed": True,
+                        "token_cost": 1200,
+                    }
+                ]
+            }
+        )
+    )
+
+    exit_code = build_empirical_rows.main(
+        [
+            "--trace",
+            str(trace_path),
+            "--outcome-results",
+            str(outcomes_path),
+            "--out",
+            str(output_path),
+        ]
+    )
+    payload = json.loads(output_path.read_text())
+
+    assert exit_code == 0
+    assert payload["row_count"] == 1
+    assert payload["trace_count"] == 2
+    assert payload["outcome_count"] == 1
+    assert payload["skipped_trace_count"] == 1
+    assert payload["rows"][0]["task_id"] == "task-pass"
+    assert payload["rows"][0]["selected_seeds"] == ["coder"]
+    assert payload["rows"][0]["verification_passed"] is True
+    assert payload["rows"][0]["token_cost"] == 1200
 
 
 def test_run_ml_rl_sweep_dry_run_expands_grid(tmp_path: Path) -> None:

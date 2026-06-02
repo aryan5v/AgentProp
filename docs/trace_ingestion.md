@@ -81,6 +81,11 @@ The generated rows include `selected_seeds`, `context_allocations`, outcome
 labels, cost fields, and latency fields. They can be passed to:
 
 ```bash
+PYTHONPATH=src:. python experiments/build_empirical_rows.py \
+  --trace results/case_study/traces.jsonl \
+  --outcome-results results/case_study/results.json \
+  --out rows.json
+
 PYTHONPATH=src:. python experiments/train_seed_scorer.py --empirical-results rows.json
 PYTHONPATH=src:. python experiments/train_torch_gnn.py --empirical-results rows.json
 PYTHONPATH=src:. python experiments/run_rl_routing.py --reward-calibration-rows rows.json
@@ -89,3 +94,8 @@ PYTHONPATH=src:. python experiments/run_rl_routing.py --reward-calibration-rows 
 Traces without any task outcome are skipped instead of becoming training labels.
 This keeps trace-calibrated learning grounded in pass/fail or quality evidence,
 not just topology or message frequency.
+
+The row builder accepts JSON or JSONL traces, plus optional outcome artifacts
+with `rows`, `tasks`, or `results` arrays. Its output records how many traces
+were converted and how many were skipped for missing labels, so benchmark runs
+cannot silently train on unlabeled topology-only data.
