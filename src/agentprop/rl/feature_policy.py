@@ -5,9 +5,14 @@ from __future__ import annotations
 import math
 import random
 from dataclasses import dataclass, field
+from typing import cast
 
-from agentprop.ml.features import extract_graph_features
+from agentprop.core import AgentGraph
+from agentprop.ml.features import GraphFeatures, extract_graph_features
 from agentprop.rl.env import AgentRoutingEnv, RoutingAction
+
+_LAST_GRAPH: AgentGraph | None = None
+_LAST_FEATURES: GraphFeatures | None = None
 
 
 @dataclass(slots=True)
@@ -137,13 +142,16 @@ def _update_policy(
     cfg: FeaturePolicyConfig,
 ) -> None:
     returns = _discounted_returns([step.reward for step in trajectory], cfg.discount)
+    weight_updates = [0.0] * len(policy.weights)
     for step, episode_return in zip(trajectory, returns, strict=True):
         probabilities = _softmax(policy, step.action_features)
         for action, probability in probabilities.items():
             direction = (1.0 if action == step.action else 0.0) - probability
             values = step.action_features[action]
             for index, value in enumerate(values):
-                policy.weights[index] += cfg.learning_rate * episode_return * direction * value
+                weight_updates[index] += cfg.learning_rate * episode_return * direction * value
+    for index, update in enumerate(weight_updates):
+        policy.weights[index] += update
 
 
 def _sample_action(
@@ -181,7 +189,7 @@ def _softmax(
 
 
 def _seed_action_features(env: AgentRoutingEnv, actions: list[str]) -> dict[str, list[float]]:
-    graph_features = extract_graph_features(env.graph)
+    graph_features = _get_graph_features(env.graph)
     state = env.state
     remaining_ratio = state.remaining_budget / max(env.budget, 1)
     selected_ratio = len(state.selected_seeds) / max(env.budget, 1)
@@ -200,12 +208,20 @@ def _seed_action_features(env: AgentRoutingEnv, actions: list[str]) -> dict[str,
 
 def _seed_action_feature_names(env: AgentRoutingEnv) -> list[str]:
     return [
-        *extract_graph_features(env.graph).feature_names,
+        *_get_graph_features(env.graph).feature_names,
         "remaining_budget_ratio",
         "selected_seed_ratio",
         "current_coverage",
         "bias",
     ]
+
+
+def _get_graph_features(graph: AgentGraph) -> GraphFeatures:
+    global _LAST_FEATURES, _LAST_GRAPH
+    if graph is not _LAST_GRAPH:
+        _LAST_GRAPH = graph
+        _LAST_FEATURES = extract_graph_features(graph)
+    return cast(GraphFeatures, _LAST_FEATURES)
 
 
 def _discounted_returns(rewards: list[float], discount: float) -> list[float]:
