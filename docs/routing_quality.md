@@ -32,10 +32,25 @@ seeds = quality_aware_greedy_seed_selection(
 expected_success - lambda * total_cost
 ```
 
-The current estimator uses reliability, error rate, context allocation, and
-node importance. It is intentionally lightweight so it can run without training
-data; real pass/fail traces can later replace the heuristic expected-success
-component.
+The fallback estimator uses reliability, error rate, context allocation, and
+node importance when no calibration data is available.
+When routed task rows include pass/fail or quality outcomes plus
+`context_allocations`, fit an empirical expected-success profile:
+
+```python
+from agentprop.evaluation import (
+    QualityAwareRoutingObjective,
+    calibrate_expected_success,
+)
+
+profile = calibrate_expected_success(rows)
+objective = QualityAwareRoutingObjective(success_profile=profile)
+```
+
+The empirical profile learns which nodes appear context-sensitive in real runs.
+For example, if compressed coder context repeatedly coincides with failed
+verification while full coder context passes, future coder-starved plans receive
+a lower expected-success score.
 
 ## Calibrated and Graded Context
 

@@ -44,11 +44,54 @@ class RoutingRisk:
 
 
 @dataclass(frozen=True, slots=True)
+class ExpectedSuccessProfile:
+    """Empirical expected-success penalties learned from routed task rows."""
+
+    default_success: float
+    node_context_penalties: dict[str, float] = field(default_factory=dict)
+    high_context_threshold: float = 0.80
+    source: str = "empirical"
+    example_count: int = 0
+
+    def estimate(
+        self,
+        graph: AgentGraph,
+        *,
+        context_ratios: dict[str, float],
+    ) -> float:
+        """Estimate task success from observed context sensitivity."""
+
+        penalties = []
+        for node in graph.nodes():
+            if node.type == NodeType.OUTPUT:
+                continue
+            penalty = self.node_context_penalties.get(node.id, 0.0)
+            if penalty <= 0.0:
+                continue
+            ratio = max(0.0, min(1.0, context_ratios.get(node.id, 0.0)))
+            shortage = max(0.0, self.high_context_threshold - ratio)
+            penalties.append(penalty * shortage / max(self.high_context_threshold, 1e-12))
+        return max(0.0, min(1.0, self.default_success - sum(penalties)))
+
+    def to_dict(self) -> dict[str, object]:
+        """Serialize profile metadata and learned penalties."""
+
+        return {
+            "default_success": self.default_success,
+            "node_context_penalties": dict(sorted(self.node_context_penalties.items())),
+            "high_context_threshold": self.high_context_threshold,
+            "source": self.source,
+            "example_count": self.example_count,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class QualityAwareRoutingObjective:
     """Expected-success objective for balancing quality and routing cost."""
 
     token_penalty: float = 0.0001
     context_penalty: float = 0.35
+    success_profile: ExpectedSuccessProfile | None = None
 
     def score(
         self,
@@ -70,8 +113,76 @@ class QualityAwareRoutingObjective:
             graph,
             context_ratios=ratios,
             context_penalty=self.context_penalty,
+            profile=self.success_profile,
         )
         return expected_success - self.token_penalty * cost.total_cost
+
+
+def calibrate_expected_success(
+    rows: list[dict[str, Any]],
+    *,
+    high_context_threshold: float = 0.80,
+    default_success: float = 0.5,
+) -> ExpectedSuccessProfile:
+    """Fit expected-success penalties from empirical routed task rows.
+
+    Rows should include a task outcome (`verification_passed`, `quality_passed`,
+    `quality_score`, or `passed`) plus `context_allocations` or
+    `context_ratios`. Retry-recommended infra rows are ignored.
+    """
+
+    outcomes = []
+    high_context_plan_outcomes = []
+    high_context_outcomes: dict[str, list[float]] = defaultdict(list)
+    low_context_outcomes: dict[str, list[float]] = defaultdict(list)
+
+    for row in rows:
+        if bool(row.get("retry_recommended")):
+            continue
+        outcome = _row_outcome(row)
+        if outcome is None:
+            continue
+        outcomes.append(outcome)
+
+        context_ratios = _row_context_ratios(row)
+        for seed in _string_list(row.get("selected_seeds")):
+            context_ratios.setdefault(seed, 1.0)
+        high_context_plan = context_ratios and all(
+            ratio >= high_context_threshold for ratio in context_ratios.values()
+        )
+        if high_context_plan:
+            high_context_plan_outcomes.append(outcome)
+        for node_id, ratio in context_ratios.items():
+            if ratio >= high_context_threshold:
+                high_context_outcomes[node_id].append(outcome)
+            else:
+                low_context_outcomes[node_id].append(outcome)
+
+    if not outcomes:
+        return ExpectedSuccessProfile(
+            default_success=default_success,
+            high_context_threshold=high_context_threshold,
+            source="default",
+            example_count=0,
+        )
+
+    baseline = mean(high_context_plan_outcomes) if high_context_plan_outcomes else mean(outcomes)
+    penalties = {}
+    for node_id in sorted(set(high_context_outcomes) | set(low_context_outcomes)):
+        high = high_context_outcomes.get(node_id)
+        low = low_context_outcomes.get(node_id)
+        if not high or not low:
+            continue
+        penalty = mean(high) - mean(low)
+        if penalty > 0.0:
+            penalties[node_id] = max(0.0, min(1.0, penalty))
+
+    return ExpectedSuccessProfile(
+        default_success=max(0.0, min(1.0, baseline)),
+        node_context_penalties=penalties,
+        high_context_threshold=high_context_threshold,
+        example_count=len(outcomes),
+    )
 
 
 def calibrate_context_compression(
@@ -150,8 +261,12 @@ def estimate_expected_success(
     *,
     context_ratios: dict[str, float],
     context_penalty: float = 0.35,
+    profile: ExpectedSuccessProfile | None = None,
 ) -> float:
-    """Estimate workflow success from reliability and context starvation risk."""
+    """Estimate workflow success from empirical data or heuristic fallback."""
+
+    if profile is not None:
+        return profile.estimate(graph, context_ratios=context_ratios)
 
     node_scores = []
     for node in graph.nodes():
@@ -233,3 +348,36 @@ def _importance(
     if node_type == NodeType.PLANNER:
         return 0.55
     return 0.35
+
+
+def _row_context_ratios(row: dict[str, Any]) -> dict[str, float]:
+    raw = row.get("context_allocations") or row.get("context_ratios")
+    if not isinstance(raw, dict):
+        return {}
+    ratios = {}
+    for node_id, value in raw.items():
+        if isinstance(value, int | float):
+            ratios[str(node_id)] = max(0.0, min(1.0, float(value)))
+    return ratios
+
+
+def _row_outcome(row: dict[str, Any]) -> float | None:
+    verification = row.get("verification_passed")
+    if isinstance(verification, bool):
+        return 1.0 if verification else 0.0
+    quality_passed = row.get("quality_passed")
+    if isinstance(quality_passed, bool):
+        return 1.0 if quality_passed else 0.0
+    quality_score = row.get("quality_score")
+    if isinstance(quality_score, int | float):
+        return max(0.0, min(1.0, float(quality_score)))
+    passed = row.get("passed")
+    if isinstance(passed, bool):
+        return 1.0 if passed else 0.0
+    return None
+
+
+def _string_list(value: object) -> list[str]:
+    if isinstance(value, list | tuple):
+        return [item for item in value if isinstance(item, str)]
+    return []

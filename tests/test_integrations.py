@@ -5,6 +5,7 @@ from types import ModuleType
 
 from agentprop.integrations import (
     NativeFrameworkUnavailable,
+    calibrate_graph_from_trace_dict,
     graph_from_autogen_dict,
     graph_from_crewai_dict,
     graph_from_framework_dict,
@@ -55,6 +56,39 @@ def test_graph_from_trace_aggregates_messages(tmp_path: Path) -> None:
     assert result.total_token_cost == 800
     assert result.graph.node("tester").error_rate == 1.0
     assert result.graph.edge("planner", "coder").message_cost == 500
+
+
+def test_trace_calibration_updates_existing_graph_probabilities() -> None:
+    graph = planner_coder_tester_reviewer()
+    trace = {
+        "events": [
+            {
+                "source": "planner",
+                "target": "coder",
+                "token_cost": 500,
+                "latency": 0.7,
+                "success": True,
+            },
+            {
+                "source": "planner",
+                "target": "coder",
+                "token_cost": 700,
+                "latency": 0.9,
+                "success": False,
+            },
+        ]
+    }
+
+    result = calibrate_graph_from_trace_dict(graph, trace, smoothing=0.0)
+    calibrated = result.graph
+
+    assert result.calibrated_edge_count == 1
+    assert calibrated.edge("planner", "coder").activation_probability == 1.0
+    assert calibrated.edge("planner", "coder").reliability == 0.5
+    assert calibrated.edge("planner", "coder").message_cost == 600
+    assert calibrated.node("coder").reliability == 0.5
+    assert graph.edge("planner", "reviewer").activation_probability == 1.0
+    assert calibrated.edge("planner", "reviewer").activation_probability == 0.0
 
 
 def test_langgraph_adapter_exports_and_imports_node_edge_spec() -> None:

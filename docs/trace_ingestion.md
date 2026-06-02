@@ -43,3 +43,23 @@ Trace ingestion aggregates:
 - edge activation probability proxy
 
 The result is a normal AgentProp workflow JSON file.
+
+## Calibrating an Existing Graph
+
+Template graph values are priors. When trace evidence exists, calibrate a copy
+of the graph instead of relying on hard-coded `activation_probability`,
+reliability, token cost, and latency values:
+
+```python
+from agentprop.integrations import calibrate_graph_from_trace_dict
+from agentprop.workflows import planner_coder_tester_reviewer
+
+graph = planner_coder_tester_reviewer()
+calibrated = calibrate_graph_from_trace_dict(graph, trace).graph
+```
+
+Observed edges receive measured activation probability, reliability, message
+cost, and latency. Unobserved outgoing edges from a source that appears in the
+trace receive a small smoothed activation probability instead of keeping the
+default `1.0`, which prevents synthetic propagation from assuming every
+possible handoff always fires.
