@@ -5,6 +5,7 @@ from pathlib import Path
 from experiments.run_with_watchdog import main as watchdog_main
 
 from agentprop.cli import main
+from agentprop.evaluation.failure_taxonomy import classify_benchmark_failure
 from agentprop.evaluation.terminal_bench import (
     TerminalBenchLaunchConfig,
     collect_harbor_trial_results,
@@ -32,6 +33,9 @@ def test_terminal_bench_prepare_writes_dry_run_bundle(tmp_path: Path) -> None:
     assert "enumerate the full answer set" in instructions
     assert "Limit candidate sweeps to a small fixed budget" in instructions
     assert "Budget-Aware Stop Conditions" in instructions
+    assert "cancellation, cleanup, and max-concurrency invariants" in instructions
+    assert "test release mode before" in instructions
+    assert "primer Tm gaps" in instructions
     assert manifest["budget_policies"][0]["category"] == "direct-answer"
     assert (tmp_path / "registry" / "registry.json").exists()
 
@@ -64,6 +68,8 @@ def test_terminal_bench_summary_reads_harbor_task_results(tmp_path: Path) -> Non
     assert summary.elapsed_time_s == 1800.0
     assert summary.command_count == 12
     assert summary.model_call_count == 5
+    assert summary.retry_recommended_count == 1
+    assert summary.failure_counts == {"passed": 1, "timeout_or_overexploration": 1}
 
 
 def test_terminal_bench_summary_skips_partial_json(tmp_path: Path) -> None:
@@ -85,8 +91,59 @@ def test_terminal_bench_summary_report_writes_artifacts(tmp_path: Path) -> None:
 
     assert json.loads(paths["summary"].read_text())["summary"]["pass_count"] == 1
     assert "Commands" in paths["report"].read_text()
+    assert "Failure Taxonomy" in paths["report"].read_text()
     assert "Task Results" in paths["report"].read_text()
     assert "task_name" in paths["csv"].read_text()
+    assert "failure_category" in paths["csv"].read_text()
+
+
+def test_terminal_bench_classifies_known_failure_signatures(tmp_path: Path) -> None:
+    _write_result(
+        tmp_path / "break-filter-js-from-html" / "result.json",
+        "terminal-bench/break-filter-js-from-html",
+        0.0,
+        exception_name="SessionNotCreatedException",
+    )
+    _write_result(
+        tmp_path / "chess-best-move" / "result.json",
+        "terminal-bench/chess-best-move",
+        0.0,
+    )
+    _write_result(tmp_path / "dna-insert" / "result.json", "terminal-bench/dna-insert", 0.0)
+    _write_result(
+        tmp_path / "cancel-async-tasks" / "result.json",
+        "terminal-bench/cancel-async-tasks",
+        0.0,
+    )
+    _write_result(
+        tmp_path / "custom-memory-heap-crash" / "result.json",
+        "terminal-bench/custom-memory-heap-crash",
+        0.0,
+    )
+
+    rows = {row.task_name: row for row in collect_harbor_trial_results(tmp_path)}
+
+    assert rows["terminal-bench/break-filter-js-from-html"].failure_category == (
+        "harness_infra_failure"
+    )
+    assert rows["terminal-bench/break-filter-js-from-html"].retry_recommended is True
+    assert rows["terminal-bench/chess-best-move"].failure_category == "incomplete_output"
+    assert rows["terminal-bench/dna-insert"].failure_category == "domain_constraint_miss"
+    assert rows["terminal-bench/cancel-async-tasks"].failure_category == "async_lifecycle_miss"
+    assert rows["terminal-bench/custom-memory-heap-crash"].failure_category == (
+        "build_or_mode_mismatch"
+    )
+
+
+def test_failure_taxonomy_marks_unknown_exceptions_retryable() -> None:
+    classification = classify_benchmark_failure(
+        "terminal-bench/crack-7z-hash",
+        passed=None,
+        exception_name="UnexpectedTmuxError",
+    )
+
+    assert classification.category == "harness_infra_failure"
+    assert classification.retry_recommended is True
 
 
 def test_cli_terminal_bench_prepare_emits_json(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]

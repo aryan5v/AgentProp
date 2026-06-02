@@ -8,6 +8,17 @@ from agentprop.evaluation.artifacts import (
     safe_artifact_id,
     write_artifact_registry,
 )
+from agentprop.evaluation.budgeting import (
+    DEFAULT_BUDGET_POLICIES,
+    AgentBudgetPolicy,
+    budget_policy_by_category,
+    render_budget_policy_markdown,
+)
+from agentprop.evaluation.failure_taxonomy import (
+    FailureCategory,
+    FailureClassification,
+    classify_benchmark_failure,
+)
 from agentprop.evaluation.llm_execution import (
     LLMExecutionResult,
     LLMUsage,
@@ -86,7 +97,10 @@ __all__ = [
     "ArtifactRecord",
     "CostSummary",
     "ContextCompressionProfile",
+    "DEFAULT_BUDGET_POLICIES",
     "ExactMatchScorer",
+    "FailureCategory",
+    "FailureClassification",
     "HarborTrialSummary",
     "HarborWatchdogConfig",
     "HumanLabelScorer",
@@ -111,9 +125,12 @@ __all__ = [
     "VerificationResult",
     "VerificationStatus",
     "WatchdogResult",
+    "AgentBudgetPolicy",
     "aggregate_quality_scores",
     "build_v1_readiness_report",
+    "budget_policy_by_category",
     "calibrate_context_compression",
+    "classify_benchmark_failure",
     "collect_harbor_trial_results",
     "compare_routing",
     "estimate_expected_success",
@@ -125,6 +142,7 @@ __all__ = [
     "openai_compatible_env_status",
     "render_html_report",
     "render_markdown_report",
+    "render_budget_policy_markdown",
     "render_v1_readiness_markdown",
     "register_artifact",
     "report_to_dict",

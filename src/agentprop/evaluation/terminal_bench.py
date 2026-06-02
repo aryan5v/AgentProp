@@ -10,6 +10,7 @@ from typing import Any
 
 from agentprop.evaluation.artifacts import register_artifact
 from agentprop.evaluation.budgeting import DEFAULT_BUDGET_POLICIES, render_budget_policy_markdown
+from agentprop.evaluation.failure_taxonomy import classify_benchmark_failure
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,6 +73,9 @@ class HarborTrialSummary:
     elapsed_time_s: float
     command_count: int
     model_call_count: int
+    failure_category: str
+    retry_recommended: bool
+    failure_rationale: str
     result_path: str
 
     @property
@@ -93,6 +97,9 @@ class HarborTrialSummary:
             "elapsed_time_s": self.elapsed_time_s,
             "command_count": self.command_count,
             "model_call_count": self.model_call_count,
+            "failure_category": self.failure_category,
+            "retry_recommended": self.retry_recommended,
+            "failure_rationale": self.failure_rationale,
             "result_path": self.result_path,
         }
 
@@ -115,6 +122,8 @@ class TerminalBenchSummary:
     elapsed_time_s: float
     command_count: int
     model_call_count: int
+    retry_recommended_count: int
+    failure_counts: dict[str, int]
     timeout_rate: float
     cost_adjusted_success: float
 
@@ -134,6 +143,8 @@ class TerminalBenchSummary:
             "elapsed_time_s": self.elapsed_time_s,
             "command_count": self.command_count,
             "model_call_count": self.model_call_count,
+            "retry_recommended_count": self.retry_recommended_count,
+            "failure_counts": self.failure_counts,
             "timeout_rate": self.timeout_rate,
             "cost_adjusted_success": self.cost_adjusted_success,
         }
@@ -237,11 +248,17 @@ def load_harbor_trial_result(path: str | Path) -> HarborTrialSummary | None:
     if exception_name is None and exception_info:
         exception_name = _optional_string(exception_info.get("exception_type"))
 
+    passed = (reward > 0.0) if reward is not None else None
+    classification = classify_benchmark_failure(
+        task_name,
+        passed=passed,
+        exception_name=exception_name,
+    )
     return HarborTrialSummary(
         task_name=task_name,
         trial_name=trial_name,
         reward=reward,
-        passed=(reward > 0.0) if reward is not None else None,
+        passed=passed,
         exception_name=exception_name,
         input_tokens=_int(agent_result.get("n_input_tokens")),
         cache_tokens=_int(agent_result.get("n_cache_tokens")),
@@ -262,6 +279,9 @@ def load_harbor_trial_result(path: str | Path) -> HarborTrialSummary | None:
             agent_result,
             keys=("model_call_count", "n_model_calls", "num_model_calls", "llm_call_count"),
         ),
+        failure_category=classification.category,
+        retry_recommended=classification.retry_recommended,
+        failure_rationale=classification.rationale,
         result_path=str(result_path),
     )
 
@@ -302,6 +322,8 @@ def summarize_terminal_bench_results(
     elapsed_time_s = sum(row.elapsed_time_s for row in rows)
     command_count = sum(row.command_count for row in rows)
     model_call_count = sum(row.model_call_count for row in rows)
+    retry_recommended_count = sum(1 for row in rows if row.retry_recommended)
+    failure_counts = _count_failure_categories(rows)
     cost_adjusted_success = pass_rate - cost_weight * cost_usd - timeout_weight * timeout_rate
     return TerminalBenchSummary(
         task_count=len(rows),
@@ -318,6 +340,8 @@ def summarize_terminal_bench_results(
         elapsed_time_s=elapsed_time_s,
         command_count=command_count,
         model_call_count=model_call_count,
+        retry_recommended_count=retry_recommended_count,
+        failure_counts=failure_counts,
         timeout_rate=timeout_rate,
         cost_adjusted_success=cost_adjusted_success,
     )
@@ -466,6 +490,9 @@ Use AgentProp routing discipline, but keep it budget-aware.
 - If a task is direct-answer or perception-heavy, avoid heavyweight process loops.
 - Preserve evidence: commands run, files changed, verification output, and any
   unresolved risk.
+- Treat verifier requirements as hard constraints. Passing a nearby local check
+  is not enough when the benchmark verifier exercises a different mode, output
+  set, or domain threshold.
 
 {budget_policy}
 
@@ -483,6 +510,21 @@ discipline was too heavy or too narrow. Apply these task-specific corrections:
 - Keep the loop short: inspect input, compute/verify candidates, write exactly
   the requested format, and stop.
 
+### Concurrency / Async Lifecycle Tasks
+
+- Treat cancellation, cleanup, and max-concurrency invariants as first-class
+  requirements. Write or inspect tests for partially started tasks, cancelled
+  tasks, and pending tasks before finalizing.
+- Verify that cleanup happens for every started task, including tasks that are
+  cancelled while blocked on a semaphore or queue.
+
+### Build-Mode Sensitive Tasks
+
+- If the verifier may compile or run release mode, test release mode before
+  finalizing. A debug-only pass is not sufficient evidence.
+- Preserve optimization flags, sanitizers, and crash-triggering inputs unless the
+  verifier proves the replacement path is equivalent.
+
 ### Simulator / Numerical Tuning Tasks
 
 - Treat the provided evaluator as the source of truth; optimize against it early.
@@ -492,6 +534,15 @@ discipline was too heavy or too narrow. Apply these task-specific corrections:
   threshold; do not continue broad exploratory searches.
 - Do not change physical semantics, units, schemas, or coordinate conventions
   unless the evaluator proves equivalence.
+
+### Domain Constraint Tasks
+
+- For biological, chemistry, or other constrained-design tasks, verify every
+  explicit constraint numerically before writing the answer. Examples include
+  assembled sequence equality, primer Tm gaps, GC content, length, orientation,
+  and forbidden motifs.
+- Do not accept a superficially plausible candidate until it passes all listed
+  constraints, including tolerance thresholds.
 """
 
 
@@ -519,29 +570,60 @@ def _render_summary_markdown(
         f"- Elapsed time: {summary.elapsed_time_s:.1f}s",
         f"- Commands: {summary.command_count:,}",
         f"- Model calls: {summary.model_call_count:,}",
+        f"- Retry-recommended tasks: {summary.retry_recommended_count:,}",
         f"- Timeout rate: {summary.timeout_rate:.1%}",
         f"- Cost-adjusted success: {summary.cost_adjusted_success:.3f}",
         "",
+        "## Failure Taxonomy",
+        "",
+        "| Category | Count |",
+        "|---|---:|",
+        *_failure_count_rows(summary.failure_counts),
+        "",
+        "Retry-recommended tasks are likely infrastructure, timeout, or unknown-exception",
+        "cases and should be rerun before being used as correctness labels.",
+        "",
         "## Task Results",
         "",
-        "| Task | Reward | Passed | Exception | Tokens | Cost | Time | Commands | Model calls |",
-        "|---|---:|---:|---|---:|---:|---:|---:|---:|",
+        (
+            "| Task | Reward | Passed | Category | Retry | Exception | Tokens | Cost | "
+            "Time | Commands | Model calls |"
+        ),
+        "|---|---:|---:|---|---:|---|---:|---:|---:|---:|---:|",
     ]
     for row in rows:
         reward = "" if row.reward is None else f"{row.reward:.3f}"
         passed = "" if row.passed is None else str(row.passed).lower()
         exception = row.exception_name or "-"
         lines.append(
-            f"| `{row.task_name}` | {reward} | {passed} | {exception} | "
-            f"{row.total_tokens} | ${row.cost_usd:.4f} | {row.elapsed_time_s:.1f}s | "
-            f"{row.command_count} | {row.model_call_count} |"
+            f"| `{row.task_name}` | {reward} | {passed} | {row.failure_category} | "
+            f"{str(row.retry_recommended).lower()} | {exception} | {row.total_tokens} | "
+            f"${row.cost_usd:.4f} | {row.elapsed_time_s:.1f}s | {row.command_count} | "
+            f"{row.model_call_count} |"
         )
     return "\n".join(lines).rstrip() + "\n"
 
 
 def _write_trial_csv(path: Path, rows: list[HarborTrialSummary]) -> None:
     fieldnames = list(
-        HarborTrialSummary("", "", None, None, None, 0, 0, 0, 0.0, 0.0, 0, 0, "").to_dict()
+        HarborTrialSummary(
+            "",
+            "",
+            None,
+            None,
+            None,
+            0,
+            0,
+            0,
+            0.0,
+            0.0,
+            0,
+            0,
+            "solution_miss",
+            False,
+            "",
+            "",
+        ).to_dict()
     )
     with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
@@ -574,6 +656,19 @@ def _int(value: object) -> int:
     if isinstance(value, float):
         return int(value)
     return 0
+
+
+def _count_failure_categories(rows: list[HarborTrialSummary]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for row in rows:
+        counts[row.failure_category] = counts.get(row.failure_category, 0) + 1
+    return dict(sorted(counts.items()))
+
+
+def _failure_count_rows(counts: dict[str, int]) -> list[str]:
+    if not counts:
+        return ["| `none` | 0 |"]
+    return [f"| `{category}` | {count} |" for category, count in sorted(counts.items())]
 
 
 def _extract_float(*payloads: dict[str, Any], keys: tuple[str, ...]) -> float:
