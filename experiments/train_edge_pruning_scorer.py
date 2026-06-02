@@ -27,6 +27,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--empirical-results", type=Path, default=None)
     parser.add_argument("--epochs", type=int, default=150)
     parser.add_argument("--learning-rate", type=float, default=0.05)
+    parser.add_argument("--l2-penalty", type=float, default=0.0)
     parser.add_argument("--out", type=Path, default=Path("results/ml/edge_pruning_scorer.json"))
     parser.add_argument("--checkpoint-out", type=Path, default=None)
     parser.add_argument("--registry-root", type=Path, default=None)
@@ -55,7 +56,12 @@ def main(argv: list[str] | None = None) -> int:
         ]
     feature_count = len(examples[0].features.feature_names)
     scorer = LinearEdgeScorer.initialize(feature_count)
-    scorer.train(examples, epochs=args.epochs, learning_rate=args.learning_rate)
+    scorer.train(
+        examples,
+        epochs=args.epochs,
+        learning_rate=args.learning_rate,
+        l2_penalty=args.l2_penalty,
+    )
 
     evaluations = []
     for workflow_name, builder in WORKFLOW_TEMPLATES.items():
@@ -74,6 +80,7 @@ def main(argv: list[str] | None = None) -> int:
         "bias": scorer.bias,
         "fraction": args.fraction,
         "label_source": label_source,
+        "l2_penalty": args.l2_penalty,
         "evaluations": evaluations,
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)
@@ -92,6 +99,7 @@ def main(argv: list[str] | None = None) -> int:
                 "fraction": args.fraction,
                 "epochs": args.epochs,
                 "learning_rate": args.learning_rate,
+                "l2_penalty": args.l2_penalty,
                 "feature_names": examples[0].features.feature_names,
             },
         )
@@ -111,6 +119,7 @@ def main(argv: list[str] | None = None) -> int:
                 "label_source": label_source,
                 "epochs": args.epochs,
                 "learning_rate": args.learning_rate,
+                "l2_penalty": args.l2_penalty,
             },
         )
     print(f"Wrote {args.out}")

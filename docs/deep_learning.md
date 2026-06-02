@@ -72,7 +72,7 @@ skipped because they do not identify which edge choice affected quality.
 Dependency-light ML baselines include:
 
 - linear node scorer
-- MLP node scorer
+- MLP node scorer with trainable hidden and output layers
 - pairwise node ranker
 - marginal-gain node regressor
 - linear edge-pruning scorer
@@ -89,6 +89,14 @@ PYTHONPATH=src:. python experiments/train_seed_scorer.py --model mlp --task veri
 PYTHONPATH=src:. python experiments/train_edge_pruning_scorer.py
 PYTHONPATH=src:. python experiments/train_edge_pruning_scorer.py --empirical-results results/case_study/results.json
 PYTHONPATH=src:. python experiments/evaluate_ml_generalization.py --model mlp
+```
+
+Use `--l2-penalty` on lightweight ML training scripts to reduce memorization on
+small workflow collections:
+
+```bash
+PYTHONPATH=src:. python experiments/train_seed_scorer.py --model mlp --l2-penalty 0.001
+PYTHONPATH=src:. python experiments/train_edge_pruning_scorer.py --l2-penalty 0.001
 ```
 
 Dependency-light ML scorers can be saved as JSON checkpoints:

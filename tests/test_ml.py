@@ -87,11 +87,15 @@ def test_mlp_node_scorer_trains_on_seed_example() -> None:
     graph = planner_coder_tester_reviewer()
     example = build_seed_selection_example(graph, budget=2, trials=5)
     scorer = MLPNodeScorer.initialize(len(example.features.feature_names), hidden_dim=4)
+    initial_input_weights = [row.copy() for row in scorer.input_weights]
+    initial_hidden_bias = scorer.hidden_bias.copy()
 
-    scorer.train([example], epochs=5, learning_rate=0.05)
+    scorer.train([example], epochs=10, learning_rate=0.05, l2_penalty=0.001)
     scores = scorer.score_nodes(example.features)
 
     assert all(0.0 <= score <= 1.0 for score in scores.values())
+    assert scorer.input_weights != initial_input_weights
+    assert scorer.hidden_bias != initial_hidden_bias
 
 
 def test_seed_ranking_example_builds_preferences_and_targets() -> None:

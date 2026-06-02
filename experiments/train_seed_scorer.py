@@ -37,6 +37,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--trials", type=int, default=30)
     parser.add_argument("--epochs", type=int, default=150)
     parser.add_argument("--learning-rate", type=float, default=0.05)
+    parser.add_argument("--l2-penalty", type=float, default=0.0)
     parser.add_argument("--out", type=Path, default=Path("results/ml/linear_seed_scorer.json"))
     parser.add_argument("--checkpoint-out", type=Path, default=None)
     parser.add_argument("--registry-root", type=Path, default=None)
@@ -88,7 +89,12 @@ def main(argv: list[str] | None = None) -> int:
         scorer = LinearNodeRegressor.initialize(feature_count)
     else:
         scorer = LinearNodeScorer.initialize(feature_count)
-    scorer.train(examples, epochs=args.epochs, learning_rate=args.learning_rate)
+    scorer.train(
+        examples,
+        epochs=args.epochs,
+        learning_rate=args.learning_rate,
+        l2_penalty=args.l2_penalty,
+    )
 
     evaluations = []
     for workflow_name, builder in WORKFLOW_TEMPLATES.items():
@@ -111,6 +117,7 @@ def main(argv: list[str] | None = None) -> int:
         "model": args.model,
         "task": args.task,
         "label_source": label_source,
+        "l2_penalty": args.l2_penalty,
         "evaluations": evaluations,
     }
     if isinstance(scorer, LinearNodeScorer | LinearNodeRegressor):
@@ -136,6 +143,7 @@ def main(argv: list[str] | None = None) -> int:
                 "trials": args.trials,
                 "epochs": args.epochs,
                 "learning_rate": args.learning_rate,
+                "l2_penalty": args.l2_penalty,
                 "feature_names": examples[0].features.feature_names,
             },
         )
@@ -156,6 +164,7 @@ def main(argv: list[str] | None = None) -> int:
                 "trials": args.trials,
                 "epochs": args.epochs,
                 "learning_rate": args.learning_rate,
+                "l2_penalty": args.l2_penalty,
             },
         )
     print(f"Wrote {args.out}")

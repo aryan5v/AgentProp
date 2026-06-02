@@ -492,6 +492,8 @@ def test_train_seed_scorer_experiment_writes_pairwise_model(tmp_path: Path) -> N
             "2",
             "--epochs",
             "2",
+            "--l2-penalty",
+            "0.01",
             "--out",
             str(output),
         ]
@@ -569,6 +571,8 @@ def test_train_seed_scorer_experiment_uses_empirical_rows(tmp_path: Path) -> Non
             str(rows),
             "--epochs",
             "2",
+            "--l2-penalty",
+            "0.01",
             "--out",
             str(output),
         ]
@@ -578,6 +582,7 @@ def test_train_seed_scorer_experiment_uses_empirical_rows(tmp_path: Path) -> Non
     assert exit_code == 0
     assert payload["label_source"] == "empirical-outcome"
     assert payload["model"] == "linear"
+    assert payload["l2_penalty"] == 0.01
     assert payload["weights"]
 
 
@@ -627,6 +632,8 @@ def test_train_edge_pruning_scorer_experiment_uses_empirical_rows(
             str(rows),
             "--epochs",
             "2",
+            "--l2-penalty",
+            "0.02",
             "--out",
             str(output),
         ]
@@ -635,6 +642,7 @@ def test_train_edge_pruning_scorer_experiment_uses_empirical_rows(
 
     assert exit_code == 0
     assert payload["label_source"] == "empirical-outcome"
+    assert payload["l2_penalty"] == 0.02
     assert payload["weights"]
 
 
