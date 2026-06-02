@@ -10,6 +10,19 @@ from agentprop.workflows import planner_coder_tester_reviewer
 
 def test_independent_cascade_reaches_full_pipeline_with_reliable_edges() -> None:
     graph = planner_coder_tester_reviewer()
+    for edge in graph.edges():
+        graph.add_edge(
+            edge.source,
+            edge.target,
+            message_cost=edge.message_cost,
+            latency=edge.latency,
+            relevance=edge.relevance,
+            reliability=edge.reliability,
+            activation_probability=1.0,
+            dependency_strength=edge.dependency_strength,
+            weight=edge.weight,
+            **edge.metadata,
+        )
     result = IndependentCascade(seed=0).simulate(graph, ["planner"], trials=20)
 
     assert result.coverage == 1.0
@@ -38,8 +51,8 @@ def test_zero_forcing_deterministically_forces_path() -> None:
     graph = AgentGraph()
     for node_id in ("a", "b", "c"):
         graph.add_agent(node_id)
-    graph.add_edge("a", "b")
-    graph.add_edge("b", "c")
+    graph.add_edge("a", "b", activation_probability=1.0)
+    graph.add_edge("b", "c", activation_probability=1.0)
 
     result = ZeroForcing().simulate(graph, ["a"])
 

@@ -9,6 +9,7 @@ from experiments import (
     evaluate_ml_generalization,
     evaluate_routing_baselines,
     replay_rl_trajectory,
+    run_bandit_routing,
     run_benchmark,
     run_case_study,
     run_experiment_suite,
@@ -571,6 +572,7 @@ def test_train_seed_scorer_experiment_writes_model(tmp_path: Path) -> None:
             "3",
             "--epochs",
             "3",
+            "--allow-heuristic-labels",
             "--out",
             str(output),
             "--registry-root",
@@ -596,6 +598,7 @@ def test_train_seed_scorer_experiment_writes_pairwise_model(tmp_path: Path) -> N
             "2",
             "--epochs",
             "2",
+            "--allow-heuristic-labels",
             "--l2-penalty",
             "0.01",
             "--out",
@@ -622,6 +625,7 @@ def test_train_seed_scorer_experiment_writes_regression_model(tmp_path: Path) ->
             "2",
             "--epochs",
             "2",
+            "--allow-heuristic-labels",
             "--out",
             str(output),
         ]
@@ -768,6 +772,7 @@ def test_train_torch_gnn_builds_empirical_seed_examples(tmp_path: Path) -> None:
         task="seed",
         workflow="planner_coder_tester_reviewer",
         empirical_results=rows,
+        allow_heuristic_labels=False,
         budget=2,
         trials=2,
     )
@@ -802,6 +807,7 @@ def test_train_torch_gnn_builds_empirical_verifier_examples(tmp_path: Path) -> N
         task="verifier",
         workflow="planner_coder_tester_reviewer",
         empirical_results=rows,
+        allow_heuristic_labels=False,
         budget=2,
         trials=2,
     )
@@ -1073,6 +1079,52 @@ def test_rl_routing_experiment_can_reward_expected_success(tmp_path: Path) -> No
     assert payload[0]["trajectory"][0]["info"]["reward_target"] == "expected_success"
     assert payload[0]["trajectory"][0]["expected_success"] is not None
     assert "final_expected_success" in payload[0]["summary"]
+
+
+def test_run_bandit_routing_updates_from_empirical_rows(tmp_path: Path) -> None:
+    rows = tmp_path / "bandit_rows.json"
+    output = tmp_path / "bandit.json"
+    rows.write_text(
+        json.dumps(
+            [
+                {
+                    "task_id": "roman-to-int",
+                    "category": "edge-case-heavy",
+                    "policy": "quality_aware_greedy",
+                    "verification_passed": True,
+                    "token_savings": 0.12,
+                },
+                {
+                    "task_id": "dna-insert",
+                    "category": "edge-case-heavy",
+                    "policy": "optimized_greedy",
+                    "verification_passed": False,
+                    "token_savings": 0.35,
+                },
+            ]
+        )
+    )
+
+    exit_code = run_bandit_routing.main(
+        [
+            "--rows",
+            str(rows),
+            "--arms",
+            "broadcast,optimized_greedy,quality_aware_greedy",
+            "--epsilon",
+            "0",
+            "--out",
+            str(output),
+        ]
+    )
+    payload = json.loads(output.read_text())
+
+    assert exit_code == 0
+    assert payload["update_count"] == 2
+    assert payload["categories"]["edge-case-heavy"]["recommended_policy"] == (
+        "quality_aware_greedy"
+    )
+    assert payload["categories"]["edge-case-heavy"]["counts"]["optimized_greedy"] == 1
 
 
 def test_replay_rl_trajectory_experiment_imports_exported_trajectory(tmp_path: Path) -> None:

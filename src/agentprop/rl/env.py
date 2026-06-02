@@ -7,6 +7,7 @@ from enum import StrEnum
 
 from agentprop.core import AgentGraph, NodeType
 from agentprop.evaluation import (
+    ContextCompressionProfile,
     ExpectedSuccessProfile,
     estimate_expected_success,
     graded_context_allocations,
@@ -76,6 +77,7 @@ class AgentRoutingEnv:
         propagation_model: PropagationModel | None = None,
         reward_profile: RoutingRewardProfile | None = None,
         success_profile: ExpectedSuccessProfile | None = None,
+        context_profile: ContextCompressionProfile | None = None,
         trials: int = 50,
     ) -> None:
         if budget < 1:
@@ -85,6 +87,7 @@ class AgentRoutingEnv:
         self.propagation_model = propagation_model or IndependentCascade(seed=0)
         self.reward_profile = reward_profile or RoutingRewardProfile()
         self.success_profile = success_profile
+        self.context_profile = context_profile
         self.trials = trials
         self._eligible_nodes = [node.id for node in graph.nodes() if node.type != NodeType.OUTPUT]
         self._selected: list[str] = []
@@ -272,6 +275,7 @@ class AgentRoutingEnv:
             effective_graph,
             seeds=active_seeds,
             activated_nodes=activated_nodes,
+            profile=self.context_profile,
         )
         expected_success = (
             estimate_expected_success(

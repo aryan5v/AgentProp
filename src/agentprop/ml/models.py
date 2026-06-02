@@ -83,9 +83,10 @@ class MLPNodeScorer:
             [0.01 * ((row + column) % 5 - 2) for column in range(feature_count)]
             for row in range(hidden_dim)
         ]
+        output_weights = [0.01 * ((index % 5) - 2) for index in range(hidden_dim)]
         return cls(
             input_weights=input_weights,
-            output_weights=[0.0] * hidden_dim,
+            output_weights=output_weights,
             hidden_bias=[0.0] * hidden_dim,
         )
 

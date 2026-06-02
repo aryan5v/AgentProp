@@ -39,6 +39,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--task", choices=["seed", "verifier"], default="seed")
     parser.add_argument("--workflow", default="planner_coder_tester_reviewer")
     parser.add_argument("--empirical-results", type=Path, default=None)
+    parser.add_argument(
+        "--allow-heuristic-labels",
+        action="store_true",
+        help=(
+            "Allow topology/heuristic labels when --empirical-results is absent. "
+            "Use this only for baseline imitation runs."
+        ),
+    )
     parser.add_argument("--budget", type=int, default=2)
     parser.add_argument("--trials", type=int, default=30)
     parser.add_argument("--epochs", type=int, default=100)
@@ -51,6 +59,7 @@ def main(argv: list[str] | None = None) -> int:
         task=args.task,
         workflow=args.workflow,
         empirical_results=args.empirical_results,
+        allow_heuristic_labels=args.allow_heuristic_labels,
         budget=args.budget,
         trials=args.trials,
     )
@@ -109,6 +118,7 @@ def _build_training_examples(
     task: str,
     workflow: str,
     empirical_results: Path | None,
+    allow_heuristic_labels: bool,
     budget: int,
     trials: int,
 ) -> tuple[list[Any], str]:
@@ -134,15 +144,21 @@ def _build_training_examples(
             raise ValueError(f"No usable empirical {task} examples found")
         return examples, "empirical-outcome"
 
+    if not allow_heuristic_labels:
+        raise ValueError(
+            "--empirical-results is required for training; pass --allow-heuristic-labels "
+            "to run an explicit heuristic baseline."
+        )
+
     if task == "verifier":
         return [
             build_verifier_placement_example(builder(), budget=budget)
             for builder in WORKFLOW_TEMPLATES.values()
-        ], "heuristic"
+        ], "heuristic-baseline"
     return [
         build_seed_selection_example(builder(), budget=budget, trials=trials)
         for builder in WORKFLOW_TEMPLATES.values()
-    ], "heuristic"
+    ], "heuristic-baseline"
 
 
 def _load_empirical_rows(path: Path) -> list[dict[str, object]]:

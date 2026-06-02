@@ -8,7 +8,9 @@ from pathlib import Path
 from typing import Any, TypeAlias
 
 from agentprop.evaluation import (
+    ContextCompressionProfile,
     ExpectedSuccessProfile,
+    calibrate_context_compression,
     calibrate_expected_success,
     quality_cost_summary,
     register_artifact,
@@ -86,6 +88,7 @@ def main(argv: list[str] | None = None) -> int:
         else RoutingRewardProfile()
     )
     success_profile = _success_profile_from_rows(empirical_rows)
+    context_profile = _context_profile_from_rows(empirical_rows)
     checkpoint_dir = args.checkpoint_dir
     if checkpoint_dir is None and args.registry_root is not None:
         checkpoint_dir = args.registry_root / "checkpoints"
@@ -96,6 +99,7 @@ def main(argv: list[str] | None = None) -> int:
             trials=args.trials,
             reward_profile=reward_profile,
             success_profile=success_profile,
+            context_profile=context_profile,
         )
         policy: RoutingPolicy
         training: TrainingResult | None = None
@@ -188,6 +192,11 @@ def main(argv: list[str] | None = None) -> int:
         }
         if success_profile is not None:
             row["success_profile"] = success_profile.to_dict()
+        if context_profile is not None:
+            row["context_profile"] = {
+                "default_ratio": context_profile.default_ratio,
+                "node_ratios": dict(sorted(context_profile.node_ratios.items())),
+            }
         if training is not None:
             row["training"] = {
                 "episodes": training.episodes,
@@ -238,6 +247,14 @@ def main(argv: list[str] | None = None) -> int:
                         "success_profile": (
                             success_profile.to_dict() if success_profile is not None else None
                         ),
+                        "context_profile": (
+                            {
+                                "default_ratio": context_profile.default_ratio,
+                                "node_ratios": dict(sorted(context_profile.node_ratios.items())),
+                            }
+                            if context_profile is not None
+                            else None
+                        ),
                     },
                 )
                 row["checkpoint_path"] = str(checkpoint_path)
@@ -264,6 +281,11 @@ def main(argv: list[str] | None = None) -> int:
                             "reward_source": reward_profile.source,
                             "success_source": (
                                 success_profile.source if success_profile is not None else None
+                            ),
+                            "context_compression_nodes": (
+                                len(context_profile.node_ratios)
+                                if context_profile is not None
+                                else 0
                             ),
                         },
                     )
@@ -324,6 +346,15 @@ def _success_profile_from_rows(rows: list[dict[str, object]]) -> ExpectedSuccess
         return None
     profile = calibrate_expected_success(rows)
     return profile if profile.example_count > 0 else None
+
+
+def _context_profile_from_rows(
+    rows: list[dict[str, object]],
+) -> ContextCompressionProfile | None:
+    if not rows:
+        return None
+    profile = calibrate_context_compression(rows)
+    return profile if profile.node_ratios else None
 
 
 if __name__ == "__main__":

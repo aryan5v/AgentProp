@@ -90,7 +90,7 @@ class AgentGraph:
         latency: float = 0.0,
         relevance: float = 1.0,
         reliability: float = 1.0,
-        activation_probability: float = 1.0,
+        activation_probability: float = 0.85,
         dependency_strength: float = 1.0,
         weight: float = 1.0,
         **metadata: Any,

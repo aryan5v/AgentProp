@@ -263,7 +263,7 @@ def estimate_expected_success(
     context_penalty: float = 0.35,
     profile: ExpectedSuccessProfile | None = None,
 ) -> float:
-    """Estimate workflow success from empirical data or heuristic fallback."""
+    """Estimate workflow success from empirical data or graph-declared priors."""
 
     if profile is not None:
         return profile.estimate(graph, context_ratios=context_ratios)
@@ -272,10 +272,10 @@ def estimate_expected_success(
     for node in graph.nodes():
         if node.type == NodeType.OUTPUT:
             continue
-        importance = _importance(node.importance_score, node.type, node.id, node.role)
+        sensitivity = _context_sensitivity(node)
         context_ratio = context_ratios.get(node.id, 0.0)
-        starvation = max(0.0, 1.0 - context_ratio) * importance
-        base = max(0.0, min(1.0, node.reliability * (1.0 - node.error_rate)))
+        starvation = max(0.0, 1.0 - context_ratio) * sensitivity
+        base = _node_success_prior(node)
         node_scores.append(max(0.0, base - context_penalty * starvation))
     return mean(node_scores) if node_scores else 1.0
 
@@ -348,6 +348,24 @@ def _importance(
     if node_type == NodeType.PLANNER:
         return 0.55
     return 0.35
+
+
+def _context_sensitivity(node: Any) -> float:
+    raw = node.metadata.get("context_sensitivity") if isinstance(node.metadata, dict) else None
+    if isinstance(raw, int | float):
+        return max(0.0, min(1.0, float(raw)))
+    return _importance(node.importance_score, node.type, node.id, node.role)
+
+
+def _node_success_prior(node: Any) -> float:
+    raw = node.metadata.get("success_prior") if isinstance(node.metadata, dict) else None
+    if isinstance(raw, int | float):
+        return max(0.0, min(1.0, float(raw)))
+    reliability = max(0.0, min(1.0, float(node.reliability)))
+    error_rate = max(0.0, min(1.0, float(node.error_rate)))
+    sensitivity = _context_sensitivity(node)
+    # High-sensitivity roles get a slightly more conservative uncalibrated prior.
+    return max(0.0, min(1.0, reliability * (1.0 - error_rate) * (1.0 - 0.08 * sensitivity)))
 
 
 def _row_context_ratios(row: dict[str, Any]) -> dict[str, float]:

@@ -34,6 +34,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--task", choices=["seed", "verifier"], default="seed")
     parser.add_argument("--workflow", default="planner_coder_tester_reviewer")
     parser.add_argument("--empirical-results", type=Path, default=None)
+    parser.add_argument(
+        "--allow-heuristic-labels",
+        action="store_true",
+        help=(
+            "Allow topology/heuristic labels when --empirical-results is absent. "
+            "Use this only for baseline imitation runs."
+        ),
+    )
     parser.add_argument("--budget", type=int, default=2)
     parser.add_argument("--trials", type=int, default=30)
     parser.add_argument("--epochs", type=int, default=150)
@@ -49,8 +57,13 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("pairwise and regression models are currently seed-task only")
     if args.empirical_results is not None and args.model in {"pairwise", "regression"}:
         parser.error("empirical training currently supports linear and mlp node scorers")
+    if args.empirical_results is None and not args.allow_heuristic_labels:
+        parser.error(
+            "--empirical-results is required for training; pass --allow-heuristic-labels "
+            "to run an explicit heuristic baseline."
+        )
 
-    label_source = "heuristic"
+    label_source = "heuristic-baseline"
     examples: list[Any]
     if args.empirical_results is not None:
         if args.workflow not in WORKFLOW_TEMPLATES:
