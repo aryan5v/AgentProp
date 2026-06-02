@@ -139,8 +139,11 @@ the ML feature stack and sequential routing. It consumes the same normalized
 node features used by seed/verifier scorers plus compact environment state
 features, then learns linear routing weights from trajectory rewards. This moves
 RL beyond graph-specific tabular state strings while keeping the implementation
-inspectable. The optional torch GNN encoders remain separate supervised scorers
-until enough empirical task-success traces exist to justify neural RL.
+inspectable. When `run_rl_routing.py` receives empirical rows with context
+allocations and task outcomes, those trajectory rewards can use calibrated
+expected task success rather than coverage alone. The optional torch GNN
+encoders remain separate supervised scorers until enough empirical task-success
+traces exist to justify neural RL.
 
 ## ML Core Experiment Suite
 

@@ -1,3 +1,4 @@
+from agentprop.evaluation import ExpectedSuccessProfile
 from agentprop.rl import (
     AgentRoutingEnv,
     CategoryBanditRoutingPolicy,
@@ -54,6 +55,27 @@ def test_routing_env_uses_calibrated_reward_profile() -> None:
 
     assert calibrated_reward < default_reward
     assert calibrated_env.reward_profile.source == "test"
+
+
+def test_routing_env_can_reward_empirical_expected_success() -> None:
+    graph = planner_coder_tester_reviewer()
+    profile = ExpectedSuccessProfile(
+        default_success=0.95,
+        node_context_penalties={"coder": 0.8},
+        high_context_threshold=0.95,
+        example_count=10,
+    )
+    env = AgentRoutingEnv(graph, budget=1, trials=3, success_profile=profile)
+
+    state, reward, done, info = env.step("planner")
+
+    assert done
+    assert state.expected_success is not None
+    assert state.expected_success < profile.default_success
+    assert info["reward_target"] == "expected_success"
+    assert info["reward_quality"] == state.expected_success
+    assert env.observation()["expected_success"] == state.expected_success
+    assert reward == info["propagation_reward"] + info["control_reward"]["total"]
 
 
 def test_calibrate_routing_reward_profile_from_empirical_rows() -> None:
