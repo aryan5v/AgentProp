@@ -64,6 +64,11 @@ high-context or selected-seed nodes by observed task success or quality score.
 That is the path for learned policies to disagree with topology-only baselines
 using real evidence.
 
+Verifier-placement scorers can also train from empirical rows when rows include
+observed `activated_verifiers`, `verifier_nodes`, or `verifier_placements`.
+Successful verifier activations become positive examples; failed activations
+become negative examples. Rows without observed verifier decisions are skipped.
+
 Edge-pruning scorers can use the same empirical row format when rows include
 `pruned_edges`. Successful pruned edges become positive examples; failed pruned
 edges become negative examples. Rows without observed pruning decisions are
@@ -86,6 +91,7 @@ PYTHONPATH=src:. python experiments/train_seed_scorer.py --model mlp --task seed
 PYTHONPATH=src:. python experiments/train_seed_scorer.py --model pairwise --task seed
 PYTHONPATH=src:. python experiments/train_seed_scorer.py --model regression --task seed
 PYTHONPATH=src:. python experiments/train_seed_scorer.py --model mlp --task verifier
+PYTHONPATH=src:. python experiments/train_seed_scorer.py --task verifier --empirical-results results/case_study/results.json
 PYTHONPATH=src:. python experiments/train_edge_pruning_scorer.py
 PYTHONPATH=src:. python experiments/train_edge_pruning_scorer.py --empirical-results results/case_study/results.json
 PYTHONPATH=src:. python experiments/evaluate_ml_generalization.py --model mlp

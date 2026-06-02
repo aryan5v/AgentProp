@@ -9,6 +9,7 @@ from agentprop.ml.datasets import (
     EdgePruningExample,
     EmpiricalEdgePruningExample,
     EmpiricalRoutingExample,
+    EmpiricalVerifierPlacementExample,
     SeedRankingExample,
     SeedSelectionExample,
     VerifierPlacementExample,
@@ -39,7 +40,12 @@ class LinearNodeScorer:
 
     def train(
         self,
-        examples: list[SeedSelectionExample | VerifierPlacementExample | EmpiricalRoutingExample],
+        examples: list[
+            SeedSelectionExample
+            | VerifierPlacementExample
+            | EmpiricalRoutingExample
+            | EmpiricalVerifierPlacementExample
+        ],
         *,
         epochs: int = 200,
         learning_rate: float = 0.1,
@@ -93,7 +99,12 @@ class MLPNodeScorer:
 
     def train(
         self,
-        examples: list[SeedSelectionExample | VerifierPlacementExample | EmpiricalRoutingExample],
+        examples: list[
+            SeedSelectionExample
+            | VerifierPlacementExample
+            | EmpiricalRoutingExample
+            | EmpiricalVerifierPlacementExample
+        ],
         *,
         epochs: int = 200,
         learning_rate: float = 0.05,

@@ -586,6 +586,55 @@ def test_train_seed_scorer_experiment_uses_empirical_rows(tmp_path: Path) -> Non
     assert payload["weights"]
 
 
+def test_train_seed_scorer_experiment_uses_empirical_verifier_rows(
+    tmp_path: Path,
+) -> None:
+    rows = tmp_path / "empirical_verifier_rows.json"
+    output = tmp_path / "empirical_verifier_model.json"
+    rows.write_text(
+        json.dumps(
+            {
+                "rows": [
+                    {
+                        "task_id": "task-pass",
+                        "policy": "quality_aware_greedy",
+                        "activated_verifiers": ["tester"],
+                        "verification_passed": True,
+                        "cost_adjusted_success": 0.75,
+                    },
+                    {
+                        "task_id": "task-fail",
+                        "policy": "greedy",
+                        "activated_verifiers": ["reviewer"],
+                        "verification_passed": False,
+                    },
+                ]
+            }
+        )
+    )
+
+    exit_code = train_seed_scorer.main(
+        [
+            "--model",
+            "linear",
+            "--task",
+            "verifier",
+            "--empirical-results",
+            str(rows),
+            "--epochs",
+            "2",
+            "--out",
+            str(output),
+        ]
+    )
+    payload = json.loads(output.read_text())
+
+    assert exit_code == 0
+    assert payload["task"] == "verifier"
+    assert payload["label_source"] == "empirical-outcome"
+    assert payload["weights"]
+
+
 def test_train_edge_pruning_scorer_experiment_writes_model(tmp_path: Path) -> None:
     output = tmp_path / "edge_model.json"
     registry_root = tmp_path / "edge_registry"

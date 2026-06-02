@@ -14,6 +14,7 @@ from agentprop.ml import (
     MLPNodeScorer,
     PairwiseNodeRanker,
     build_empirical_routing_examples,
+    build_empirical_verifier_placement_examples,
     build_seed_ranking_example,
     build_seed_selection_example,
     build_verifier_placement_example,
@@ -48,21 +49,28 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("pairwise and regression models are currently seed-task only")
     if args.empirical_results is not None and args.model in {"pairwise", "regression"}:
         parser.error("empirical training currently supports linear and mlp node scorers")
-    if args.empirical_results is not None and args.task != "seed":
-        parser.error("empirical training currently targets seed/context routing")
 
     label_source = "heuristic"
     examples: list[Any]
     if args.empirical_results is not None:
         if args.workflow not in WORKFLOW_TEMPLATES:
             raise ValueError(f"Unknown workflow template: {args.workflow}")
-        examples = build_empirical_routing_examples(
-            WORKFLOW_TEMPLATES[args.workflow](),
-            _load_empirical_rows(args.empirical_results),
-            default_budget=args.budget,
-        )
+        graph = WORKFLOW_TEMPLATES[args.workflow]()
+        rows = _load_empirical_rows(args.empirical_results)
+        if args.task == "verifier":
+            examples = build_empirical_verifier_placement_examples(
+                graph,
+                rows,
+                default_budget=args.budget,
+            )
+        else:
+            examples = build_empirical_routing_examples(
+                graph,
+                rows,
+                default_budget=args.budget,
+            )
         if not examples:
-            raise ValueError("No usable empirical routing examples found")
+            raise ValueError(f"No usable empirical {args.task} examples found")
         label_source = "empirical-outcome"
     elif args.model in {"pairwise", "regression"}:
         examples = [
