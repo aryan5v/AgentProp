@@ -7,7 +7,8 @@ AgentProp includes a small sequential routing environment and four policies:
 - `ReinforcePolicy`: trained with a dependency-light episodic policy-gradient
   loop over learned state-action preferences.
 - `PPOPolicy`: trained with a dependency-light clipped policy-gradient update
-  and a tabular value baseline.
+  and a tabular value baseline. This is a research baseline, not a neural PPO
+  implementation with function approximation.
 
 Run the trainable policy:
 
@@ -21,7 +22,7 @@ Run the policy-gradient baseline:
 PYTHONPATH=src:. python experiments/run_rl_routing.py --policy reinforce --episodes 100 --out results/rl/reinforce_policy.json
 ```
 
-Run the clipped actor-critic baseline:
+Run the clipped policy-gradient baseline:
 
 ```bash
 PYTHONPATH=src:. python experiments/run_rl_routing.py --policy ppo --episodes 100 --out results/rl/ppo_policy.json
@@ -72,6 +73,21 @@ baselines.
 Expanded-action rewards keep the base coverage/cost/time score and add small
 interpretable terms for verifier risk coverage, safe pruning savings, risky
 pruning exposure, tool reliability, and summary token savings.
+
+By default those weights are fixed for reproducible synthetic comparisons. For
+real routed tasks, calibrate cost and latency penalties from empirical rows that
+include pass/fail or quality labels:
+
+```bash
+PYTHONPATH=src:. python experiments/run_rl_routing.py \
+  --policy ppo \
+  --reward-calibration-rows results/case_study/results.json \
+  --out results/rl/ppo_empirical_reward.json
+```
+
+The exported trajectory records the reward profile source and weights. This
+keeps default RL baselines reproducible while allowing benchmark/case-study
+runs to learn a cost frontier from real outcomes.
 
 Replay an exported trajectory with a deterministic propagation seed:
 

@@ -77,6 +77,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "betweenness",
         "closeness",
         "k-core",
+        "pure-greedy",
         "greedy",
         "celf",
         "cost-aware-greedy",

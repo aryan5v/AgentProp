@@ -7,6 +7,9 @@ from math import exp
 
 from agentprop.ml.datasets import (
     EdgePruningExample,
+    EmpiricalEdgePruningExample,
+    EmpiricalRoutingExample,
+    EmpiricalVerifierPlacementExample,
     SeedRankingExample,
     SeedSelectionExample,
     VerifierPlacementExample,
@@ -37,21 +40,29 @@ class LinearNodeScorer:
 
     def train(
         self,
-        examples: list[SeedSelectionExample | VerifierPlacementExample],
+        examples: list[
+            SeedSelectionExample
+            | VerifierPlacementExample
+            | EmpiricalRoutingExample
+            | EmpiricalVerifierPlacementExample
+        ],
         *,
         epochs: int = 200,
         learning_rate: float = 0.1,
+        l2_penalty: float = 0.0,
     ) -> None:
         """Train with logistic loss using simple gradient descent."""
 
         for _ in range(epochs):
             for example in examples:
+                sample_weight = _example_weight(example)
                 for node_id, values in example.features.node_features.items():
                     label = example.labels[node_id]
                     prediction = _sigmoid(_dot(self.weights, values) + self.bias)
-                    error = prediction - label
+                    error = sample_weight * (prediction - label)
                     for index, value in enumerate(values):
-                        self.weights[index] -= learning_rate * error * value
+                        gradient = error * value + l2_penalty * self.weights[index]
+                        self.weights[index] -= learning_rate * gradient
                     self.bias -= learning_rate * error
 
 
@@ -88,23 +99,47 @@ class MLPNodeScorer:
 
     def train(
         self,
-        examples: list[SeedSelectionExample | VerifierPlacementExample],
+        examples: list[
+            SeedSelectionExample
+            | VerifierPlacementExample
+            | EmpiricalRoutingExample
+            | EmpiricalVerifierPlacementExample
+        ],
         *,
         epochs: int = 200,
         learning_rate: float = 0.05,
+        l2_penalty: float = 0.0,
     ) -> None:
-        """Train only the output layer for a stable tiny MLP baseline."""
+        """Train both layers with logistic loss and backpropagation."""
 
         for _ in range(epochs):
             for example in examples:
+                sample_weight = _example_weight(example)
                 for node_id, values in example.features.node_features.items():
                     label = example.labels[node_id]
                     hidden = self._hidden(values)
                     prediction = _sigmoid(_dot(self.output_weights, hidden) + self.output_bias)
-                    error = prediction - label
+                    error = sample_weight * (prediction - label)
+                    previous_output_weights = self.output_weights.copy()
                     for index, value in enumerate(hidden):
-                        self.output_weights[index] -= learning_rate * error * value
+                        gradient = error * value + l2_penalty * self.output_weights[index]
+                        self.output_weights[index] -= learning_rate * gradient
                     self.output_bias -= learning_rate * error
+                    for hidden_index, hidden_value in enumerate(hidden):
+                        hidden_gradient = (
+                            error
+                            * previous_output_weights[hidden_index]
+                            * _relu_derivative(hidden_value)
+                        )
+                        for input_index, value in enumerate(values):
+                            gradient = (
+                                hidden_gradient * value
+                                + l2_penalty * self.input_weights[hidden_index][input_index]
+                            )
+                            self.input_weights[hidden_index][input_index] -= (
+                                learning_rate * gradient
+                            )
+                        self.hidden_bias[hidden_index] -= learning_rate * hidden_gradient
 
     def _hidden(self, values: list[float]) -> list[float]:
         return [
@@ -139,6 +174,7 @@ class PairwiseNodeRanker:
         *,
         epochs: int = 200,
         learning_rate: float = 0.05,
+        l2_penalty: float = 0.0,
     ) -> None:
         """Train with a logistic pairwise ranking loss."""
 
@@ -151,7 +187,8 @@ class PairwiseNodeRanker:
                     probability = _sigmoid(_dot(self.weights, difference))
                     gradient_scale = 1.0 - probability
                     for index, value in enumerate(difference):
-                        self.weights[index] += learning_rate * gradient_scale * value
+                        gradient = gradient_scale * value - l2_penalty * self.weights[index]
+                        self.weights[index] += learning_rate * gradient
 
 
 @dataclass(slots=True)
@@ -181,6 +218,7 @@ class LinearNodeRegressor:
         *,
         epochs: int = 200,
         learning_rate: float = 0.05,
+        l2_penalty: float = 0.0,
     ) -> None:
         """Train with squared error on marginal-utility targets."""
 
@@ -192,7 +230,8 @@ class LinearNodeRegressor:
                     prediction = _dot(self.weights, values) + self.bias
                     error = prediction - target
                     for index, value in enumerate(values):
-                        self.weights[index] -= learning_rate * error * value
+                        gradient = error * value + l2_penalty * self.weights[index]
+                        self.weights[index] -= learning_rate * gradient
                     self.bias -= learning_rate * error
 
 
@@ -219,23 +258,26 @@ class LinearEdgeScorer:
 
     def train(
         self,
-        examples: list[EdgePruningExample],
+        examples: list[EdgePruningExample | EmpiricalEdgePruningExample],
         *,
         epochs: int = 200,
         learning_rate: float = 0.1,
+        l2_penalty: float = 0.0,
     ) -> None:
         """Train from examples with edge features and labels."""
 
         for _ in range(epochs):
             for example in examples:
+                sample_weight = _example_weight(example)
                 features = example.features
                 labels = example.labels
                 for edge_id, values in features.edge_features.items():
                     label = labels[edge_id]
                     prediction = _sigmoid(_dot(self.weights, values) + self.bias)
-                    error = prediction - label
+                    error = sample_weight * (prediction - label)
                     for index, value in enumerate(values):
-                        self.weights[index] -= learning_rate * error * value
+                        gradient = error * value + l2_penalty * self.weights[index]
+                        self.weights[index] -= learning_rate * gradient
                     self.bias -= learning_rate * error
 
 
@@ -285,3 +327,14 @@ def _sigmoid(value: float) -> float:
 
 def _relu(value: float) -> float:
     return max(value, 0.0)
+
+
+def _relu_derivative(hidden_value: float) -> float:
+    return 1.0 if hidden_value > 0.0 else 0.0
+
+
+def _example_weight(example: object) -> float:
+    weight = getattr(example, "sample_weight", 1.0)
+    if isinstance(weight, int | float):
+        return max(0.0, float(weight))
+    return 1.0

@@ -6,6 +6,7 @@ The core package exposes:
 
 - graph feature extraction
 - greedy-labeled seed-selection examples
+- empirical outcome-labeled routing examples
 - pairwise seed-ranking examples
 - marginal-gain regression targets
 - a lightweight trainable scorer
@@ -45,10 +46,38 @@ cost, reliability, and dependency signals during both training and inference. It
 is intentionally small enough to inspect while still using real `torch.nn.Module`
 models and gradient descent.
 
+Greedy-labeled examples are behavior-cloning baselines: they test whether a
+model can approximate graph heuristics, not whether it can beat them. To train
+against real task success, pass empirical routed rows with task outcomes,
+selected seeds, and context allocations:
+
+```bash
+PYTHONPATH=src:. python experiments/train_seed_scorer.py \
+  --model linear \
+  --empirical-results results/case_study/results.json \
+  --workflow planner_coder_tester_reviewer \
+  --out results/ml/empirical_seed_scorer.json
+```
+
+Empirical training skips retry-recommended infra/timeout rows, then labels
+high-context or selected-seed nodes by observed task success or quality score.
+That is the path for learned policies to disagree with topology-only baselines
+using real evidence.
+
+Verifier-placement scorers can also train from empirical rows when rows include
+observed `activated_verifiers`, `verifier_nodes`, or `verifier_placements`.
+Successful verifier activations become positive examples; failed activations
+become negative examples. Rows without observed verifier decisions are skipped.
+
+Edge-pruning scorers can use the same empirical row format when rows include
+`pruned_edges`. Successful pruned edges become positive examples; failed pruned
+edges become negative examples. Rows without observed pruning decisions are
+skipped because they do not identify which edge choice affected quality.
+
 Dependency-light ML baselines include:
 
 - linear node scorer
-- MLP node scorer
+- MLP node scorer with trainable hidden and output layers
 - pairwise node ranker
 - marginal-gain node regressor
 - linear edge-pruning scorer
@@ -62,8 +91,18 @@ PYTHONPATH=src:. python experiments/train_seed_scorer.py --model mlp --task seed
 PYTHONPATH=src:. python experiments/train_seed_scorer.py --model pairwise --task seed
 PYTHONPATH=src:. python experiments/train_seed_scorer.py --model regression --task seed
 PYTHONPATH=src:. python experiments/train_seed_scorer.py --model mlp --task verifier
+PYTHONPATH=src:. python experiments/train_seed_scorer.py --task verifier --empirical-results results/case_study/results.json
 PYTHONPATH=src:. python experiments/train_edge_pruning_scorer.py
+PYTHONPATH=src:. python experiments/train_edge_pruning_scorer.py --empirical-results results/case_study/results.json
 PYTHONPATH=src:. python experiments/evaluate_ml_generalization.py --model mlp
+```
+
+Use `--l2-penalty` on lightweight ML training scripts to reduce memorization on
+small workflow collections:
+
+```bash
+PYTHONPATH=src:. python experiments/train_seed_scorer.py --model mlp --l2-penalty 0.001
+PYTHONPATH=src:. python experiments/train_edge_pruning_scorer.py --l2-penalty 0.001
 ```
 
 Dependency-light ML scorers can be saved as JSON checkpoints:

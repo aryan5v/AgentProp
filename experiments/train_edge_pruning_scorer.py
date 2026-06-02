@@ -5,11 +5,15 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+from typing import cast
 
 from agentprop.evaluation import register_artifact, safe_artifact_id
 from agentprop.ml import (
+    EdgePruningExample,
+    EmpiricalEdgePruningExample,
     LinearEdgeScorer,
     build_edge_pruning_example,
+    build_empirical_edge_pruning_examples,
     extract_edge_features,
     save_ml_model,
 )
@@ -19,21 +23,45 @@ from agentprop.workflows import WORKFLOW_TEMPLATES
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Train an edge-pruning scorer.")
     parser.add_argument("--fraction", type=float, default=0.2)
+    parser.add_argument("--workflow", default="planner_coder_tester_reviewer")
+    parser.add_argument("--empirical-results", type=Path, default=None)
     parser.add_argument("--epochs", type=int, default=150)
     parser.add_argument("--learning-rate", type=float, default=0.05)
+    parser.add_argument("--l2-penalty", type=float, default=0.0)
     parser.add_argument("--out", type=Path, default=Path("results/ml/edge_pruning_scorer.json"))
     parser.add_argument("--checkpoint-out", type=Path, default=None)
     parser.add_argument("--registry-root", type=Path, default=None)
     parser.add_argument("--run-id", default=None)
     args = parser.parse_args(argv)
 
-    examples = [
-        build_edge_pruning_example(builder(), fraction=args.fraction)
-        for builder in WORKFLOW_TEMPLATES.values()
-    ]
+    label_source = "heuristic"
+    examples: list[EdgePruningExample | EmpiricalEdgePruningExample]
+    if args.empirical_results is not None:
+        if args.workflow not in WORKFLOW_TEMPLATES:
+            raise ValueError(f"Unknown workflow template: {args.workflow}")
+        examples = cast(
+            list[EdgePruningExample | EmpiricalEdgePruningExample],
+            build_empirical_edge_pruning_examples(
+                WORKFLOW_TEMPLATES[args.workflow](),
+                _load_empirical_rows(args.empirical_results),
+            ),
+        )
+        if not examples:
+            raise ValueError("No usable empirical edge-pruning examples found")
+        label_source = "empirical-outcome"
+    else:
+        examples = [
+            build_edge_pruning_example(builder(), fraction=args.fraction)
+            for builder in WORKFLOW_TEMPLATES.values()
+        ]
     feature_count = len(examples[0].features.feature_names)
     scorer = LinearEdgeScorer.initialize(feature_count)
-    scorer.train(examples, epochs=args.epochs, learning_rate=args.learning_rate)
+    scorer.train(
+        examples,
+        epochs=args.epochs,
+        learning_rate=args.learning_rate,
+        l2_penalty=args.l2_penalty,
+    )
 
     evaluations = []
     for workflow_name, builder in WORKFLOW_TEMPLATES.items():
@@ -51,6 +79,8 @@ def main(argv: list[str] | None = None) -> int:
         "weights": scorer.weights,
         "bias": scorer.bias,
         "fraction": args.fraction,
+        "label_source": label_source,
+        "l2_penalty": args.l2_penalty,
         "evaluations": evaluations,
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)
@@ -65,9 +95,11 @@ def main(argv: list[str] | None = None) -> int:
             checkpoint_path,
             metadata={
                 "task": "edge-pruning",
+                "label_source": label_source,
                 "fraction": args.fraction,
                 "epochs": args.epochs,
                 "learning_rate": args.learning_rate,
+                "l2_penalty": args.l2_penalty,
                 "feature_names": examples[0].features.feature_names,
             },
         )
@@ -84,12 +116,26 @@ def main(argv: list[str] | None = None) -> int:
             tags=("edge-pruning", "linear"),
             metadata={
                 "fraction": args.fraction,
+                "label_source": label_source,
                 "epochs": args.epochs,
                 "learning_rate": args.learning_rate,
+                "l2_penalty": args.l2_penalty,
             },
         )
     print(f"Wrote {args.out}")
     return 0
+
+
+def _load_empirical_rows(path: Path) -> list[dict[str, object]]:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if isinstance(payload, list):
+        return [dict(row) for row in payload if isinstance(row, dict)]
+    if isinstance(payload, dict):
+        for key in ("rows", "tasks", "results"):
+            value = payload.get(key)
+            if isinstance(value, list):
+                return [dict(row) for row in value if isinstance(row, dict)]
+    raise ValueError("Empirical results must be a list or contain rows/tasks/results")
 
 
 if __name__ == "__main__":

@@ -492,6 +492,8 @@ def test_train_seed_scorer_experiment_writes_pairwise_model(tmp_path: Path) -> N
             "2",
             "--epochs",
             "2",
+            "--l2-penalty",
+            "0.01",
             "--out",
             str(output),
         ]
@@ -529,6 +531,110 @@ def test_train_seed_scorer_experiment_writes_regression_model(tmp_path: Path) ->
     assert payload["weights"]
 
 
+def test_train_seed_scorer_experiment_uses_empirical_rows(tmp_path: Path) -> None:
+    rows = tmp_path / "empirical_rows.json"
+    output = tmp_path / "empirical_model.json"
+    rows.write_text(
+        json.dumps(
+            [
+                {
+                    "task_id": "task-pass",
+                    "policy": "quality_aware_greedy",
+                    "selected_seeds": ["coder", "tester"],
+                    "context_allocations": {"coder": 1.0, "tester": 1.0},
+                    "verification_passed": True,
+                    "cost_adjusted_success": 0.8,
+                },
+                {
+                    "task_id": "task-fail",
+                    "policy": "greedy",
+                    "selected_seeds": ["planner"],
+                    "context_allocations": {"planner": 1.0, "coder": 0.25},
+                    "verification_passed": False,
+                },
+                {
+                    "task_id": "task-infra",
+                    "policy": "greedy",
+                    "selected_seeds": ["planner"],
+                    "verification_passed": False,
+                    "retry_recommended": True,
+                },
+            ]
+        )
+    )
+
+    exit_code = train_seed_scorer.main(
+        [
+            "--model",
+            "linear",
+            "--empirical-results",
+            str(rows),
+            "--epochs",
+            "2",
+            "--l2-penalty",
+            "0.01",
+            "--out",
+            str(output),
+        ]
+    )
+    payload = json.loads(output.read_text())
+
+    assert exit_code == 0
+    assert payload["label_source"] == "empirical-outcome"
+    assert payload["model"] == "linear"
+    assert payload["l2_penalty"] == 0.01
+    assert payload["weights"]
+
+
+def test_train_seed_scorer_experiment_uses_empirical_verifier_rows(
+    tmp_path: Path,
+) -> None:
+    rows = tmp_path / "empirical_verifier_rows.json"
+    output = tmp_path / "empirical_verifier_model.json"
+    rows.write_text(
+        json.dumps(
+            {
+                "rows": [
+                    {
+                        "task_id": "task-pass",
+                        "policy": "quality_aware_greedy",
+                        "activated_verifiers": ["tester"],
+                        "verification_passed": True,
+                        "cost_adjusted_success": 0.75,
+                    },
+                    {
+                        "task_id": "task-fail",
+                        "policy": "greedy",
+                        "activated_verifiers": ["reviewer"],
+                        "verification_passed": False,
+                    },
+                ]
+            }
+        )
+    )
+
+    exit_code = train_seed_scorer.main(
+        [
+            "--model",
+            "linear",
+            "--task",
+            "verifier",
+            "--empirical-results",
+            str(rows),
+            "--epochs",
+            "2",
+            "--out",
+            str(output),
+        ]
+    )
+    payload = json.loads(output.read_text())
+
+    assert exit_code == 0
+    assert payload["task"] == "verifier"
+    assert payload["label_source"] == "empirical-outcome"
+    assert payload["weights"]
+
+
 def test_train_edge_pruning_scorer_experiment_writes_model(tmp_path: Path) -> None:
     output = tmp_path / "edge_model.json"
     registry_root = tmp_path / "edge_registry"
@@ -541,6 +647,52 @@ def test_train_edge_pruning_scorer_experiment_writes_model(tmp_path: Path) -> No
     assert exit_code == 0
     assert output.exists()
     assert records[0].metadata["epochs"] == 3
+
+
+def test_train_edge_pruning_scorer_experiment_uses_empirical_rows(
+    tmp_path: Path,
+) -> None:
+    output = tmp_path / "edge_empirical_model.json"
+    rows = tmp_path / "edge_rows.json"
+    rows.write_text(
+        json.dumps(
+            {
+                "rows": [
+                    {
+                        "task_id": "safe-prune",
+                        "policy": "rl_ppo",
+                        "pruned_edges": [["planner", "reviewer"]],
+                        "verification_passed": True,
+                    },
+                    {
+                        "task_id": "unsafe-prune",
+                        "policy": "rl_ppo",
+                        "pruned_edges": [["coder", "tester"]],
+                        "verification_passed": False,
+                    },
+                ]
+            }
+        )
+    )
+
+    exit_code = train_edge_pruning_scorer.main(
+        [
+            "--empirical-results",
+            str(rows),
+            "--epochs",
+            "2",
+            "--l2-penalty",
+            "0.02",
+            "--out",
+            str(output),
+        ]
+    )
+    payload = json.loads(output.read_text())
+
+    assert exit_code == 0
+    assert payload["label_source"] == "empirical-outcome"
+    assert payload["l2_penalty"] == 0.02
+    assert payload["weights"]
 
 
 def test_train_learned_propagation_experiment_writes_model(tmp_path: Path) -> None:
@@ -636,6 +788,49 @@ def test_rl_routing_experiment_writes_trajectory(tmp_path: Path) -> None:
     assert output.exists()
     assert payload[0]["summary"]["total_reward"] != 0
     assert "cost_adjusted_success" in payload[0]["summary"]
+
+
+def test_rl_routing_experiment_uses_empirical_reward_calibration(tmp_path: Path) -> None:
+    output = tmp_path / "rl_calibrated.json"
+    rows = tmp_path / "reward_rows.json"
+    rows.write_text(
+        json.dumps(
+            [
+                {
+                    "verification_passed": True,
+                    "token_cost": 1000,
+                    "message_cost": 100,
+                    "latency": 5,
+                },
+                {
+                    "verification_passed": False,
+                    "token_cost": 3000,
+                    "message_cost": 500,
+                    "latency": 25,
+                },
+            ]
+        )
+    )
+
+    exit_code = run_rl_routing.main(
+        [
+            "--policy",
+            "greedy",
+            "--trials",
+            "2",
+            "--max-steps",
+            "2",
+            "--reward-calibration-rows",
+            str(rows),
+            "--out",
+            str(output),
+        ]
+    )
+    payload = json.loads(output.read_text())
+
+    assert exit_code == 0
+    assert payload[0]["reward_profile"]["source"] == "empirical"
+    assert payload[0]["reward_profile"]["example_count"] == 2
     assert "cumulative_reward" in payload[0]["trajectory"][0]
 
 

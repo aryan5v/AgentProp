@@ -23,6 +23,7 @@ from agentprop.algorithms.seed_selection import (
     greedy_seed_selection,
     k_core_seed_selection,
     pagerank_seed_selection,
+    pure_greedy_seed_selection,
     quality_aware_greedy_seed_selection,
     random_seed_selection,
 )
@@ -61,6 +62,7 @@ __all__ = [
     "observability_scores",
     "pagerank_seed_selection",
     "pagerank_verifier_placement",
+    "pure_greedy_seed_selection",
     "quality_aware_greedy_seed_selection",
     "random_seed_selection",
     "risk_aware_verifier_placement",

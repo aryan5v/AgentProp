@@ -20,6 +20,7 @@ from agentprop.algorithms import (
     observability_scores,
     pagerank_seed_selection,
     pagerank_verifier_placement,
+    pure_greedy_seed_selection,
     quality_aware_greedy_seed_selection,
     risk_aware_verifier_placement,
     verifier_observability_placement,
@@ -58,6 +59,26 @@ def test_greedy_seed_selection_uses_propagation_model() -> None:
 
     assert len(seeds) == 2
     assert "coder" in seeds
+
+
+def test_pure_greedy_disables_role_critical_preseeding() -> None:
+    graph = planner_coder_tester_reviewer()
+
+    pure = pure_greedy_seed_selection(
+        graph,
+        1,
+        propagation_model=IndependentCascade(seed=0),
+        trials=5,
+    )
+    role_critical = greedy_seed_selection(
+        graph,
+        1,
+        propagation_model=IndependentCascade(seed=0),
+        trials=5,
+    )
+
+    assert len(pure) == 1
+    assert role_critical == ["coder"]
 
 
 def test_celf_and_cost_aware_seed_selection_return_budgeted_nodes() -> None:
