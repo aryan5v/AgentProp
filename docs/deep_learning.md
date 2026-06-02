@@ -124,15 +124,23 @@ PYTHONPATH=src:. python experiments/train_seed_scorer.py \
   --run-id mlp_seed_scorer
 
 PYTHONPATH=src:. python experiments/run_rl_routing.py \
-  --policy ppo \
+  --policy feature-policy \
   --registry-root results/ml_core/model_registry \
-  --run-id ppo_routing_policy
+  --run-id feature_policy_routing
 ```
 
 The registry writes `registry.json` with artifact id, kind, checkpoint path,
 metrics path, source script, tags, metadata, and timestamps. This gives ML/RL
 experiments a stable artifact index without requiring a heavyweight tracking
 server.
+
+The `feature-policy` RL option is the first dependency-light connection between
+the ML feature stack and sequential routing. It consumes the same normalized
+node features used by seed/verifier scorers plus compact environment state
+features, then learns linear routing weights from trajectory rewards. This moves
+RL beyond graph-specific tabular state strings while keeping the implementation
+inspectable. The optional torch GNN encoders remain separate supervised scorers
+until enough empirical task-success traces exist to justify neural RL.
 
 ## ML Core Experiment Suite
 
@@ -177,6 +185,7 @@ The default suite runs:
 - held-out workflow ML generalization
 - classical vs ML/GNN-style vs seed-only and expanded-action RL routing baselines
 - checkpointed PPO trajectory export with final cost-adjusted proxy quality
+- checkpointed graph-feature RL trajectory export that consumes ML node features
 
 ## Still Planned
 

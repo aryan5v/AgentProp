@@ -262,6 +262,38 @@ def test_run_case_study_preflight_writes_readiness_manifest(tmp_path: Path) -> N
     assert "llm_environment" in payload
 
 
+def test_run_rl_routing_supports_graph_feature_policy(tmp_path: Path) -> None:
+    output = tmp_path / "feature_policy.json"
+    checkpoint_root = tmp_path / "registry"
+
+    exit_code = run_rl_routing.main(
+        [
+            "--policy",
+            "feature-policy",
+            "--episodes",
+            "2",
+            "--trials",
+            "2",
+            "--max-steps",
+            "2",
+            "--out",
+            str(output),
+            "--registry-root",
+            str(checkpoint_root),
+            "--run-id",
+            "feature-policy-smoke",
+        ]
+    )
+    payload = json.loads(output.read_text())
+
+    assert exit_code == 0
+    assert payload
+    assert payload[0]["policy"] == "feature-policy"
+    assert payload[0]["training"]["feature_count"] > 0
+    assert payload[0]["feature_policy"]["feature_names"]
+    assert Path(payload[0]["checkpoint_path"]).exists()
+
+
 def test_analyze_case_study_writes_tables_and_plots(tmp_path: Path) -> None:
     results = tmp_path / "results.json"
     out_dir = tmp_path / "analysis"
@@ -753,9 +785,15 @@ def test_evaluate_routing_baselines_writes_comparison(tmp_path: Path) -> None:
 
     assert exit_code == 0
     assert output.exists()
-    assert {"broadcast", "greedy", "celf", "message_passing_gnn", "reinforce", "ppo"}.issubset(
-        policies
-    )
+    assert {
+        "broadcast",
+        "greedy",
+        "celf",
+        "message_passing_gnn",
+        "reinforce",
+        "ppo",
+        "feature_policy",
+    }.issubset(policies)
     assert {"q_learning_expanded", "reinforce_expanded", "ppo_expanded"}.issubset(policies)
     assert {"pairwise_ranker", "marginal_gain_regressor"}.issubset(policies)
     assert payload["summary"]["greedy"]["workflows"] == 2.0

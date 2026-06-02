@@ -15,6 +15,12 @@ from agentprop.rl.env import (
     format_routing_action,
     parse_routing_action,
 )
+from agentprop.rl.feature_policy import (
+    FeaturePolicyConfig,
+    FeaturePolicyTrainingResult,
+    GraphFeaturePolicy,
+    train_feature_policy,
+)
 from agentprop.rl.policies import GreedyCoveragePolicy
 from agentprop.rl.ppo import (
     PPOConfig,
@@ -52,6 +58,9 @@ __all__ = [
     "AgentRoutingEnv",
     "BanditArmStats",
     "CategoryBanditRoutingPolicy",
+    "FeaturePolicyConfig",
+    "FeaturePolicyTrainingResult",
+    "GraphFeaturePolicy",
     "GreedyCoveragePolicy",
     "PPOConfig",
     "PPOPolicy",
@@ -79,6 +88,7 @@ __all__ = [
     "propagation_reward",
     "replay_actions",
     "save_rl_policy",
+    "train_feature_policy",
     "train_ppo_policy",
     "train_q_policy",
     "train_reinforce_policy",

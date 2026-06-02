@@ -26,11 +26,15 @@ from agentprop.evaluation.metrics import (
     seeded_routing_cost,
 )
 from agentprop.ml import (
+    EmpiricalRoutingExample,
+    EmpiricalVerifierPlacementExample,
     LinearNodeRegressor,
     LinearNodeScorer,
     MessagePassingNodeScorer,
     MLPNodeScorer,
     PairwiseNodeRanker,
+    SeedSelectionExample,
+    VerifierPlacementExample,
     build_seed_ranking_example,
     build_seed_selection_example,
     extract_graph_features,
@@ -38,11 +42,13 @@ from agentprop.ml import (
 from agentprop.propagation import IndependentCascade
 from agentprop.rl import (
     AgentRoutingEnv,
+    FeaturePolicyConfig,
     PPOConfig,
     QLearningConfig,
     ReinforceConfig,
     RoutingAction,
     RoutingState,
+    train_feature_policy,
     train_ppo_policy,
     train_q_policy,
     train_reinforce_policy,
@@ -50,6 +56,12 @@ from agentprop.rl import (
 from agentprop.workflows import WORKFLOW_TEMPLATES
 
 SeedSelector = Callable[[AgentGraph], list[str]]
+NodeTrainingExample = (
+    SeedSelectionExample
+    | VerifierPlacementExample
+    | EmpiricalRoutingExample
+    | EmpiricalVerifierPlacementExample
+)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -184,7 +196,7 @@ def _learned_seed_sets(
     epochs: int,
     learning_rate: float,
 ) -> dict[str, list[str]]:
-    examples = [
+    examples: list[NodeTrainingExample] = [
         build_seed_selection_example(builder(), budget=budget, trials=trials)
         for name, builder in WORKFLOW_TEMPLATES.items()
         if name != workflow_name
@@ -310,12 +322,27 @@ def _evaluate_rl_policy_family(
             expanded_actions=expanded_actions,
         ),
     )
-    rows = []
-    for policy_name, env, action_fn in (
+    policy_rows: list[tuple[str, AgentRoutingEnv, Callable[[AgentRoutingEnv], str]]] = [
         (f"q_learning{suffix}", q_env, q_policy.act),
         (f"reinforce{suffix}", reinforce_env, reinforce_policy.act),
         (f"ppo{suffix}", ppo_env, ppo_policy.act),
-    ):
+    ]
+    if not expanded_actions:
+        feature_env = AgentRoutingEnv(graph, budget=budget, trials=trials)
+        feature_policy, _ = train_feature_policy(
+            feature_env,
+            config=FeaturePolicyConfig(
+                episodes=episodes,
+                learning_rate=learning_rate,
+                epsilon=0.2,
+                seed=seed,
+                max_steps=max_steps,
+            ),
+        )
+        policy_rows.append(("feature_policy", feature_env, feature_policy.act))
+
+    rows = []
+    for policy_name, env, action_fn in policy_rows:
         state, actions, reward_trace = _rollout_routing_policy(
             env,
             action_fn,

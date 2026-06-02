@@ -80,6 +80,19 @@
         "--registry-root": "{artifact_root}/model_registry",
         "--run-id": "ppo_routing_policy"
       }
+    },
+    {
+      "id": "rl_policy_feature",
+      "module": "experiments.run_rl_routing",
+      "args": {
+        "--policy": "feature-policy",
+        "--trials": 10,
+        "--episodes": 20,
+        "--max-steps": 8,
+        "--out": "{artifact_root}/rl_feature_policy_trajectories.json",
+        "--registry-root": "{artifact_root}/model_registry",
+        "--run-id": "feature_policy_routing"
+      }
     }
   ]
 }
