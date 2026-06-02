@@ -5,6 +5,7 @@ from agentprop.ml import (
     MLPNodeScorer,
     PairwiseNodeRanker,
     build_edge_pruning_example,
+    build_empirical_edge_pruning_example,
     build_empirical_routing_example,
     build_seed_ranking_example,
     build_seed_selection_example,
@@ -139,6 +140,45 @@ def test_edge_features_and_scorer_train_on_pruning_example() -> None:
     assert example.positive_edges
     assert example.features.feature_names == features.feature_names
     assert all(0.0 <= score <= 1.0 for score in scores.values())
+
+
+def test_empirical_edge_pruning_example_uses_task_outcome_labels() -> None:
+    graph = planner_coder_tester_reviewer()
+    success = build_empirical_edge_pruning_example(
+        graph,
+        {
+            "task_id": "roman-to-int",
+            "policy": "rl_ppo",
+            "pruned_edges": [["planner", "reviewer"]],
+            "verification_passed": True,
+            "cost_adjusted_success": 0.8,
+        },
+    )
+    failure = build_empirical_edge_pruning_example(
+        graph,
+        {
+            "task_id": "roman-to-int",
+            "policy": "rl_ppo",
+            "pruned_edges": [{"source": "coder", "target": "tester"}],
+            "verification_passed": False,
+        },
+    )
+    retryable = build_empirical_edge_pruning_example(
+        graph,
+        {
+            "task_id": "browser-flake",
+            "pruned_edges": [["planner", "reviewer"]],
+            "verification_passed": False,
+            "retry_recommended": True,
+        },
+    )
+
+    assert success is not None
+    assert success.labels[("planner", "reviewer")] == 1.0
+    assert success.sample_weight > 1.0
+    assert failure is not None
+    assert failure.labels[("coder", "tester")] == 0.0
+    assert retryable is None
 
 
 def test_verifier_placement_example_labels_nodes() -> None:

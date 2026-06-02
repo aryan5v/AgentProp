@@ -595,6 +595,49 @@ def test_train_edge_pruning_scorer_experiment_writes_model(tmp_path: Path) -> No
     assert records[0].metadata["epochs"] == 3
 
 
+def test_train_edge_pruning_scorer_experiment_uses_empirical_rows(
+    tmp_path: Path,
+) -> None:
+    output = tmp_path / "edge_empirical_model.json"
+    rows = tmp_path / "edge_rows.json"
+    rows.write_text(
+        json.dumps(
+            {
+                "rows": [
+                    {
+                        "task_id": "safe-prune",
+                        "policy": "rl_ppo",
+                        "pruned_edges": [["planner", "reviewer"]],
+                        "verification_passed": True,
+                    },
+                    {
+                        "task_id": "unsafe-prune",
+                        "policy": "rl_ppo",
+                        "pruned_edges": [["coder", "tester"]],
+                        "verification_passed": False,
+                    },
+                ]
+            }
+        )
+    )
+
+    exit_code = train_edge_pruning_scorer.main(
+        [
+            "--empirical-results",
+            str(rows),
+            "--epochs",
+            "2",
+            "--out",
+            str(output),
+        ]
+    )
+    payload = json.loads(output.read_text())
+
+    assert exit_code == 0
+    assert payload["label_source"] == "empirical-outcome"
+    assert payload["weights"]
+
+
 def test_train_learned_propagation_experiment_writes_model(tmp_path: Path) -> None:
     trace = tmp_path / "trace.json"
     trace.write_text(

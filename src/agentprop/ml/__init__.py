@@ -8,11 +8,14 @@ from agentprop.ml.checkpointing import (
 )
 from agentprop.ml.datasets import (
     EdgePruningExample,
+    EmpiricalEdgePruningExample,
     EmpiricalRoutingExample,
     SeedRankingExample,
     SeedSelectionExample,
     VerifierPlacementExample,
     build_edge_pruning_example,
+    build_empirical_edge_pruning_example,
+    build_empirical_edge_pruning_examples,
     build_empirical_routing_example,
     build_empirical_routing_examples,
     build_seed_ranking_example,
@@ -37,6 +40,7 @@ from agentprop.ml.models import (
 __all__ = [
     "EdgeFeatures",
     "EdgePruningExample",
+    "EmpiricalEdgePruningExample",
     "EmpiricalRoutingExample",
     "GraphFeatures",
     "LinearEdgeScorer",
@@ -51,6 +55,8 @@ __all__ = [
     "SeedSelectionExample",
     "VerifierPlacementExample",
     "build_edge_pruning_example",
+    "build_empirical_edge_pruning_example",
+    "build_empirical_edge_pruning_examples",
     "build_empirical_routing_example",
     "build_empirical_routing_examples",
     "build_seed_ranking_example",

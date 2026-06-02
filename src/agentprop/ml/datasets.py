@@ -49,6 +49,22 @@ class EdgePruningExample:
     features: EdgeFeatures
     labels: dict[tuple[str, str], float]
     positive_edges: list[tuple[str, str]]
+    sample_weight: float = 1.0
+
+
+@dataclass(slots=True)
+class EmpiricalEdgePruningExample:
+    """Edge-pruning example labeled by real task outcome."""
+
+    features: EdgeFeatures
+    labels: dict[tuple[str, str], float]
+    outcome_score: float
+    task_id: str
+    policy: str
+    pruned_edges: list[tuple[str, str]]
+    task_category: str | None = None
+    cost_adjusted_success: float | None = None
+    sample_weight: float = 1.0
 
 
 @dataclass(slots=True)
@@ -188,6 +204,62 @@ def build_empirical_routing_examples(
             high_context_threshold=high_context_threshold,
             default_budget=default_budget,
         )
+        if example is not None:
+            examples.append(example)
+    return examples
+
+
+def build_empirical_edge_pruning_example(
+    graph: AgentGraph,
+    row: dict[str, object],
+) -> EmpiricalEdgePruningExample | None:
+    """Build an edge-pruning example from a real routed task row.
+
+    Only observed pruning decisions are credited. A pruned edge receives the
+    task outcome as its target, so successful prunes become positive examples
+    and failed prunes become negative examples. Rows with no pruned edges carry
+    no direct pruning signal and are skipped.
+    """
+
+    if bool(row.get("retry_recommended")):
+        return None
+
+    outcome = _empirical_outcome(row)
+    if outcome is None:
+        return None
+
+    pruned_edges = _edge_tuple_list(row.get("pruned_edges"))
+    if not pruned_edges:
+        return None
+
+    features = extract_edge_features(graph)
+    pruned = set(pruned_edges)
+    labels = {
+        edge_id: outcome if edge_id in pruned else 0.0
+        for edge_id in features.edge_features
+    }
+    return EmpiricalEdgePruningExample(
+        features=features,
+        labels=labels,
+        outcome_score=outcome,
+        task_id=str(row.get("task_id") or row.get("task_name") or "unknown-task"),
+        policy=str(row.get("policy") or "unknown-policy"),
+        pruned_edges=pruned_edges,
+        task_category=_optional_string(row.get("category")),
+        cost_adjusted_success=_optional_float(row.get("cost_adjusted_success")),
+        sample_weight=_empirical_sample_weight(row),
+    )
+
+
+def build_empirical_edge_pruning_examples(
+    graph: AgentGraph,
+    rows: list[dict[str, object]],
+) -> list[EmpiricalEdgePruningExample]:
+    """Build all usable empirical edge-pruning examples from result rows."""
+
+    examples = []
+    for row in rows:
+        example = build_empirical_edge_pruning_example(graph, row)
         if example is not None:
             examples.append(example)
     return examples
@@ -334,6 +406,23 @@ def _string_float_dict(value: object) -> dict[str, float]:
         if numeric is not None:
             result[str(key)] = max(0.0, min(1.0, numeric))
     return result
+
+
+def _edge_tuple_list(value: object) -> list[tuple[str, str]]:
+    if not isinstance(value, list | tuple):
+        return []
+    edges = []
+    for item in value:
+        if isinstance(item, list | tuple) and len(item) == 2:
+            source, target = item
+            if isinstance(source, str) and isinstance(target, str):
+                edges.append((source, target))
+        elif isinstance(item, dict):
+            source = item.get("source")
+            target = item.get("target")
+            if isinstance(source, str) and isinstance(target, str):
+                edges.append((source, target))
+    return edges
 
 
 def _optional_float(value: object) -> float | None:

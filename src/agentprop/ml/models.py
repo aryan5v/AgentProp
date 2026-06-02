@@ -7,6 +7,7 @@ from math import exp
 
 from agentprop.ml.datasets import (
     EdgePruningExample,
+    EmpiricalEdgePruningExample,
     EmpiricalRoutingExample,
     SeedRankingExample,
     SeedSelectionExample,
@@ -47,10 +48,11 @@ class LinearNodeScorer:
 
         for _ in range(epochs):
             for example in examples:
+                sample_weight = _example_weight(example)
                 for node_id, values in example.features.node_features.items():
                     label = example.labels[node_id]
                     prediction = _sigmoid(_dot(self.weights, values) + self.bias)
-                    error = prediction - label
+                    error = sample_weight * (prediction - label)
                     for index, value in enumerate(values):
                         self.weights[index] -= learning_rate * error * value
                     self.bias -= learning_rate * error
@@ -98,11 +100,12 @@ class MLPNodeScorer:
 
         for _ in range(epochs):
             for example in examples:
+                sample_weight = _example_weight(example)
                 for node_id, values in example.features.node_features.items():
                     label = example.labels[node_id]
                     hidden = self._hidden(values)
                     prediction = _sigmoid(_dot(self.output_weights, hidden) + self.output_bias)
-                    error = prediction - label
+                    error = sample_weight * (prediction - label)
                     for index, value in enumerate(hidden):
                         self.output_weights[index] -= learning_rate * error * value
                     self.output_bias -= learning_rate * error
@@ -220,7 +223,7 @@ class LinearEdgeScorer:
 
     def train(
         self,
-        examples: list[EdgePruningExample],
+        examples: list[EdgePruningExample | EmpiricalEdgePruningExample],
         *,
         epochs: int = 200,
         learning_rate: float = 0.1,
@@ -229,12 +232,13 @@ class LinearEdgeScorer:
 
         for _ in range(epochs):
             for example in examples:
+                sample_weight = _example_weight(example)
                 features = example.features
                 labels = example.labels
                 for edge_id, values in features.edge_features.items():
                     label = labels[edge_id]
                     prediction = _sigmoid(_dot(self.weights, values) + self.bias)
-                    error = prediction - label
+                    error = sample_weight * (prediction - label)
                     for index, value in enumerate(values):
                         self.weights[index] -= learning_rate * error * value
                     self.bias -= learning_rate * error
@@ -286,3 +290,10 @@ def _sigmoid(value: float) -> float:
 
 def _relu(value: float) -> float:
     return max(value, 0.0)
+
+
+def _example_weight(example: object) -> float:
+    weight = getattr(example, "sample_weight", 1.0)
+    if isinstance(weight, int | float):
+        return max(0.0, float(weight))
+    return 1.0

@@ -42,7 +42,11 @@ Heuristic ML examples are behavior-cloning baselines. They are useful for
 checking whether small scorers can approximate classical graph policies, but
 they are not evidence that learned routing beats the teacher. For that, train
 with empirical outcome rows from routed case studies or benchmark artifacts via
-`experiments/train_seed_scorer.py --empirical-results ...`.
+`experiments/train_seed_scorer.py --empirical-results ...`. Edge-pruning
+scorers can likewise train from empirical `pruned_edges` rows with
+`experiments/train_edge_pruning_scorer.py --empirical-results ...`, which
+separates low-cost edges from edges actually removed without hurting task
+success.
 
 The `message_passing_gnn` baseline is dependency-light and CPU-only. It is not a
 torch model; it is meant to provide a stable GNN-style comparison path in core
