@@ -6,6 +6,8 @@ from types import ModuleType
 from agentprop.integrations import (
     NativeFrameworkUnavailable,
     calibrate_graph_from_trace_dict,
+    empirical_row_from_trace_dict,
+    empirical_rows_from_trace_dicts,
     graph_from_autogen_dict,
     graph_from_crewai_dict,
     graph_from_framework_dict,
@@ -89,6 +91,76 @@ def test_trace_calibration_updates_existing_graph_probabilities() -> None:
     assert calibrated.node("coder").reliability == 0.5
     assert graph.edge("planner", "reviewer").activation_probability == 1.0
     assert calibrated.edge("planner", "reviewer").activation_probability == 0.0
+
+
+def test_empirical_row_from_trace_uses_trace_context_and_outcome() -> None:
+    trace = {
+        "task_id": "roman-to-int",
+        "policy": "quality_aware_greedy",
+        "quality_score": 0.9,
+        "quality_passed": True,
+        "cost_adjusted_success": 0.8,
+        "events": [
+            {
+                "source": "task",
+                "target": "coder",
+                "full_context": True,
+                "token_cost": 1000,
+            },
+            {
+                "source": "predecessor_summaries",
+                "target": "reviewer",
+                "full_context": False,
+                "token_cost": 300,
+            },
+        ],
+    }
+
+    row = empirical_row_from_trace_dict(trace)
+
+    assert row is not None
+    assert row["task_id"] == "roman-to-int"
+    assert row["policy"] == "quality_aware_greedy"
+    assert row["selected_seeds"] == ["coder"]
+    assert row["context_allocations"]["coder"] == 1.0
+    assert row["context_allocations"]["reviewer"] == 0.35
+    assert row["quality_score"] == 0.9
+    assert row["quality_passed"] is True
+    assert row["cost_adjusted_success"] == 0.8
+
+
+def test_empirical_rows_from_traces_join_outcome_rows_and_skip_unlabeled() -> None:
+    traces = [
+        {
+            "task_id": "task-a",
+            "policy": "optimized_greedy",
+            "events": [{"source": "task", "target": "planner"}],
+        },
+        {
+            "task_id": "task-b",
+            "policy": "optimized_greedy",
+            "events": [{"source": "task", "target": "coder"}],
+        },
+    ]
+    outcomes = [
+        {
+            "task_id": "task-a",
+            "policy": "optimized_greedy",
+            "verification_passed": False,
+            "token_cost": 1200,
+            "latency": 4.0,
+        }
+    ]
+
+    result = empirical_rows_from_trace_dicts(traces, outcome_rows=outcomes)
+
+    assert result.skipped_trace_count == 1
+    assert len(result.rows) == 1
+    assert result.rows[0]["task_id"] == "task-a"
+    assert result.rows[0]["selected_seeds"] == ["planner"]
+    assert result.rows[0]["context_allocations"]["planner"] == 1.0
+    assert result.rows[0]["verification_passed"] is False
+    assert result.rows[0]["token_cost"] == 1200
 
 
 def test_langgraph_adapter_exports_and_imports_node_edge_spec() -> None:

@@ -63,3 +63,29 @@ cost, and latency. Unobserved outgoing edges from a source that appears in the
 trace receive a small smoothed activation probability instead of keeping the
 default `1.0`, which prevents synthetic propagation from assuming every
 possible handoff always fires.
+
+## Empirical Training Rows
+
+Traces can also become empirical ML/DL/RL training rows when they include, or
+can be joined to, task outcome fields such as `verification_passed`,
+`quality_score`, or `quality_passed`:
+
+```python
+from agentprop.integrations import empirical_rows_from_trace_dicts
+
+result = empirical_rows_from_trace_dicts(traces, outcome_rows=case_study_rows)
+rows = result.rows
+```
+
+The generated rows include `selected_seeds`, `context_allocations`, outcome
+labels, cost fields, and latency fields. They can be passed to:
+
+```bash
+PYTHONPATH=src:. python experiments/train_seed_scorer.py --empirical-results rows.json
+PYTHONPATH=src:. python experiments/train_torch_gnn.py --empirical-results rows.json
+PYTHONPATH=src:. python experiments/run_rl_routing.py --reward-calibration-rows rows.json
+```
+
+Traces without any task outcome are skipped instead of becoming training labels.
+This keeps trace-calibrated learning grounded in pass/fail or quality evidence,
+not just topology or message frequency.
