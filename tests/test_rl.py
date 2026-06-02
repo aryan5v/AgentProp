@@ -5,6 +5,7 @@ from agentprop.rl import (
     FeaturePolicyConfig,
     GraphFeaturePolicy,
     GreedyCoveragePolicy,
+    NodeScorerRoutingPolicy,
     PPOConfig,
     PPOPolicy,
     QLearningConfig,
@@ -195,6 +196,21 @@ def test_greedy_coverage_policy_returns_valid_action() -> None:
 
     assert action in env.action_space
     assert action != RoutingAction.STOP.value
+
+
+def test_node_scorer_routing_policy_uses_learned_scores_sequentially() -> None:
+    graph = planner_coder_tester_reviewer()
+    env = AgentRoutingEnv(graph, budget=2, trials=3)
+    policy = NodeScorerRoutingPolicy({"coder": 0.9, "tester": 0.8, "planner": 0.1})
+
+    first = policy.act(env)
+    state, _, done, _ = env.step(first)
+    second = policy.act(env)
+
+    assert first == "coder"
+    assert state.selected_seeds == ("coder",)
+    assert not done
+    assert second == "tester"
 
 
 def test_q_learning_trains_state_action_values() -> None:

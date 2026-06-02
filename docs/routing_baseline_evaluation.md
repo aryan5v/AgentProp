@@ -30,6 +30,10 @@ Included policy families:
 - ML baselines: `mlp`, `message_passing_gnn`, `pairwise_ranker`, and
   `marginal_gain_regressor`, trained with leave-one-workflow-out greedy labels,
   seed preference pairs, or marginal utility targets.
+- Learned-scorer routing policies: `mlp_routing_policy`,
+  `message_passing_gnn_routing_policy`, `pairwise_ranker_routing_policy`, and
+  `marginal_gain_regressor_routing_policy`, which run the learned node scores
+  through the same sequential `AgentRoutingEnv` rollout used by RL policies.
 - RL baselines: `q_learning`, `reinforce`, `ppo`, and `feature_policy`.
 
 `pure-greedy` is the theory-preserving influence-maximization baseline: it does
@@ -53,6 +57,9 @@ success.
 The `message_passing_gnn` baseline is dependency-light and CPU-only. It is not a
 torch model; it is meant to provide a stable GNN-style comparison path in core
 CI before optional torch GCN, GraphSAGE, GAT, and GIN experiments are run.
+Its `_routing_policy` row uses the same node scores as an environment policy,
+so learned graph scorers can be audited as sequential routing decisions rather
+than only as static top-k seed sets.
 
 The `feature_policy` RL baseline is also dependency-light. It learns linear
 weights over reusable graph/node/state features, so it can transfer a routing

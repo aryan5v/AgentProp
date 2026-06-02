@@ -21,7 +21,7 @@ from agentprop.rl.feature_policy import (
     GraphFeaturePolicy,
     train_feature_policy,
 )
-from agentprop.rl.policies import GreedyCoveragePolicy
+from agentprop.rl.policies import GreedyCoveragePolicy, NodeScorerRoutingPolicy
 from agentprop.rl.ppo import (
     PPOConfig,
     PPOPolicy,
@@ -62,6 +62,7 @@ __all__ = [
     "FeaturePolicyTrainingResult",
     "GraphFeaturePolicy",
     "GreedyCoveragePolicy",
+    "NodeScorerRoutingPolicy",
     "PPOConfig",
     "PPOPolicy",
     "PPOTrainingResult",

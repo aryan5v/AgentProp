@@ -864,11 +864,17 @@ def test_evaluate_routing_baselines_writes_comparison(tmp_path: Path) -> None:
         "greedy",
         "celf",
         "message_passing_gnn",
+        "message_passing_gnn_routing_policy",
         "reinforce",
         "ppo",
         "feature_policy",
     }.issubset(policies)
     assert {"q_learning_expanded", "reinforce_expanded", "ppo_expanded"}.issubset(policies)
+    assert {
+        "mlp_routing_policy",
+        "pairwise_ranker_routing_policy",
+        "marginal_gain_regressor_routing_policy",
+    }.issubset(policies)
     assert {"pairwise_ranker", "marginal_gain_regressor"}.issubset(policies)
     assert payload["summary"]["greedy"]["workflows"] == 2.0
     expanded_rows = [row for row in payload["rows"] if row["policy"].endswith("_expanded")]
