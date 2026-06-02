@@ -25,6 +25,14 @@ from agentprop.runtime.controller import (
     RuntimeNodeResult,
     RuntimeRunResult,
 )
+from agentprop.runtime.terminal_loop import (
+    ControlledTerminalLoop,
+    TerminalCommandProposal,
+    TerminalCommandResult,
+    TerminalLoopConfig,
+    TerminalLoopResult,
+    TerminalTurnRequest,
+)
 
 __all__ = [
     "AgentPropRuntimeController",
@@ -35,6 +43,7 @@ __all__ = [
     "AgentTurnResult",
     "ControlDecision",
     "ControlledAgentLoop",
+    "ControlledTerminalLoop",
     "ExecutionEvent",
     "ExecutionStateFeatures",
     "ExecutionStateTracker",
@@ -45,5 +54,10 @@ __all__ = [
     "RuntimeRunResult",
     "StoppingController",
     "StoppingControllerConfig",
+    "TerminalCommandProposal",
+    "TerminalCommandResult",
+    "TerminalLoopConfig",
+    "TerminalLoopResult",
+    "TerminalTurnRequest",
     "execution_features_to_dict",
 ]

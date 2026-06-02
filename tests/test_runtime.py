@@ -8,6 +8,7 @@ from agentprop.runtime import (
     AgentTurnRequest,
     AgentTurnResult,
     ControlledAgentLoop,
+    ControlledTerminalLoop,
     ExecutionEvent,
     ExecutionStateTracker,
     RuntimeControllerConfig,
@@ -16,6 +17,10 @@ from agentprop.runtime import (
     RuntimeRewardLogger,
     StoppingController,
     StoppingControllerConfig,
+    TerminalCommandProposal,
+    TerminalCommandResult,
+    TerminalLoopConfig,
+    TerminalTurnRequest,
 )
 from agentprop.workflows import planner_coder_tester_reviewer
 
@@ -377,6 +382,183 @@ def test_controlled_agent_loop_records_bandit_reward() -> None:
     assert result.reward_row is not None
     assert result.reward_row["token_savings"] == 0.4
     assert logger.bandit.choose("constraint-heavy") == "agentprop_controller"
+
+
+def test_controlled_terminal_loop_executes_allowed_command() -> None:
+    loop = ControlledTerminalLoop(
+        controller=StoppingController(StoppingControllerConfig(max_steps_without_verifier=4)),
+        config=TerminalLoopConfig(max_steps=2),
+    )
+    executed: list[str] = []
+
+    def proposer(request: TerminalTurnRequest) -> TerminalCommandProposal:
+        return TerminalCommandProposal(command=f"pytest -q #{request.step}")
+
+    def executor(
+        request: TerminalTurnRequest,
+        proposal: TerminalCommandProposal,
+    ) -> TerminalCommandResult:
+        executed.append(proposal.command)
+        return TerminalCommandResult(
+            event=ExecutionEvent(
+                step=request.step,
+                command=proposal.command,
+                verifier_run=True,
+                verifier_passed=True,
+                final_answer_written=True,
+            ),
+            stdout="PASS\n",
+        )
+
+    result = loop.run(task="demo", proposer=proposer, executor=executor)
+
+    assert executed == ["pytest -q #1"]
+    assert [decision.action for decision in result.decisions] == ["CONTINUE", "FINALIZE"]
+    assert result.stdout == "PASS\n"
+    assert result.passed is True
+
+
+def test_controlled_terminal_loop_force_verify_blocks_pending_command() -> None:
+    loop = ControlledTerminalLoop(
+        controller=StoppingController(StoppingControllerConfig(max_steps_without_verifier=1)),
+        config=TerminalLoopConfig(max_steps=2),
+    )
+    executed: list[str] = []
+    verified_blocked: list[str] = []
+
+    def proposer(request: TerminalTurnRequest) -> TerminalCommandProposal:
+        return TerminalCommandProposal(command=f"python solve.py #{request.step}")
+
+    def executor(
+        request: TerminalTurnRequest,
+        proposal: TerminalCommandProposal,
+    ) -> TerminalCommandResult:
+        executed.append(proposal.command)
+        return TerminalCommandResult(
+            event=ExecutionEvent(step=request.step, command=proposal.command),
+        )
+
+    def verifier(
+        request: TerminalTurnRequest,
+        blocked_proposal: TerminalCommandProposal | None = None,
+    ) -> TerminalCommandResult:
+        assert blocked_proposal is not None
+        verified_blocked.append(blocked_proposal.command)
+        return TerminalCommandResult(
+            event=ExecutionEvent(
+                step=request.step,
+                command="pytest -q",
+                verifier_run=True,
+                verifier_passed=True,
+                final_answer_written=True,
+            ),
+            stdout="verified\n",
+        )
+
+    result = loop.run(task="demo", proposer=proposer, executor=executor, verifier=verifier)
+
+    assert executed == ["python solve.py #1"]
+    assert verified_blocked == ["python solve.py #2"]
+    assert [decision.action for decision in result.decisions] == [
+        "CONTINUE",
+        "FORCE_VERIFY",
+    ]
+    assert result.passed is True
+
+
+def test_controlled_terminal_loop_switches_strategy_without_executing_proposal() -> None:
+    loop = ControlledTerminalLoop(
+        controller=StoppingController(StoppingControllerConfig(repeated_error_threshold=2)),
+        config=TerminalLoopConfig(max_steps=4, fallback_strategy="baseline"),
+    )
+    executed: list[str] = []
+    proposed: list[tuple[str, str]] = []
+
+    def proposer(request: TerminalTurnRequest) -> TerminalCommandProposal:
+        command = f"{request.strategy}:run-{request.step}"
+        proposed.append((request.strategy, command))
+        return TerminalCommandProposal(command=command)
+
+    def executor(
+        request: TerminalTurnRequest,
+        proposal: TerminalCommandProposal,
+    ) -> TerminalCommandResult:
+        executed.append(proposal.command)
+        if request.strategy == "baseline":
+            return TerminalCommandResult(
+                event=ExecutionEvent(
+                    step=request.step,
+                    command=proposal.command,
+                    verifier_run=True,
+                    verifier_passed=True,
+                    final_answer_written=True,
+                )
+            )
+        return TerminalCommandResult(
+            event=ExecutionEvent(
+                step=request.step,
+                command=proposal.command,
+                exit_code=1,
+                error_signature="same",
+            )
+        )
+
+    result = loop.run(task="demo", proposer=proposer, executor=executor)
+
+    assert proposed[2] == ("agentprop_controller", "agentprop_controller:run-3")
+    assert "agentprop_controller:run-3" not in executed
+    assert executed == [
+        "agentprop_controller:run-1",
+        "agentprop_controller:run-2",
+        "baseline:run-4",
+    ]
+    assert result.strategy == "baseline"
+    assert "SWITCH_STRATEGY" in {decision.action for decision in result.decisions}
+
+
+def test_controlled_terminal_loop_logs_state_action_outcome(tmp_path) -> None:
+    logger = RuntimeRewardLogger(
+        CategoryBanditRoutingPolicy(arms=("agentprop_controller",), epsilon=0.0),
+        jsonl_path=tmp_path / "terminal-rewards.jsonl",
+    )
+    loop = ControlledTerminalLoop(
+        controller=StoppingController(
+            StoppingControllerConfig(max_steps_without_verifier=2, token_budget=40)
+        ),
+        config=TerminalLoopConfig(
+            max_steps=2,
+            task_id="terminal-demo",
+            category="coding",
+            baseline_tokens=100,
+        ),
+        reward_logger=logger,
+    )
+
+    def proposer(request: TerminalTurnRequest) -> TerminalCommandProposal:
+        return TerminalCommandProposal(command="pytest -q")
+
+    def executor(
+        request: TerminalTurnRequest,
+        proposal: TerminalCommandProposal,
+    ) -> TerminalCommandResult:
+        return TerminalCommandResult(
+            event=ExecutionEvent(
+                step=request.step,
+                command=proposal.command,
+                verifier_run=True,
+                verifier_passed=True,
+                tokens_used=20,
+                elapsed_s=2.0,
+            )
+        )
+
+    result = loop.run(task="demo", proposer=proposer, executor=executor)
+    logged = json.loads((tmp_path / "terminal-rewards.jsonl").read_text(encoding="utf-8"))
+
+    assert result.reward_row is not None
+    assert logged["state"]["token_budget_fraction"] == 0.5
+    assert logged["action"] == "FINALIZE"
+    assert logged["outcome"]["passed"] is True
 
 
 def test_runtime_controller_can_reject_cycles_in_strict_mode() -> None:
