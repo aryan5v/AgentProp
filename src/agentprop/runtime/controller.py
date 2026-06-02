@@ -173,6 +173,8 @@ class AgentPropRuntimeController:
             result = executor(request)
             if result is None:
                 raise RuntimeError(f"Executor returned None for node {node.id!r}")
+            if result is None:
+                raise ValueError(f"Executor returned None for node {node.id!r}")
             if result.node_id != node.id:
                 raise ValueError(f"Executor returned {result.node_id!r} for node {node.id!r}")
             results.append(result)
