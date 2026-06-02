@@ -41,7 +41,7 @@ import tempfile
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from agentprop.algorithms import greedy_seed_selection
 from agentprop.core import AgentGraph
@@ -98,22 +98,18 @@ def run_tests(code: str, task: Task, timeout_s: float = 15.0) -> TestOutcome:
     if not code.strip():
         return TestOutcome(False, "no code produced")
     script = f"{code}\n\n# --- tests ---\n{task.test_code}\n"
-    with tempfile.NamedTemporaryFile(
-        "w", suffix=".py", delete=False, encoding="utf-8"
-    ) as handle:
-        handle.write(script)
-        tmp_path = handle.name
-    try:
-        proc = subprocess.run(
-            [sys.executable, tmp_path],
-            capture_output=True,
-            text=True,
-            timeout=timeout_s,
-        )
-    except subprocess.TimeoutExpired:
-        Path(tmp_path).unlink(missing_ok=True)
-        return TestOutcome(False, "timeout")
-    Path(tmp_path).unlink(missing_ok=True)
+    with tempfile.TemporaryDirectory(prefix="agentprop_case_study_") as tmp_dir:
+        tmp_path = Path(tmp_dir) / "candidate.py"
+        tmp_path.write_text(script, encoding="utf-8")
+        try:
+            proc = subprocess.run(
+                [sys.executable, str(tmp_path)],
+                capture_output=True,
+                text=True,
+                timeout=timeout_s,
+            )
+        except subprocess.TimeoutExpired:
+            return TestOutcome(False, "timeout")
     if proc.returncode == 0:
         return TestOutcome(True, "ok")
     tail = (proc.stderr or proc.stdout or "").strip().splitlines()
@@ -143,7 +139,7 @@ class RetryingClient:
         last: Exception | None = None
         for attempt in range(self._retries + 1):
             try:
-                return self._inner.chat(**kwargs)
+                return cast(LLMExecutionResult, self._inner.chat(**kwargs))
             except Exception as exc:  # noqa: BLE001 - provider errors are opaque strings
                 last = exc
                 if attempt == self._retries:
