@@ -134,7 +134,14 @@ def budget_policy_by_category(category: str) -> AgentBudgetPolicy:
     for policy in DEFAULT_BUDGET_POLICIES:
         if policy.category == normalized:
             return policy
-    return DEFAULT_BUDGET_POLICIES[1]
+    return _required_policy("setup-build")
+
+
+def _required_policy(category: str) -> AgentBudgetPolicy:
+    for policy in DEFAULT_BUDGET_POLICIES:
+        if policy.category == category:
+            return policy
+    raise LookupError(f"Missing required budget policy: {category}")
 
 
 def render_budget_policy_markdown(

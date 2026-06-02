@@ -607,22 +607,22 @@ def _render_summary_markdown(
 def _write_trial_csv(path: Path, rows: list[HarborTrialSummary]) -> None:
     fieldnames = list(
         HarborTrialSummary(
-            "",
-            "",
-            None,
-            None,
-            None,
-            0,
-            0,
-            0,
-            0.0,
-            0.0,
-            0,
-            0,
-            "solution_miss",
-            False,
-            "",
-            "",
+            task_name="",
+            trial_name="",
+            reward=None,
+            passed=None,
+            exception_name=None,
+            input_tokens=0,
+            cache_tokens=0,
+            output_tokens=0,
+            cost_usd=0.0,
+            elapsed_time_s=0.0,
+            command_count=0,
+            model_call_count=0,
+            failure_category="solution_miss",
+            retry_recommended=False,
+            failure_rationale="",
+            result_path="",
         ).to_dict()
     )
     with path.open("w", newline="", encoding="utf-8") as handle:
