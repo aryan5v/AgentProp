@@ -106,6 +106,23 @@ The exported trajectory records the reward profile source and weights. This
 keeps default RL baselines reproducible while allowing benchmark/case-study
 runs to learn a cost frontier from real outcomes.
 
+When empirical rows also include routing context, such as `context_allocations`,
+`context_ratios`, or `selected_seeds`, the same command also fits an
+`ExpectedSuccessProfile`. The environment then uses estimated task success as
+the quality term in the RL reward instead of raw propagation coverage:
+
+```bash
+PYTHONPATH=src:. python experiments/run_rl_routing.py \
+  --policy feature-policy \
+  --reward-calibration-rows results/case_study/results.json \
+  --out results/rl/feature_policy_expected_success.json
+```
+
+Cost-only rows still calibrate token, message, and latency penalties without
+switching the reward target away from coverage. This prevents the RL loop from
+pretending that task success is learned when the rows do not identify which
+nodes received full or compressed context.
+
 Replay an exported trajectory with a deterministic propagation seed:
 
 ```bash

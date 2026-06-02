@@ -869,7 +869,59 @@ def test_rl_routing_experiment_uses_empirical_reward_calibration(tmp_path: Path)
     assert exit_code == 0
     assert payload[0]["reward_profile"]["source"] == "empirical"
     assert payload[0]["reward_profile"]["example_count"] == 2
+    assert "success_profile" not in payload[0]
+    assert payload[0]["trajectory"][0]["info"]["reward_target"] == "coverage"
     assert "cumulative_reward" in payload[0]["trajectory"][0]
+
+
+def test_rl_routing_experiment_can_reward_expected_success(tmp_path: Path) -> None:
+    output = tmp_path / "rl_success_calibrated.json"
+    rows = tmp_path / "success_rows.json"
+    rows.write_text(
+        json.dumps(
+            [
+                {
+                    "verification_passed": True,
+                    "token_cost": 1000,
+                    "message_cost": 100,
+                    "latency": 5,
+                    "context_allocations": {"coder": 1.0, "tester": 1.0},
+                    "selected_seeds": ["coder"],
+                },
+                {
+                    "verification_passed": False,
+                    "token_cost": 900,
+                    "message_cost": 100,
+                    "latency": 5,
+                    "context_allocations": {"coder": 0.25, "tester": 1.0},
+                    "selected_seeds": ["planner"],
+                },
+            ]
+        )
+    )
+
+    exit_code = run_rl_routing.main(
+        [
+            "--policy",
+            "greedy",
+            "--trials",
+            "2",
+            "--max-steps",
+            "2",
+            "--reward-calibration-rows",
+            str(rows),
+            "--out",
+            str(output),
+        ]
+    )
+    payload = json.loads(output.read_text())
+
+    assert exit_code == 0
+    assert payload[0]["success_profile"]["example_count"] == 2
+    assert payload[0]["success_profile"]["node_context_penalties"]["coder"] == 1.0
+    assert payload[0]["trajectory"][0]["info"]["reward_target"] == "expected_success"
+    assert payload[0]["trajectory"][0]["expected_success"] is not None
+    assert "final_expected_success" in payload[0]["summary"]
 
 
 def test_replay_rl_trajectory_experiment_imports_exported_trajectory(tmp_path: Path) -> None:

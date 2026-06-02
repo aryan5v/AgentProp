@@ -7,7 +7,13 @@ import json
 from pathlib import Path
 from typing import Any, TypeAlias
 
-from agentprop.evaluation import quality_cost_summary, register_artifact, safe_artifact_id
+from agentprop.evaluation import (
+    ExpectedSuccessProfile,
+    calibrate_expected_success,
+    quality_cost_summary,
+    register_artifact,
+    safe_artifact_id,
+)
 from agentprop.rl import (
     AgentRoutingEnv,
     FeaturePolicyConfig,
@@ -69,11 +75,17 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     rows: list[dict[str, Any]] = []
-    reward_profile = (
-        calibrate_routing_reward_profile(_load_empirical_rows(args.reward_calibration_rows))
+    empirical_rows = (
+        _load_empirical_rows(args.reward_calibration_rows)
         if args.reward_calibration_rows is not None
+        else []
+    )
+    reward_profile = (
+        calibrate_routing_reward_profile(empirical_rows)
+        if empirical_rows
         else RoutingRewardProfile()
     )
+    success_profile = _success_profile_from_rows(empirical_rows)
     checkpoint_dir = args.checkpoint_dir
     if checkpoint_dir is None and args.registry_root is not None:
         checkpoint_dir = args.registry_root / "checkpoints"
@@ -83,6 +95,7 @@ def main(argv: list[str] | None = None) -> int:
             budget=args.budget,
             trials=args.trials,
             reward_profile=reward_profile,
+            success_profile=success_profile,
         )
         policy: RoutingPolicy
         training: TrainingResult | None = None
@@ -154,6 +167,8 @@ def main(argv: list[str] | None = None) -> int:
                     "coverage": state.coverage,
                     "token_cost": state.token_cost,
                     "message_cost": state.message_cost,
+                    "expected_success": state.expected_success,
+                    "context_ratios": dict(state.context_ratios),
                     "activated_verifiers": list(state.activated_verifiers),
                     "used_edges": [list(edge) for edge in state.used_edges],
                     "pruned_edges": [list(edge) for edge in state.pruned_edges],
@@ -171,6 +186,8 @@ def main(argv: list[str] | None = None) -> int:
             "summary": _trajectory_summary(final_state, total_reward),
             "reward_profile": reward_profile.to_dict(),
         }
+        if success_profile is not None:
+            row["success_profile"] = success_profile.to_dict()
         if training is not None:
             row["training"] = {
                 "episodes": training.episodes,
@@ -218,6 +235,9 @@ def main(argv: list[str] | None = None) -> int:
                         "expanded_actions": args.expanded_actions,
                         "max_steps": args.max_steps,
                         "reward_profile": reward_profile.to_dict(),
+                        "success_profile": (
+                            success_profile.to_dict() if success_profile is not None else None
+                        ),
                     },
                 )
                 row["checkpoint_path"] = str(checkpoint_path)
@@ -237,8 +257,14 @@ def main(argv: list[str] | None = None) -> int:
                             "episodes": args.episodes,
                             "expanded_actions": args.expanded_actions,
                             "final_coverage": row["summary"]["final_coverage"],
+                            "final_expected_success": row["summary"][
+                                "final_expected_success"
+                            ],
                             "efficiency_score": row["summary"]["efficiency_score"],
                             "reward_source": reward_profile.source,
+                            "success_source": (
+                                success_profile.source if success_profile is not None else None
+                            ),
                         },
                     )
         rows.append(row)
@@ -253,14 +279,18 @@ def _trajectory_summary(state: RoutingState, total_reward: float) -> dict[str, f
     token_cost = state.token_cost
     message_cost = state.message_cost
     total_cost = token_cost + message_cost
+    expected_success = (
+        state.expected_success if state.expected_success is not None else state.coverage
+    )
     quality = quality_cost_summary(
-        success_rate=state.coverage,
+        success_rate=expected_success,
         token_cost=total_cost,
         latency=state.propagation_time,
     )
     return {
         "total_reward": total_reward,
-        "final_coverage": quality.success_rate,
+        "final_coverage": state.coverage,
+        "final_expected_success": expected_success,
         "final_token_cost": token_cost,
         "final_message_cost": message_cost,
         "final_total_cost": total_cost,
@@ -281,6 +311,19 @@ def _load_empirical_rows(path: Path) -> list[dict[str, object]]:
             if isinstance(value, list):
                 return [dict(row) for row in value if isinstance(row, dict)]
     raise ValueError("Reward calibration rows must be a list or contain rows/tasks/results")
+
+
+def _success_profile_from_rows(rows: list[dict[str, object]]) -> ExpectedSuccessProfile | None:
+    if not rows:
+        return None
+    if not any(
+        key in row
+        for row in rows
+        for key in ("context_allocations", "context_ratios", "selected_seeds")
+    ):
+        return None
+    profile = calibrate_expected_success(rows)
+    return profile if profile.example_count > 0 else None
 
 
 if __name__ == "__main__":

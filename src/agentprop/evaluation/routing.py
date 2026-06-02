@@ -235,7 +235,7 @@ def graded_context_allocations(
     """Assign each node a context ratio instead of binary full-or-summary routing."""
 
     seed_set = set(seeds)
-    active = activated_nodes or {node.id for node in graph.nodes()}
+    active = {node.id for node in graph.nodes()} if activated_nodes is None else activated_nodes
     profile = profile or ContextCompressionProfile(default_ratio=min_ratio)
     allocations: dict[str, float] = {}
 

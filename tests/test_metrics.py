@@ -133,6 +133,14 @@ def test_quality_aware_objective_penalizes_context_starvation() -> None:
     assert full_score > compressed_score
 
 
+def test_graded_context_allocations_respects_empty_activation_set() -> None:
+    graph = planner_coder_tester_reviewer()
+
+    allocations = graded_context_allocations(graph, seeds=[], activated_nodes=set())
+
+    assert all(ratio == 0.0 for ratio in allocations.values())
+
+
 def test_quality_aware_objective_can_use_empirical_success_profile() -> None:
     graph = planner_coder_tester_reviewer()
     profile = ExpectedSuccessProfile(
