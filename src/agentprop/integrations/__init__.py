@@ -24,7 +24,10 @@ from agentprop.integrations.framework_adapters import (
     to_openai_agents_dict,
 )
 from agentprop.integrations.trace_loader import (
+    TraceGraphCalibrationResult,
     TraceLoadResult,
+    calibrate_graph_from_trace,
+    calibrate_graph_from_trace_dict,
     graph_from_trace,
     graph_from_trace_dict,
 )
@@ -34,7 +37,10 @@ __all__ = [
     "NativeFrameworkStatus",
     "NativeFrameworkUnavailable",
     "SUPPORTED_FRAMEWORKS",
+    "TraceGraphCalibrationResult",
     "TraceLoadResult",
+    "calibrate_graph_from_trace",
+    "calibrate_graph_from_trace_dict",
     "graph_from_autogen_dict",
     "graph_from_crewai_dict",
     "graph_from_framework_dict",
