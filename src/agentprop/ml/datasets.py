@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from agentprop.algorithms import (
-    greedy_seed_selection,
     low_weight_edges,
     risk_aware_verifier_placement,
 )
@@ -123,29 +122,18 @@ def build_seed_selection_example(
     propagation_model: PropagationModel | None = None,
     trials: int = 50,
 ) -> SeedSelectionExample:
-    """Label nodes by whether greedy influence maximization selected them."""
+    """Build soft labels from marginal seed utility.
 
-    model = propagation_model or IndependentCascade(seed=0)
-    positive_seeds = greedy_seed_selection(
+    This intentionally avoids behavior-cloning ``greedy_seed_selection`` so
+    learned policies do not train on the same selector they are evaluated
+    against.
+    """
+
+    return build_seed_utility_example(
         graph,
-        budget,
-        propagation_model=model,
-        trials=trials,
-    )
-    positives = set(positive_seeds)
-    features = extract_graph_features(graph)
-    labels = {node_id: 1.0 if node_id in positives else 0.0 for node_id in features.node_features}
-    neighbors = {
-        node_id: sorted({*graph.predecessors(node_id), *graph.successors(node_id)})
-        for node_id in features.node_features
-    }
-    return SeedSelectionExample(
-        features=features,
-        labels=labels,
-        positive_seeds=positive_seeds,
         budget=budget,
-        neighbors=neighbors,
-        edge_features=extract_edge_features(graph),
+        propagation_model=propagation_model,
+        trials=trials,
     )
 
 
@@ -391,6 +379,57 @@ def build_seed_ranking_example(
         preference_pairs=preference_pairs,
         budget=budget,
         seed_candidates=seed_candidates,
+    )
+
+
+def build_seed_utility_example(
+    graph: AgentGraph,
+    *,
+    budget: int,
+    propagation_model: PropagationModel | None = None,
+    trials: int = 50,
+) -> SeedSelectionExample:
+    """Build soft node labels from marginal utility instead of greedy choices."""
+
+    ranking = build_seed_ranking_example(
+        graph,
+        budget=budget,
+        propagation_model=propagation_model,
+        trials=trials,
+    )
+    candidate_values = [
+        ranking.utility_targets[node_id] for node_id in ranking.seed_candidates
+    ]
+    minimum = min(candidate_values, default=0.0)
+    maximum = max(candidate_values, default=0.0)
+    scale = maximum - minimum
+    labels = {}
+    for node_id in ranking.features.node_features:
+        raw = ranking.utility_targets.get(node_id, 0.0)
+        if node_id not in ranking.seed_candidates or scale <= 1e-12:
+            labels[node_id] = 0.0
+        else:
+            labels[node_id] = max(0.0, min(1.0, (raw - minimum) / scale))
+    positive_seeds = [
+        node_id
+        for node_id, _ in sorted(
+            (
+                (node_id, ranking.utility_targets[node_id])
+                for node_id in ranking.seed_candidates
+            ),
+            key=lambda item: (-item[1], item[0]),
+        )
+    ][:budget]
+    return SeedSelectionExample(
+        features=ranking.features,
+        labels=labels,
+        positive_seeds=positive_seeds,
+        budget=budget,
+        neighbors={
+            node_id: sorted({*graph.predecessors(node_id), *graph.successors(node_id)})
+            for node_id in ranking.features.node_features
+        },
+        edge_features=extract_edge_features(graph),
     )
 
 

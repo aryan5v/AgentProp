@@ -23,6 +23,7 @@ from agentprop.ml.datasets import (
     build_empirical_verifier_placement_examples,
     build_seed_ranking_example,
     build_seed_selection_example,
+    build_seed_utility_example,
     build_verifier_placement_example,
 )
 from agentprop.ml.features import (
@@ -67,6 +68,7 @@ __all__ = [
     "build_empirical_verifier_placement_examples",
     "build_seed_ranking_example",
     "build_seed_selection_example",
+    "build_seed_utility_example",
     "build_verifier_placement_example",
     "extract_edge_features",
     "extract_graph_features",

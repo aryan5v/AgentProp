@@ -43,8 +43,8 @@ def main(argv: list[str] | None = None) -> int:
         "--allow-heuristic-labels",
         action="store_true",
         help=(
-            "Allow topology/heuristic labels when --empirical-results is absent. "
-            "Use this only for baseline imitation runs."
+            "Allow synthetic marginal-utility labels when --empirical-results is absent. "
+            "Use this only for synthetic baseline runs."
         ),
     )
     parser.add_argument("--budget", type=int, default=2)
@@ -147,18 +147,18 @@ def _build_training_examples(
     if not allow_heuristic_labels:
         raise ValueError(
             "--empirical-results is required for training; pass --allow-heuristic-labels "
-            "to run an explicit heuristic baseline."
+            "to run an explicit synthetic baseline."
         )
 
     if task == "verifier":
         return [
             build_verifier_placement_example(builder(), budget=budget)
             for builder in WORKFLOW_TEMPLATES.values()
-        ], "heuristic-baseline"
+        ], "marginal-utility-baseline"
     return [
         build_seed_selection_example(builder(), budget=budget, trials=trials)
         for builder in WORKFLOW_TEMPLATES.values()
-    ], "heuristic-baseline"
+    ], "marginal-utility-baseline"
 
 
 def _load_empirical_rows(path: Path) -> list[dict[str, object]]:

@@ -36,7 +36,7 @@ from agentprop.ml import (
     SeedSelectionExample,
     VerifierPlacementExample,
     build_seed_ranking_example,
-    build_seed_selection_example,
+    build_seed_utility_example,
     extract_graph_features,
 )
 from agentprop.propagation import IndependentCascade
@@ -223,7 +223,7 @@ def _learned_node_score_maps(
     learning_rate: float,
 ) -> dict[str, dict[str, float]]:
     examples: list[NodeTrainingExample] = [
-        build_seed_selection_example(builder(), budget=budget, trials=trials)
+        build_seed_utility_example(builder(), budget=budget, trials=trials)
         for name, builder in WORKFLOW_TEMPLATES.items()
         if name != workflow_name
     ]
