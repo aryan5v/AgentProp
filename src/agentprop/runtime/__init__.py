@@ -2,6 +2,7 @@
 
 from agentprop.runtime.agent_loop import (
     AgentLoopConfig,
+    AgentLoopDecision,
     AgentLoopResult,
     AgentTurnRequest,
     AgentTurnResult,
@@ -27,6 +28,7 @@ from agentprop.runtime.controller import (
 __all__ = [
     "AgentPropRuntimeController",
     "AgentLoopConfig",
+    "AgentLoopDecision",
     "AgentLoopResult",
     "AgentTurnRequest",
     "AgentTurnResult",

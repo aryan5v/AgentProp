@@ -85,6 +85,15 @@ class AgentLoopResult:
     reward_row: Mapping[str, object] | None = None
 
 
+@dataclass(frozen=True, slots=True)
+class AgentLoopDecision:
+    """One controller decision over the current observed loop state."""
+
+    strategy: str
+    decision: ControlDecision
+    request: AgentTurnRequest
+
+
 @dataclass(slots=True)
 class ControlledAgentLoop:
     """Wrap a real agent loop with AgentProp stopping, verification, and rewards."""
@@ -93,6 +102,33 @@ class ControlledAgentLoop:
     config: AgentLoopConfig = field(default_factory=AgentLoopConfig)
     bandit: CategoryBanditRoutingPolicy | None = None
     reward_logger: RuntimeRewardLogger | None = None
+
+    def decide(
+        self,
+        *,
+        task: str,
+        initial_events: tuple[ExecutionEvent, ...] = (),
+        strategy: str | None = None,
+        step: int | None = None,
+        metadata: Mapping[str, object] | None = None,
+    ) -> AgentLoopDecision:
+        """Inspect observed events and return the next control decision."""
+
+        tracker = _tracker_from_events(initial_events)
+        active_strategy = strategy or self._initial_strategy()
+        request = AgentTurnRequest(
+            task=task,
+            step=step or (len(initial_events) + 1),
+            strategy=active_strategy,
+            features=tracker.features(),
+            transcript=tuple(tracker.events),
+            metadata=dict(metadata or {}),
+        )
+        return AgentLoopDecision(
+            strategy=active_strategy,
+            decision=self.controller.decide(request.features),
+            request=request,
+        )
 
     def run(
         self,
@@ -106,9 +142,7 @@ class ControlledAgentLoop:
     ) -> AgentLoopResult:
         """Run agent turns while AgentProp controls verify/switch/finalize decisions."""
 
-        tracker = ExecutionStateTracker()
-        for event in initial_events:
-            tracker.observe(event)
+        tracker = _tracker_from_events(initial_events)
         decisions: list[ControlDecision] = []
         final_output = ""
         strategy = self._initial_strategy()
@@ -228,6 +262,13 @@ def _last_verifier_result(events: list[ExecutionEvent]) -> bool | None:
         if event.verifier_passed is not None:
             return event.verifier_passed
     return None
+
+
+def _tracker_from_events(events: tuple[ExecutionEvent, ...]) -> ExecutionStateTracker:
+    tracker = ExecutionStateTracker()
+    for event in events:
+        tracker.observe(event)
+    return tracker
 
 
 def _token_savings(*, baseline_tokens: int | None, observed_tokens: int) -> float:

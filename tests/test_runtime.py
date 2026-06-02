@@ -256,6 +256,28 @@ def test_controlled_agent_loop_uses_initial_events_for_resume() -> None:
     assert result.passed is True
 
 
+def test_controlled_agent_loop_decides_without_running_turn() -> None:
+    loop = ControlledAgentLoop(
+        controller=StoppingController(StoppingControllerConfig(repeated_error_threshold=2)),
+        config=AgentLoopConfig(fallback_strategy="broadcast"),
+    )
+
+    decision = loop.decide(
+        task="demo",
+        strategy="agentprop_controller",
+        initial_events=(
+            ExecutionEvent(step=1, exit_code=1, error_signature="same-miss"),
+            ExecutionEvent(step=2, exit_code=1, error_signature="same-miss"),
+        ),
+    )
+
+    assert decision.strategy == "agentprop_controller"
+    assert decision.decision.action == "SWITCH_STRATEGY"
+    assert decision.request.step == 3
+    assert decision.request.features.repeated_error_count == 2
+    assert len(decision.request.transcript) == 2
+
+
 def test_controlled_agent_loop_records_bandit_reward() -> None:
     bandit = CategoryBanditRoutingPolicy(
         arms=("agentprop_controller", "baseline"),
