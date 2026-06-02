@@ -101,11 +101,14 @@ class ControlledAgentLoop:
         turn_executor: AgentTurnExecutor,
         verifier: AgentLoopVerifier | None = None,
         strategy_switcher: AgentStrategySwitcher | None = None,
+        initial_events: tuple[ExecutionEvent, ...] = (),
         metadata: Mapping[str, object] | None = None,
     ) -> AgentLoopResult:
         """Run agent turns while AgentProp controls verify/switch/finalize decisions."""
 
         tracker = ExecutionStateTracker()
+        for event in initial_events:
+            tracker.observe(event)
         decisions: list[ControlDecision] = []
         final_output = ""
         strategy = self._initial_strategy()

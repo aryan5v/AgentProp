@@ -223,6 +223,39 @@ def test_controlled_agent_loop_switches_strategy_after_repeated_errors() -> None
     assert result.passed is True
 
 
+def test_controlled_agent_loop_uses_initial_events_for_resume() -> None:
+    loop = ControlledAgentLoop(
+        controller=StoppingController(StoppingControllerConfig(repeated_error_threshold=2)),
+        config=AgentLoopConfig(max_steps=4, fallback_strategy="broadcast"),
+    )
+    seen_strategies: list[str] = []
+
+    def turn_executor(request: AgentTurnRequest) -> AgentTurnResult:
+        seen_strategies.append(request.strategy)
+        return AgentTurnResult(
+            event=ExecutionEvent(
+                step=request.step,
+                verifier_run=True,
+                verifier_passed=True,
+                final_answer_written=True,
+            ),
+            output="fixed",
+        )
+
+    result = loop.run(
+        task="demo",
+        turn_executor=turn_executor,
+        initial_events=(
+            ExecutionEvent(step=1, exit_code=1, error_signature="same-miss"),
+            ExecutionEvent(step=2, exit_code=1, error_signature="same-miss"),
+        ),
+    )
+
+    assert result.decisions[0].action == "SWITCH_STRATEGY"
+    assert seen_strategies == ["broadcast"]
+    assert result.passed is True
+
+
 def test_controlled_agent_loop_records_bandit_reward() -> None:
     bandit = CategoryBanditRoutingPolicy(
         arms=("agentprop_controller", "baseline"),
