@@ -38,8 +38,8 @@ def main(argv: list[str] | None = None) -> int:
         "--allow-heuristic-labels",
         action="store_true",
         help=(
-            "Allow topology/heuristic labels when --empirical-results is absent. "
-            "Use this only for baseline imitation runs."
+            "Allow synthetic marginal-utility labels when --empirical-results is absent. "
+            "Use this only for synthetic baseline runs."
         ),
     )
     parser.add_argument("--budget", type=int, default=2)
@@ -60,10 +60,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.empirical_results is None and not args.allow_heuristic_labels:
         parser.error(
             "--empirical-results is required for training; pass --allow-heuristic-labels "
-            "to run an explicit heuristic baseline."
+            "to run an explicit synthetic baseline."
         )
 
-    label_source = "heuristic-baseline"
+    label_source = "marginal-utility-baseline"
     examples: list[Any]
     if args.empirical_results is not None:
         if args.workflow not in WORKFLOW_TEMPLATES:

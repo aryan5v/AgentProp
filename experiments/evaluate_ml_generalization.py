@@ -9,7 +9,7 @@ from pathlib import Path
 from agentprop.ml import (
     LinearNodeScorer,
     MLPNodeScorer,
-    build_seed_selection_example,
+    build_seed_utility_example,
     extract_graph_features,
 )
 from agentprop.workflows import WORKFLOW_TEMPLATES
@@ -28,7 +28,7 @@ def main(argv: list[str] | None = None) -> int:
     rows = []
     for held_out_name, held_out_builder in WORKFLOW_TEMPLATES.items():
         training_examples = [
-            build_seed_selection_example(builder(), budget=args.budget, trials=args.trials)
+            build_seed_utility_example(builder(), budget=args.budget, trials=args.trials)
             for name, builder in WORKFLOW_TEMPLATES.items()
             if name != held_out_name
         ]
@@ -40,7 +40,7 @@ def main(argv: list[str] | None = None) -> int:
         scorer.train(training_examples, epochs=args.epochs, learning_rate=args.learning_rate)
 
         held_out_graph = held_out_builder()
-        held_out_example = build_seed_selection_example(
+        held_out_example = build_seed_utility_example(
             held_out_graph,
             budget=args.budget,
             trials=args.trials,
@@ -63,6 +63,7 @@ def main(argv: list[str] | None = None) -> int:
 
     payload = {
         "model": args.model,
+        "label_source": "marginal-utility",
         "budget": args.budget,
         "mean_top_k_recall": sum(row["top_k_recall"] for row in rows) / len(rows),
         "rows": rows,

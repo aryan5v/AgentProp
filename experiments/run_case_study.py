@@ -27,7 +27,7 @@ from agentprop.evaluation.metrics import broadcast_cost, seeded_routing_cost
 from agentprop.ml import (
     LinearNodeScorer,
     MessagePassingNodeScorer,
-    build_seed_selection_example,
+    build_seed_utility_example,
     extract_graph_features,
 )
 from agentprop.propagation import IndependentCascade
@@ -360,7 +360,7 @@ def _message_passing_seeds(
     epochs: int,
 ) -> list[str]:
     examples = [
-        build_seed_selection_example(builder(), budget=budget, trials=trials)
+        build_seed_utility_example(builder(), budget=budget, trials=trials)
         for name, builder in WORKFLOW_TEMPLATES.items()
         if name != workflow_name
     ]

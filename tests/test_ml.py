@@ -10,6 +10,7 @@ from agentprop.ml import (
     build_empirical_verifier_placement_example,
     build_seed_ranking_example,
     build_seed_selection_example,
+    build_seed_utility_example,
     build_verifier_placement_example,
     extract_edge_features,
     extract_graph_features,
@@ -107,6 +108,16 @@ def test_seed_ranking_example_builds_preferences_and_targets() -> None:
     assert "final" not in example.seed_candidates
     assert set(example.seed_candidates).issubset(example.utility_targets)
     assert all(winner != loser for winner, loser in example.preference_pairs)
+
+
+def test_seed_utility_example_uses_soft_marginal_gain_labels() -> None:
+    graph = planner_coder_tester_reviewer()
+    example = build_seed_utility_example(graph, budget=2, trials=5)
+
+    assert example.positive_seeds
+    assert all(0.0 <= label <= 1.0 for label in example.labels.values())
+    assert any(0.0 < label < 1.0 for label in example.labels.values())
+    assert "final" not in example.positive_seeds
 
 
 def test_pairwise_ranker_trains_on_seed_preferences() -> None:
