@@ -22,7 +22,7 @@ class NodeScorerRoutingPolicy:
             return RoutingAction.STOP.value
         return max(
             sorted(actions),
-            key=lambda node_id: float(self.node_scores.get(node_id, 0.0)),
+            key=lambda node_id: float(self.node_scores.get(node_id, -float("inf"))),
         )
 
 

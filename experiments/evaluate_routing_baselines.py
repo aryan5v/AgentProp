@@ -108,6 +108,13 @@ def main(argv: list[str] | None = None) -> int:
                 seed=args.seed,
             ).items()
         )
+        learned_node_score_maps = _learned_node_score_maps(
+            workflow_name=workflow_name,
+            budget=args.budget,
+            trials=args.trials,
+            epochs=args.epochs,
+            learning_rate=args.learning_rate,
+        )
         rows.extend(
             _evaluate_policy(
                 workflow_name,
@@ -118,21 +125,17 @@ def main(argv: list[str] | None = None) -> int:
                 seed=args.seed,
             )
             for policy_name, seeds in _learned_seed_sets(
-                workflow_name=workflow_name,
+                learned_node_score_maps,
                 budget=args.budget,
-                trials=args.trials,
-                epochs=args.epochs,
-                learning_rate=args.learning_rate,
             ).items()
         )
         rows.extend(
             _evaluate_learned_scorer_policies(
                 workflow_name=workflow_name,
                 graph=graph,
+                node_score_maps=learned_node_score_maps,
                 budget=args.budget,
                 trials=args.trials,
-                epochs=args.epochs,
-                learning_rate=args.learning_rate,
                 max_steps=args.max_steps,
             )
         )
@@ -201,22 +204,13 @@ def _classical_selectors(
 
 
 def _learned_seed_sets(
+    node_score_maps: dict[str, dict[str, float]],
     *,
-    workflow_name: str,
     budget: int,
-    trials: int,
-    epochs: int,
-    learning_rate: float,
 ) -> dict[str, list[str]]:
     return {
         policy_name: _top_k(node_scores, budget)
-        for policy_name, node_scores in _learned_node_score_maps(
-            workflow_name=workflow_name,
-            budget=budget,
-            trials=trials,
-            epochs=epochs,
-            learning_rate=learning_rate,
-        ).items()
+        for policy_name, node_scores in node_score_maps.items()
     }
 
 
@@ -275,20 +269,13 @@ def _evaluate_learned_scorer_policies(
     *,
     workflow_name: str,
     graph: AgentGraph,
+    node_score_maps: dict[str, dict[str, float]],
     budget: int,
     trials: int,
-    epochs: int,
-    learning_rate: float,
     max_steps: int,
 ) -> list[dict[str, Any]]:
     rows = []
-    for policy_name, node_scores in _learned_node_score_maps(
-        workflow_name=workflow_name,
-        budget=budget,
-        trials=trials,
-        epochs=epochs,
-        learning_rate=learning_rate,
-    ).items():
+    for policy_name, node_scores in node_score_maps.items():
         env = AgentRoutingEnv(graph, budget=budget, trials=trials)
         policy = NodeScorerRoutingPolicy(node_scores)
         state, actions, reward_trace = _rollout_routing_policy(
