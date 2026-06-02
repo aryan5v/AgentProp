@@ -43,6 +43,7 @@ from agentprop.propagation import IndependentCascade
 from agentprop.rl import (
     AgentRoutingEnv,
     FeaturePolicyConfig,
+    NodeScorerRoutingPolicy,
     PPOConfig,
     QLearningConfig,
     ReinforceConfig,
@@ -125,6 +126,17 @@ def main(argv: list[str] | None = None) -> int:
             ).items()
         )
         rows.extend(
+            _evaluate_learned_scorer_policies(
+                workflow_name=workflow_name,
+                graph=graph,
+                budget=args.budget,
+                trials=args.trials,
+                epochs=args.epochs,
+                learning_rate=args.learning_rate,
+                max_steps=args.max_steps,
+            )
+        )
+        rows.extend(
             _evaluate_rl_policies(
                 workflow_name,
                 graph,
@@ -196,6 +208,26 @@ def _learned_seed_sets(
     epochs: int,
     learning_rate: float,
 ) -> dict[str, list[str]]:
+    return {
+        policy_name: _top_k(node_scores, budget)
+        for policy_name, node_scores in _learned_node_score_maps(
+            workflow_name=workflow_name,
+            budget=budget,
+            trials=trials,
+            epochs=epochs,
+            learning_rate=learning_rate,
+        ).items()
+    }
+
+
+def _learned_node_score_maps(
+    *,
+    workflow_name: str,
+    budget: int,
+    trials: int,
+    epochs: int,
+    learning_rate: float,
+) -> dict[str, dict[str, float]]:
     examples: list[NodeTrainingExample] = [
         build_seed_selection_example(builder(), budget=budget, trials=trials)
         for name, builder in WORKFLOW_TEMPLATES.items()
@@ -229,20 +261,52 @@ def _learned_seed_sets(
         for node_id in features.node_features
     }
     return {
-        "mlp": _top_k(_seed_eligible_scores(graph, mlp.score_nodes(features)), budget),
-        "message_passing_gnn": _top_k(
-            _seed_eligible_scores(graph, message_passing.score_nodes(features, neighbors)),
-            budget,
+        "mlp": _seed_eligible_scores(graph, mlp.score_nodes(features)),
+        "message_passing_gnn": _seed_eligible_scores(
+            graph,
+            message_passing.score_nodes(features, neighbors),
         ),
-        "pairwise_ranker": _top_k(
-            _seed_eligible_scores(graph, ranker.score_nodes(features)),
-            budget,
-        ),
-        "marginal_gain_regressor": _top_k(
-            _seed_eligible_scores(graph, regressor.score_nodes(features)),
-            budget,
-        ),
+        "pairwise_ranker": _seed_eligible_scores(graph, ranker.score_nodes(features)),
+        "marginal_gain_regressor": _seed_eligible_scores(graph, regressor.score_nodes(features)),
     }
+
+
+def _evaluate_learned_scorer_policies(
+    *,
+    workflow_name: str,
+    graph: AgentGraph,
+    budget: int,
+    trials: int,
+    epochs: int,
+    learning_rate: float,
+    max_steps: int,
+) -> list[dict[str, Any]]:
+    rows = []
+    for policy_name, node_scores in _learned_node_score_maps(
+        workflow_name=workflow_name,
+        budget=budget,
+        trials=trials,
+        epochs=epochs,
+        learning_rate=learning_rate,
+    ).items():
+        env = AgentRoutingEnv(graph, budget=budget, trials=trials)
+        policy = NodeScorerRoutingPolicy(node_scores)
+        state, actions, reward_trace = _rollout_routing_policy(
+            env,
+            policy.act,
+            max_steps=max_steps,
+        )
+        rows.append(
+            _evaluate_rl_state(
+                workflow_name,
+                graph,
+                f"{policy_name}_routing_policy",
+                state,
+                actions,
+                reward_trace,
+            )
+        )
+    return rows
 
 
 def _evaluate_rl_policies(

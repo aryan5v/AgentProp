@@ -14,6 +14,9 @@ AgentProp includes a small sequential routing environment and four policies:
   the dependency-light bridge between the ML feature stack and RL routing; it is
   transferable across workflow graphs but is still a linear policy, not a neural
   GNN policy.
+- `NodeScorerRoutingPolicy`: wraps learned ML/GNN-style node scores as a
+  sequential routing policy inside `AgentRoutingEnv`, making learned scorers
+  auditable with the same rollout traces and reward terms as RL policies.
 
 Run the trainable policy:
 
@@ -86,6 +89,10 @@ The comparison report now includes both seed-only policies (`q_learning`,
 trace, reward trace, activated verifiers, pruned edges, tool calls, and summary
 requests so RL decisions can be audited against greedy and GNN-style routing
 baselines.
+
+It also includes learned-scorer routing rows such as
+`message_passing_gnn_routing_policy`, which take supervised ML/GNN-style node
+scores and roll them through `AgentRoutingEnv` as sequential policy actions.
 
 Expanded-action rewards keep the base coverage/cost/time score and add small
 interpretable terms for verifier risk coverage, safe pruning savings, risky

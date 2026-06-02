@@ -2,7 +2,28 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from dataclasses import dataclass
+
 from agentprop.rl.env import AgentRoutingEnv, RoutingAction, RoutingState
+
+
+@dataclass(slots=True)
+class NodeScorerRoutingPolicy:
+    """Route by selecting the highest-scoring available node from a learned scorer."""
+
+    node_scores: Mapping[str, float]
+
+    def act(self, env: AgentRoutingEnv) -> str:
+        """Return the best available seed action according to node scores."""
+
+        actions = env.available_seed_actions()
+        if not actions:
+            return RoutingAction.STOP.value
+        return max(
+            sorted(actions),
+            key=lambda node_id: float(self.node_scores.get(node_id, 0.0)),
+        )
 
 
 class GreedyCoveragePolicy:
