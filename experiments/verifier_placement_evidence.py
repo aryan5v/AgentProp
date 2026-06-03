@@ -7,6 +7,7 @@ import networkx as nx
 
 from agentprop.algorithms import (
     betweenness_verifier_placement,
+    fault_tolerant_resolving_coverage,
     metric_dimension_verifier_placement,
     resolving_coverage,
     risk_aware_verifier_placement,
@@ -60,6 +61,31 @@ for method in METHODS:
         n = sum(1 for c in cov[method][k] if c >= 1.0 - 1e-9)
         row += f"  {n:4d}"
     print(row)
+
+print()
+print("=" * 78)
+print("TABLE V3 — fault-tolerant coverage: worst-case after ANY single verifier")
+print("  fails. Compares plain metric-dim placement vs the fault-tolerant variant")
+print("  at a fixed budget k=5 (mean over 14 workflows).")
+print("=" * 78)
+ft_plain = []
+ft_ft = []
+n_robust_plain = 0
+n_robust_ft = 0
+for _name, fn in WORKFLOW_TEMPLATES.items():
+    g = fn()
+    plain_set = metric_dimension_verifier_placement(g, 5)
+    ft_set = metric_dimension_verifier_placement(g, 5, fault_tolerant=True)
+    fp = fault_tolerant_resolving_coverage(g, plain_set)
+    ff = fault_tolerant_resolving_coverage(g, ft_set)
+    ft_plain.append(fp)
+    ft_ft.append(ff)
+    n_robust_plain += 1 if fp >= 1.0 - 1e-9 else 0
+    n_robust_ft += 1 if ff >= 1.0 - 1e-9 else 0
+print(f"  {'metric_dim (plain)':22s} ft_coverage={st.mean(ft_plain):.3f}  "
+      f"fully-robust workflows={n_robust_plain}/14")
+print(f"  {'metric_dim_ft':22s} ft_coverage={st.mean(ft_ft):.3f}  "
+      f"fully-robust workflows={n_robust_ft}/14")
 
 print()
 print("=" * 78)

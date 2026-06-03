@@ -197,6 +197,28 @@ def resolving_coverage(graph: AgentGraph, verifiers: list[str]) -> float:
     return resolved / max(total, 1)
 
 
+def fault_tolerant_resolving_coverage(graph: AgentGraph, verifiers: list[str]) -> float:
+    """Worst-case resolving coverage after any single verifier fails.
+
+    Measures the value a fault-tolerant placement adds over a plain resolving
+    set: the minimum, over every single-verifier removal, of the coverage that
+    the remaining verifiers still provide. Returns 1.0 only when the set stays a
+    full resolving set under any single failure (fault-tolerant metric
+    dimension, Geneson 2026). A single verifier scores 0.0 because removing it
+    leaves nothing to resolve with.
+    """
+
+    verifier_set = [v for v in verifiers if v in {n.id for n in graph.nodes()}]
+    if not verifier_set:
+        return 0.0
+    if len(verifier_set) == 1:
+        return resolving_coverage(graph, [])
+    return min(
+        resolving_coverage(graph, verifier_set[:i] + verifier_set[i + 1 :])
+        for i in range(len(verifier_set))
+    )
+
+
 def _extend_to_resolving(
     verifiers: list[str],
     node_ids: list[str],

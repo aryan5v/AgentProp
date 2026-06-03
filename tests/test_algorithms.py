@@ -12,6 +12,7 @@ from agentprop.algorithms import (
     error_propagation_centrality,
     error_propagation_verifier_placement,
     failure_sensitive_nodes,
+    fault_tolerant_resolving_coverage,
     greedy_correction_coverage_placement,
     greedy_seed_selection,
     k_core_seed_selection,
@@ -200,3 +201,19 @@ def test_fault_tolerant_metric_dimension_survives_single_deletion() -> None:
     for v in verifiers:
         remaining = [x for x in verifiers if x != v]
         assert resolving_coverage(graph, remaining) == 1.0
+
+
+def test_fault_tolerant_resolving_coverage_distinguishes_placements() -> None:
+    from agentprop.workflows import chain_workflow
+
+    graph = chain_workflow()
+
+    plain = metric_dimension_verifier_placement(graph, 5)
+    ft = metric_dimension_verifier_placement(graph, 5, fault_tolerant=True)
+
+    # A single verifier has no redundancy: worst-case removal coverage is 0.
+    assert fault_tolerant_resolving_coverage(graph, [plain[0]]) == 0.0
+    # The fault-tolerant set retains full coverage under any single failure.
+    assert fault_tolerant_resolving_coverage(graph, ft) == 1.0
+    # The plain resolving set (metric dimension 1 on a path) is not fault tolerant.
+    assert fault_tolerant_resolving_coverage(graph, plain) < 1.0
