@@ -9,7 +9,7 @@ from pathlib import Path
 
 from agentprop.core import AgentGraph
 from agentprop.evaluation import run_benchmark
-from agentprop.workflows import WORKFLOW_TEMPLATES
+from agentprop.workflows import WORKFLOW_TEMPLATES, inject_quality_decay
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -52,12 +52,21 @@ def main(argv: list[str] | None = None) -> int:
         ],
     )
     parser.add_argument("--out-dir", type=Path, default=Path("results/benchmark"))
+    parser.add_argument(
+        "--decay",
+        action="store_true",
+        help="Inject heterogeneous edge relevance/reliability so the quality "
+        "cascade is non-degenerate.",
+    )
+    parser.add_argument("--decay-seed", type=int, default=0)
     args = parser.parse_args(argv)
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
     rows = []
     for workflow in args.workflows:
         workflow_name, graph = _load_workflow(workflow)
+        if args.decay:
+            graph = inject_quality_decay(graph, seed=args.decay_seed)
         rows.extend(
             run_benchmark(
                 graph,

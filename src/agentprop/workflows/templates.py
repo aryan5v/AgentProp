@@ -328,6 +328,43 @@ def layered_pipeline_workflow() -> AgentGraph:
     return graph
 
 
+def inject_quality_decay(
+    graph: AgentGraph,
+    *,
+    seed: int = 0,
+    relevance_range: tuple[float, float] = (0.6, 1.0),
+    reliability_range: tuple[float, float] = (0.75, 0.97),
+) -> AgentGraph:
+    """Return a copy of ``graph`` with heterogeneous edge relevance/reliability.
+
+    Most built-in templates set ``relevance = reliability = 1.0`` on nearly
+    every edge, which makes the quality cascade degenerate (output quality stays
+    at 1.0 regardless of routing). This transform assigns each edge a
+    deterministic, reproducible relevance and reliability sampled from the given
+    ranges, keyed by ``(seed, source, target)`` so the same workflow always maps
+    to the same decayed graph. The original graph is left unmodified.
+    """
+
+    decayed = AgentGraph.from_dict(graph.to_dict())
+    for edge in graph.edges():
+        rng = random.Random(f"{seed}:{edge.source}->{edge.target}")
+        relevance = round(rng.uniform(*relevance_range), 3)
+        reliability = round(rng.uniform(*reliability_range), 3)
+        decayed.add_edge(
+            edge.source,
+            edge.target,
+            message_cost=edge.message_cost,
+            latency=edge.latency,
+            relevance=relevance,
+            reliability=reliability,
+            activation_probability=edge.activation_probability,
+            dependency_strength=edge.dependency_strength,
+            weight=edge.weight,
+            **edge.metadata,
+        )
+    return decayed
+
+
 def _synthetic_node_metrics(index: int) -> dict[str, Any]:
     return {
         "token_cost": 650.0 + 75.0 * (index % 5),

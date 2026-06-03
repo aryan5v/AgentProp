@@ -110,6 +110,35 @@ def test_quality_cascade_drives_context_allocation() -> None:
         assert abs(ratios[node.id] - expected) < 1e-9
 
 
+def test_inject_quality_decay_makes_cascade_non_degenerate() -> None:
+    from agentprop.workflows import chain_workflow, inject_quality_decay
+
+    base = chain_workflow()
+    decayed = inject_quality_decay(base, seed=0)
+
+    # Original graph is untouched.
+    assert all(e.relevance == 1.0 for e in base.edges())
+    # Decayed edges carry heterogeneous, bounded relevance/reliability.
+    assert any(e.relevance < 1.0 for e in decayed.edges())
+    assert all(0.6 <= e.relevance <= 1.0 for e in decayed.edges())
+    assert all(0.75 <= e.reliability <= 0.97 for e in decayed.edges())
+
+    result = QualityCascade().simulate(decayed, [decayed.nodes()[0].id])
+    assert result.mean_output_quality < 1.0
+
+
+def test_inject_quality_decay_is_deterministic() -> None:
+    from agentprop.workflows import chain_workflow, inject_quality_decay
+
+    g = chain_workflow()
+    a = inject_quality_decay(g, seed=0)
+    b = inject_quality_decay(g, seed=0)
+
+    assert [(e.relevance, e.reliability) for e in a.edges()] == [
+        (e.relevance, e.reliability) for e in b.edges()
+    ]
+
+
 def test_quality_cascade_zero_floor_does_not_raise() -> None:
     from agentprop.workflows import chain_workflow
 
