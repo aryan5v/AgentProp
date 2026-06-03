@@ -118,6 +118,36 @@ def test_category_bandit_updates_routing_policy_by_task_type() -> None:
     assert policy.values("edge-case-heavy")["quality-aware-greedy"] > 0
 
 
+def test_category_bandit_never_prefers_cheaper_failure() -> None:
+    # A cheap failure must not out-rank a more expensive pass.
+    policy = CategoryBanditRoutingPolicy(epsilon=0.0)
+    policy.update("api-design", "quality-aware-greedy", passed=True, token_savings=0.0)
+    policy.update("api-design", "cost-aware-greedy", passed=False, token_savings=0.9)
+
+    assert policy.exploit("api-design") == "quality-aware-greedy"
+    assert policy.values("api-design")["cost-aware-greedy"] < 0
+
+
+def test_category_bandit_cold_start_uses_safe_default() -> None:
+    policy = CategoryBanditRoutingPolicy(
+        arms=("broadcast", "quality-aware-greedy", "cost-aware-greedy"),
+        default_arm="quality-aware-greedy",
+        epsilon=0.0,
+    )
+    # An unseen eval category falls back to the strong default, not an arbitrary arm.
+    assert policy.exploit("never-seen-category") == "quality-aware-greedy"
+
+
+def test_category_bandit_exploit_is_deterministic_under_exploration() -> None:
+    # With pure exploration configured, exploit() must still be greedy (no randomness),
+    # so scoring a held-out task can never regress on a random pick.
+    policy = CategoryBanditRoutingPolicy(epsilon=1.0, seed=1)
+    policy.update("infra", "quality-aware-greedy", passed=True, token_savings=0.2)
+    policy.update("infra", "broadcast", passed=False, token_savings=0.0)
+
+    assert all(policy.exploit("infra") == "quality-aware-greedy" for _ in range(20))
+
+
 def test_agent_routing_env_supports_expanded_control_actions() -> None:
     graph = planner_coder_tester_reviewer()
     env = AgentRoutingEnv(graph, budget=2, trials=3)

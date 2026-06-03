@@ -63,6 +63,13 @@ class ControlDecision:
     action: ControlAction
     reason: str
     strategy: str | None = None
+    defer_command: bool = True
+    """For a FORCE_VERIFY action, whether to skip the agent's proposed command.
+
+    True when the agent believes it is finished (an unconfirmed pass or a written
+    final answer): the proposed command is moot, so we verify instead. False for a
+    proactive/staleness check: the proposed command is still useful work, so the
+    loop should execute it and verify alongside rather than discard it."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -176,10 +183,16 @@ class StoppingController:
             return ControlDecision("FINALIZE", "wall-clock budget reached")
         if features.repeated_error_count >= self.config.repeated_error_threshold:
             return ControlDecision("SWITCH_STRATEGY", "same error repeated")
+        # Proactive checks below run *alongside* the agent's command (defer_command
+        # =False) so a routine verification never discards useful in-flight work.
         if features.steps_since_verifier >= self.config.max_steps_without_verifier:
-            return ControlDecision("FORCE_VERIFY", "verification is stale")
+            return ControlDecision(
+                "FORCE_VERIFY", "verification is stale", defer_command=False
+            )
         if features.steps_since_progress >= self.config.max_steps_without_progress:
-            return ControlDecision("FORCE_VERIFY", "progress is stale")
+            return ControlDecision(
+                "FORCE_VERIFY", "progress is stale", defer_command=False
+            )
         return ControlDecision("CONTINUE", "within execution budget")
 
 

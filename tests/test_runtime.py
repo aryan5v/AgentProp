@@ -268,6 +268,44 @@ def test_self_reported_pass_without_verifier_is_not_recorded_as_passed() -> None
     assert result.passed is None
 
 
+def test_forced_verification_resets_staleness_and_avoids_verify_storm() -> None:
+    """A forced verify must reset the staleness counter even if the harness's
+    verifier result does not set verifier_run, so the controller does not force a
+    verification on every subsequent step."""
+
+    def proposer(request: TerminalTurnRequest) -> TerminalCommandProposal:
+        return TerminalCommandProposal(command=f"python work.py # step {request.step}")
+
+    def executor(
+        request: TerminalTurnRequest, proposal: TerminalCommandProposal
+    ) -> TerminalCommandResult:
+        return TerminalCommandResult(
+            event=ExecutionEvent(
+                step=request.step, command=proposal.command, progress_made=True
+            )
+        )
+
+    def verifier(
+        request: TerminalTurnRequest,
+        blocked_proposal: TerminalCommandProposal | None = None,
+    ) -> TerminalCommandResult:
+        # The harness forgets to mark this as a verifier run; the loop must still
+        # treat it as one so the staleness counter resets.
+        return TerminalCommandResult(
+            event=ExecutionEvent(step=request.step, command="check", verifier_run=False)
+        )
+
+    loop = ControlledTerminalLoop(
+        controller=StoppingController(StoppingControllerConfig(max_steps_without_verifier=2)),
+        config=TerminalLoopConfig(max_steps=12),
+    )
+    result = loop.run(task="t", proposer=proposer, executor=executor, verifier=verifier)
+
+    forced = [d for d in result.decisions if d.action == "FORCE_VERIFY"]
+    # Without the reset guarantee this would force a verify on nearly every step.
+    assert len(forced) <= len(result.decisions) // 2
+
+
 def test_runtime_reward_logger_updates_bandit_from_real_outcome(tmp_path) -> None:
     log_path = tmp_path / "rewards.jsonl"
     logger = RuntimeRewardLogger(
@@ -538,13 +576,15 @@ def test_controlled_terminal_loop_executes_allowed_command() -> None:
     assert result.passed is True
 
 
-def test_controlled_terminal_loop_force_verify_blocks_pending_command() -> None:
+def test_controlled_terminal_loop_proactive_verify_runs_command_alongside() -> None:
+    """A staleness verify keeps the agent's in-flight work instead of discarding it."""
+
     loop = ControlledTerminalLoop(
         controller=StoppingController(StoppingControllerConfig(max_steps_without_verifier=1)),
         config=TerminalLoopConfig(max_steps=2),
     )
     executed: list[str] = []
-    verified_blocked: list[str] = []
+    verified: list[str] = []
 
     def proposer(request: TerminalTurnRequest) -> TerminalCommandProposal:
         return TerminalCommandProposal(command=f"python solve.py #{request.step}")
@@ -563,7 +603,7 @@ def test_controlled_terminal_loop_force_verify_blocks_pending_command() -> None:
         blocked_proposal: TerminalCommandProposal | None = None,
     ) -> TerminalCommandResult:
         assert blocked_proposal is not None
-        verified_blocked.append(blocked_proposal.command)
+        verified.append(blocked_proposal.command)
         return TerminalCommandResult(
             event=ExecutionEvent(
                 step=request.step,
@@ -577,12 +617,69 @@ def test_controlled_terminal_loop_force_verify_blocks_pending_command() -> None:
 
     result = loop.run(task="demo", proposer=proposer, executor=executor, verifier=verifier)
 
-    assert executed == ["python solve.py #1"]
-    assert verified_blocked == ["python solve.py #2"]
+    # The proactive (staleness) verify is non-destructive: the step-2 command runs
+    # and is then verified alongside, rather than being thrown away.
+    assert executed == ["python solve.py #1", "python solve.py #2"]
+    assert verified == ["python solve.py #2"]
     assert [decision.action for decision in result.decisions] == [
         "CONTINUE",
         "FORCE_VERIFY",
     ]
+    assert result.decisions[-1].defer_command is False
+    assert result.passed is True
+
+
+def test_controlled_terminal_loop_deferred_verify_blocks_finalizing_command() -> None:
+    """When the agent claims completion, the verify is deferred (command blocked)."""
+
+    loop = ControlledTerminalLoop(
+        controller=StoppingController(StoppingControllerConfig()),
+        config=TerminalLoopConfig(max_steps=3),
+    )
+    executed: list[str] = []
+    verified: list[str] = []
+
+    def proposer(request: TerminalTurnRequest) -> TerminalCommandProposal:
+        return TerminalCommandProposal(command=f"echo done #{request.step}")
+
+    def executor(
+        request: TerminalTurnRequest,
+        proposal: TerminalCommandProposal,
+    ) -> TerminalCommandResult:
+        executed.append(proposal.command)
+        # The agent self-reports a pass (untrusted) on its first turn.
+        return TerminalCommandResult(
+            event=ExecutionEvent(
+                step=request.step,
+                command=proposal.command,
+                verifier_run=True,
+                verifier_passed=True,
+                trusted=False,
+            ),
+        )
+
+    def verifier(
+        request: TerminalTurnRequest,
+        blocked_proposal: TerminalCommandProposal | None = None,
+    ) -> TerminalCommandResult:
+        verified.append(blocked_proposal.command if blocked_proposal else "")
+        return TerminalCommandResult(
+            event=ExecutionEvent(
+                step=request.step,
+                command="pytest -q",
+                verifier_run=True,
+                verifier_passed=True,
+                trusted=True,
+            ),
+        )
+
+    result = loop.run(task="demo", proposer=proposer, executor=executor, verifier=verifier)
+
+    # Step 1 executes and self-reports a pass; step 2 defers (blocks) the command
+    # and verifies independently — so only the first command ever runs.
+    assert executed == ["echo done #1"]
+    force_verify = next(d for d in result.decisions if d.action == "FORCE_VERIFY")
+    assert force_verify.defer_command is True
     assert result.passed is True
 
 
