@@ -34,11 +34,19 @@ AgentProp is a graph optimization framework for multi-agent LLM workflows.
 ```bash
 agentprop optimize benchmarks/workflows/planner_coder_tester_reviewer.json --budget 2
 agentprop simulate chain --seeds node_0 --model zero-forcing
+agentprop simulate chain --seeds node_0 --model quality-cascade
 agentprop prune planner_coder_tester_reviewer --target-token-reduction 0.3
 agentprop benchmark planner_coder_tester_reviewer --budget 2 --trials 50
 agentprop report planner_coder_tester_reviewer --out reports/demo.html --format html
 agentprop agent-instructions planner_coder_tester_reviewer --target codex --out reports/codex_agent_brief.md
 agentprop viz planner_coder_tester_reviewer --out reports/workflow.dot
+```
+
+Reproduce the verifier-placement and seeding scaling studies:
+
+```bash
+python experiments/verifier_placement_evidence.py
+python experiments/rzf_scaling_study.py
 ```
 
 ## What AgentProp Proves

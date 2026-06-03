@@ -132,6 +132,13 @@ result = controller.run(
 )
 ```
 
+The terminal loop (`ControlledTerminalLoop`) gates every proposed command through
+the same controller. Mark self-reported evaluation results with `trusted=False`
+on `ExecutionEvent` so the controller issues a `FORCE_VERIFY` action instead of
+finalizing — preventing false passes where an agent trusts its own miscalibrated
+evaluation script. An independent verifier result (`trusted=True`) advances the
+loop to `FINALIZE`.
+
 Terminal-Bench-specific launchers, model keys, and machine-local run state should
 live in private benchmark operations repos until the evidence is ready to
 publish. The public contract is the runtime controller API and the saved trace
@@ -191,10 +198,38 @@ Run the benchmark table and SVG plot:
 
 ```bash
 PYTHONPATH=src:. python experiments/run_benchmark.py \
-  --workflows planner_coder_tester_reviewer,chain,tree \
+  --workflows planner_coder_tester_reviewer chain tree \
+  --algorithms rzf-centrality greedy betweenness pagerank random \
+  --models quality-cascade independent-cascade \
   --budget 2 \
-  --trials 20 \
+  --trials 50 \
   --out-dir results/benchmark
+```
+
+Add `--decay` to inject heterogeneous edge reliability before benchmarking,
+which produces meaningful `mean_output_quality` values for the quality-cascade
+model:
+
+```bash
+PYTHONPATH=src:. python experiments/run_benchmark.py \
+  --workflows planner_coder_tester_reviewer chain \
+  --algorithms rzf-centrality greedy betweenness \
+  --models quality-cascade independent-cascade \
+  --budget 2 --trials 50 --decay --decay-seed 0 \
+  --out-dir results/benchmark_decay
+```
+
+Run the verifier-placement evidence script (resolving coverage vs budget
+across all workflow templates):
+
+```bash
+PYTHONPATH=src:. python experiments/verifier_placement_evidence.py
+```
+
+Run the RZF seeding scaling study on larger workflow graphs:
+
+```bash
+PYTHONPATH=src:. python experiments/rzf_scaling_study.py
 ```
 
 Run a small ML/RL sweep:
@@ -264,6 +299,20 @@ and a saved artifact.
   quality-aware greedy.
 - Bottleneck, articulation, bridge, low-reliability, failure-sensitive, pruning,
   observability, and verifier-placement diagnostics.
+- Metric-dimension verifier placement with `resolving_coverage` and
+  `fault_tolerant_resolving_coverage` metrics; guarantees unique failure
+  localization when coverage reaches 1.0.
+- RZF process-based centrality (`rzf-centrality`) for seed selection: scores
+  nodes by propagation coverage divided by expected propagation time, grounded
+  in randomized zero-forcing dynamics.
+- Quality-cascade propagation model (`quality-cascade`): propagates a continuous
+  quality score in topological order, making context allocation proportional to
+  the quality of information reaching each node.
+- Coverage-constrained cost metrics (`constrained_savings`, `critical_coverage`,
+  `cost_per_coverage`) that credit savings only when all critical workflow nodes
+  are reached — preventing a "reach-nothing, save-everything" artefact.
+- `inject_quality_decay` workflow transform for controlled benchmarking with
+  heterogeneous edge reliability.
 - Role-critical routing with context-sensitivity scores, graded context
   allocation, calibrated compression ratios, risk annotations, and
   verifier-placement coupling.
