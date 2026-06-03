@@ -236,6 +236,38 @@ def test_force_verify_then_finalize_recovers_false_local_pass() -> None:
     assert result.passed is True
 
 
+def test_self_reported_pass_without_verifier_is_not_recorded_as_passed() -> None:
+    """With no independent verifier, an unconfirmed pass must not finalize as passed."""
+
+    def proposer(request: TerminalTurnRequest) -> TerminalCommandProposal:
+        return TerminalCommandProposal(command=f"python eval.py # step {request.step}")
+
+    def executor(
+        request: TerminalTurnRequest, proposal: TerminalCommandProposal
+    ) -> TerminalCommandResult:
+        return TerminalCommandResult(
+            event=ExecutionEvent(
+                step=request.step,
+                command=proposal.command,
+                verifier_run=True,
+                verifier_passed=True,
+                trusted=False,
+            )
+        )
+
+    loop = ControlledTerminalLoop(
+        controller=StoppingController(StoppingControllerConfig(max_steps_without_verifier=4)),
+        config=TerminalLoopConfig(max_steps=4),
+    )
+    # No verifier supplied: the controller keeps requesting independent verification,
+    # and the unconfirmed self-report is never credited as a real pass.
+    result = loop.run(task="t", proposer=proposer, executor=executor)
+
+    assert result.features.unconfirmed_pass is True
+    assert result.features.evaluator_passed is False
+    assert result.passed is not True
+
+
 def test_runtime_reward_logger_updates_bandit_from_real_outcome(tmp_path) -> None:
     log_path = tmp_path / "rewards.jsonl"
     logger = RuntimeRewardLogger(

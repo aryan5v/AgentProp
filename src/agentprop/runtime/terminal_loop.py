@@ -186,7 +186,7 @@ class ControlledTerminalLoop:
             self._observe_result(tracker, result, stdout_parts, stderr_parts)
 
         features = self._features(tracker)
-        passed = True if features.evaluator_passed else _last_verifier_result(tracker.events)
+        passed = self._resolve_passed(features, tracker.events)
         reward_row = self._record_reward(
             strategy=strategy,
             passed=passed,
@@ -274,6 +274,24 @@ class ControlledTerminalLoop:
             wall_time_budget_s=self.controller.config.wall_time_budget_s,
         )
 
+    def _resolve_passed(
+        self,
+        features: ExecutionStateFeatures,
+        events: list[ExecutionEvent],
+    ) -> bool | None:
+        """Decide the final outcome without trusting an unconfirmed pass.
+
+        A trusted/independent verifier pass finalizes as a pass. When
+        ``require_independent_verification`` is on, the fallback ignores
+        self-reported (untrusted) results so a false-local-pass is never
+        recorded as a success; otherwise it uses the last verifier result.
+        """
+
+        if features.evaluator_passed:
+            return True
+        trusted_only = self.controller.config.require_independent_verification
+        return _last_verifier_result(events, trusted_only=trusted_only)
+
 
 def _tracker_from_events(events: tuple[ExecutionEvent, ...]) -> ExecutionStateTracker:
     tracker = ExecutionStateTracker()
@@ -282,10 +300,15 @@ def _tracker_from_events(events: tuple[ExecutionEvent, ...]) -> ExecutionStateTr
     return tracker
 
 
-def _last_verifier_result(events: list[ExecutionEvent]) -> bool | None:
+def _last_verifier_result(
+    events: list[ExecutionEvent], *, trusted_only: bool = False
+) -> bool | None:
     for event in reversed(events):
-        if event.verifier_passed is not None:
-            return event.verifier_passed
+        if event.verifier_passed is None:
+            continue
+        if trusted_only and not event.trusted:
+            continue
+        return event.verifier_passed
     return None
 
 
