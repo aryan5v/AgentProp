@@ -284,9 +284,17 @@ def _steps_since(events: list[ExecutionEvent], predicate: object) -> int:
     test = predicate  # keep mypy happy with callability narrowed below
     if not callable(test):
         raise TypeError("predicate must be callable")
+    # Count distinct steps, not events: a single step may record several events
+    # (for example an executed command verified alongside it), and a step counts as
+    # matched if any of its events satisfy the predicate.
+    matched_by_step: dict[int, bool] = {}
+    for event in events:
+        matched_by_step[event.step] = matched_by_step.get(event.step, False) or bool(
+            test(event)
+        )
     count = 0
-    for event in reversed(events):
-        if test(event):
+    for step in sorted(matched_by_step, reverse=True):
+        if matched_by_step[step]:
             return count
         count += 1
     return count

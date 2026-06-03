@@ -166,25 +166,34 @@ class ControlledTerminalLoop:
 
             if decision.action == "FINALIZE":
                 break
-            if decision.action == "FORCE_VERIFY" and verifier is not None:
-                # A proactive (non-deferred) check keeps the agent's proposed work:
-                # run it first, then verify alongside instead of discarding it.
-                if not decision.defer_command:
-                    work = executor(request, proposal)
-                    self._observe_result(tracker, work, stdout_parts, stderr_parts)
-                    # Refresh the request so the verifier sees the command it ran.
-                    request = replace(
-                        request,
-                        features=self._features(tracker),
-                        transcript=tuple(tracker.events),
-                    )
-                result = verifier(request, proposal)
-                # Guarantee the forced verification counts as a verifier run so the
-                # staleness counter resets and we do not trigger a verify-every-step
-                # storm if the harness forgets to set verifier_run on its result.
-                result = _as_verifier_run(result)
-                self._observe_result(tracker, result, stdout_parts, stderr_parts)
-                continue
+            if decision.action == "FORCE_VERIFY":
+                if verifier is None:
+                    # A deferred verify confirms a claimed completion; with no
+                    # verifier available the claim can never be cleared, so stop
+                    # rather than executing commands until the budget is exhausted.
+                    # A proactive (non-deferred) check just falls through to run the
+                    # proposed command this step.
+                    if decision.defer_command:
+                        break
+                else:
+                    # A proactive (non-deferred) check keeps the agent's proposed
+                    # work: run it first, then verify alongside instead of discarding.
+                    if not decision.defer_command:
+                        work = executor(request, proposal)
+                        self._observe_result(tracker, work, stdout_parts, stderr_parts)
+                        # Refresh the request so the verifier sees the command it ran.
+                        request = replace(
+                            request,
+                            features=self._features(tracker),
+                            transcript=tuple(tracker.events),
+                        )
+                    result = verifier(request, proposal)
+                    # Guarantee the forced verification counts as a verifier run so
+                    # the staleness counter resets and we do not trigger a verify-
+                    # every-step storm if the harness omits verifier_run on its result.
+                    result = _as_verifier_run(result)
+                    self._observe_result(tracker, result, stdout_parts, stderr_parts)
+                    continue
             if decision.action == "SWITCH_STRATEGY":
                 strategy = self._switch_strategy(
                     request=request,

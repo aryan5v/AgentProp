@@ -43,6 +43,8 @@ class CategoryBanditRoutingPolicy:
             raise ValueError("epsilon must be between 0 and 1")
         if self.default_arm is not None and self.default_arm not in self.arms:
             raise ValueError(f"default_arm must be one of arms: {self.default_arm!r}")
+        if self.cost_weight < 0:
+            raise ValueError("cost_weight must be non-negative")
         self._rng = random.Random(self.seed)
 
     def choose(self, category: str, *, explore: bool = True) -> str:

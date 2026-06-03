@@ -112,6 +112,25 @@ def test_execution_state_tracker_extracts_real_loop_features() -> None:
     assert features.last_exit_code == 1
 
 
+def test_staleness_counters_count_steps_not_events() -> None:
+    # Two events sharing one step (e.g. a command executed and verified alongside)
+    # count as a single step, and a step with any progress event is "progress made".
+    tracker = ExecutionStateTracker(
+        [
+            ExecutionEvent(step=1, command="a", progress_made=True),
+            ExecutionEvent(step=2, command="b", progress_made=True),  # executor
+            ExecutionEvent(step=2, command="verify", verifier_run=True),  # alongside
+        ]
+    )
+    features = tracker.features()
+
+    # Progress happened in step 2 despite the trailing (non-progress) verifier event.
+    assert features.steps_since_progress == 0
+    # The alongside verifier event resets verifier staleness for step 2.
+    assert features.steps_since_verifier == 0
+    assert features.step_count == 3
+
+
 def test_execution_state_tracker_exposes_normalized_budget_features() -> None:
     tracker = ExecutionStateTracker(
         [
@@ -239,12 +258,15 @@ def test_force_verify_then_finalize_recovers_false_local_pass() -> None:
 def test_self_reported_pass_without_verifier_is_not_recorded_as_passed() -> None:
     """With no independent verifier, an unconfirmed pass must not finalize as passed."""
 
+    executed: list[str] = []
+
     def proposer(request: TerminalTurnRequest) -> TerminalCommandProposal:
         return TerminalCommandProposal(command=f"python eval.py # step {request.step}")
 
     def executor(
         request: TerminalTurnRequest, proposal: TerminalCommandProposal
     ) -> TerminalCommandResult:
+        executed.append(proposal.command)
         return TerminalCommandResult(
             event=ExecutionEvent(
                 step=request.step,
@@ -257,15 +279,47 @@ def test_self_reported_pass_without_verifier_is_not_recorded_as_passed() -> None
 
     loop = ControlledTerminalLoop(
         controller=StoppingController(StoppingControllerConfig(max_steps_without_verifier=4)),
-        config=TerminalLoopConfig(max_steps=4),
+        config=TerminalLoopConfig(max_steps=16),
     )
-    # No verifier supplied: the controller keeps requesting independent verification,
-    # and the unconfirmed self-report is never credited as a real pass.
+    # No verifier supplied: the controller cannot confirm the self-reported pass, so
+    # it stops instead of executing commands until the step budget is exhausted, and
+    # the unconfirmed report is never credited as a real pass.
     result = loop.run(task="t", proposer=proposer, executor=executor)
 
     assert result.features.unconfirmed_pass is True
     assert result.features.evaluator_passed is False
     assert result.passed is None
+    assert result.decisions[-1].action == "FORCE_VERIFY"
+    # The loop stopped promptly rather than burning all 16 steps.
+    assert len(executed) == 1
+
+
+def test_proactive_verify_without_verifier_still_executes_command() -> None:
+    """A staleness check with no verifier available must not abort the run."""
+
+    executed: list[str] = []
+
+    def proposer(request: TerminalTurnRequest) -> TerminalCommandProposal:
+        return TerminalCommandProposal(command=f"make progress #{request.step}")
+
+    def executor(
+        request: TerminalTurnRequest, proposal: TerminalCommandProposal
+    ) -> TerminalCommandResult:
+        executed.append(proposal.command)
+        return TerminalCommandResult(
+            event=ExecutionEvent(step=request.step, command=proposal.command),
+        )
+
+    loop = ControlledTerminalLoop(
+        controller=StoppingController(StoppingControllerConfig(max_steps_without_verifier=1)),
+        config=TerminalLoopConfig(max_steps=4),
+    )
+    # Staleness keeps firing FORCE_VERIFY, but with no verifier the run continues to
+    # execute the agent's commands rather than stalling.
+    result = loop.run(task="t", proposer=proposer, executor=executor)
+
+    assert len(executed) == 4
+    assert "FORCE_VERIFY" in [d.action for d in result.decisions]
 
 
 def test_forced_verification_resets_staleness_and_avoids_verify_storm() -> None:

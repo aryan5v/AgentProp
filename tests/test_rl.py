@@ -141,6 +141,13 @@ def test_category_bandit_token_hungry_pass_still_beats_failure() -> None:
     assert policy.exploit("infra") == "quality-aware-greedy"
 
 
+def test_category_bandit_rejects_negative_cost_weight() -> None:
+    import pytest
+
+    with pytest.raises(ValueError, match="cost_weight"):
+        CategoryBanditRoutingPolicy(cost_weight=-0.1)
+
+
 def test_category_bandit_cold_start_uses_safe_default() -> None:
     policy = CategoryBanditRoutingPolicy(
         arms=("broadcast", "quality-aware-greedy", "cost-aware-greedy"),
