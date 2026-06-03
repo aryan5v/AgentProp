@@ -93,9 +93,7 @@ print("DEMO — Failure localization: resolving vs non-resolving verifier set")
 print("=" * 78)
 
 
-def signature(g, node, verifiers):
-    ug = g.to_networkx().to_undirected()
-    dist = dict(nx.all_pairs_shortest_path_length(ug))
+def signature(dist, node, verifiers):
     return tuple(dist.get(node, {}).get(v, -1) for v in verifiers)
 
 
@@ -106,8 +104,11 @@ nodes = [n.id for n in g.nodes()]
 resolving = metric_dimension_verifier_placement(g, 5)
 single = [resolving[0]]
 
+# Distances are static for g, so compute the shortest-path map once.
+dist = dict(nx.all_pairs_shortest_path_length(g.to_networkx().to_undirected()))
+
 for label, vset in [("RESOLVING set", resolving), ("SINGLE verifier (non-resolving)", single)]:
-    sigs = {n: signature(g, n, vset) for n in nodes}
+    sigs = {n: signature(dist, n, vset) for n in nodes}
     seen = defaultdict(list)
     for n, s in sigs.items():
         seen[s].append(n)

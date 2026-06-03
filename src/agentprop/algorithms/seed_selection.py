@@ -506,7 +506,11 @@ def rzf_centrality_seed_selection(
     scores: ScoreMap = {}
     for node_id in candidates:
         result = model.simulate(graph, [node_id], trials=trials)
-        propagation_time = result.expected_propagation_time or float(result.propagation_time)
+        propagation_time = (
+            result.expected_propagation_time
+            if result.expected_propagation_time is not None
+            else float(result.propagation_time)
+        )
         scores[node_id] = result.coverage / max(1.0, propagation_time)
 
     return sorted(candidates, key=lambda n: (-scores[n], n))[:k]
