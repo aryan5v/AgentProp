@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Protocol
 
 from agentprop.rl import CategoryBanditRoutingPolicy
@@ -99,6 +99,10 @@ class TerminalLoopConfig:
     category: str | None = None
     baseline_tokens: int | None = None
     quality_score: float | None = None
+    explore: bool = True
+    """Whether bandit strategy selection may explore. Set False when scoring
+    held-out tasks so a graded run exploits the learned policy instead of risking
+    a random exploration pick."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -163,7 +167,16 @@ class ControlledTerminalLoop:
             if decision.action == "FINALIZE":
                 break
             if decision.action == "FORCE_VERIFY" and verifier is not None:
+                # A proactive (non-deferred) check keeps the agent's proposed work:
+                # run it first, then verify alongside instead of discarding it.
+                if not decision.defer_command:
+                    work = executor(request, proposal)
+                    self._observe_result(tracker, work, stdout_parts, stderr_parts)
                 result = verifier(request, proposal)
+                # Guarantee the forced verification counts as a verifier run so the
+                # staleness counter resets and we do not trigger a verify-every-step
+                # storm if the harness forgets to set verifier_run on its result.
+                result = _as_verifier_run(result)
                 self._observe_result(tracker, result, stdout_parts, stderr_parts)
                 continue
             if decision.action == "SWITCH_STRATEGY":
@@ -207,7 +220,7 @@ class ControlledTerminalLoop:
 
     def _initial_strategy(self) -> str:
         if self.bandit is not None and self.config.category is not None:
-            return self.bandit.choose(self.config.category)
+            return self.bandit.choose(self.config.category, explore=self.config.explore)
         return self.config.default_strategy
 
     def _switch_strategy(
@@ -298,6 +311,25 @@ def _tracker_from_events(events: tuple[ExecutionEvent, ...]) -> ExecutionStateTr
     for event in events:
         tracker.observe(event)
     return tracker
+
+
+def _as_verifier_run(result: TerminalCommandResult) -> TerminalCommandResult:
+    """Ensure a forced-verification result is recorded as a verifier run.
+
+    Without this, a harness that returns a verifier result with ``verifier_run``
+    left False never resets ``steps_since_verifier``, so the controller forces a
+    verification on every subsequent step — the dominant cost regression observed
+    for the gated arm.
+    """
+
+    if result.event.verifier_run:
+        return result
+    return TerminalCommandResult(
+        event=replace(result.event, verifier_run=True),
+        stdout=result.stdout,
+        stderr=result.stderr,
+        metadata=result.metadata,
+    )
 
 
 def _last_verifier_result(
