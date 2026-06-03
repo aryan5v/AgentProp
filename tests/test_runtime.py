@@ -265,7 +265,7 @@ def test_self_reported_pass_without_verifier_is_not_recorded_as_passed() -> None
 
     assert result.features.unconfirmed_pass is True
     assert result.features.evaluator_passed is False
-    assert result.passed is not True
+    assert result.passed is None
 
 
 def test_runtime_reward_logger_updates_bandit_from_real_outcome(tmp_path) -> None:
