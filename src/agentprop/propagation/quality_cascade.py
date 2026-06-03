@@ -146,7 +146,9 @@ class QualityCascade:
         qualities: dict[str, float],
     ) -> float:
         predecessors = graph.predecessors(node_id)
-        active_preds = [p for p in predecessors if qualities.get(p, 0.0) >= self.quality_floor]
+        active_preds = [
+            p for p in predecessors if p in qualities and qualities[p] >= self.quality_floor
+        ]
         if not active_preds:
             return 0.0
 

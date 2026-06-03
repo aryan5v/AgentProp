@@ -110,6 +110,17 @@ def test_quality_cascade_drives_context_allocation() -> None:
         assert abs(ratios[node.id] - expected) < 1e-9
 
 
+def test_quality_cascade_zero_floor_does_not_raise() -> None:
+    from agentprop.workflows import chain_workflow
+
+    graph = chain_workflow()
+
+    result = QualityCascade(quality_floor=0.0).simulate(graph, [graph.nodes()[0].id])
+
+    assert isinstance(result, QualityCascadeResult)
+    assert result.node_qualities[graph.nodes()[0].id] == 1.0
+
+
 def test_quality_cascade_mean_output_quality_is_populated() -> None:
     from agentprop.workflows import chain_workflow
 

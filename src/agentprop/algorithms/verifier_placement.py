@@ -155,7 +155,7 @@ def metric_dimension_verifier_placement(
     _extend_to_resolving(verifiers, node_ids, distances, k)
 
     if fault_tolerant:
-        budget_remaining = graph.node_count
+        budget_remaining = k - len(verifiers)
         while budget_remaining > 0:
             if _is_fault_tolerant_resolving(verifiers, node_ids, distances):
                 break
@@ -219,16 +219,22 @@ def _best_resolving_candidate(
     node_ids: list[str],
     distances: dict[str, dict[str, int]],
 ) -> str | None:
+    unresolved_pairs = [
+        (u, v)
+        for i, u in enumerate(node_ids)
+        for v in node_ids[i + 1 :]
+        if not _is_resolved(u, v, verifiers, distances)
+    ]
+    if not unresolved_pairs:
+        return None
+
     best_node = None
     best_gain = -1
     for candidate in candidates:
-        trial = [*verifiers, candidate]
         gain = sum(
             1
-            for i, u in enumerate(node_ids)
-            for v in node_ids[i + 1 :]
-            if not _is_resolved(u, v, verifiers, distances)
-            and _is_resolved(u, v, trial, distances)
+            for u, v in unresolved_pairs
+            if distances.get(u, {}).get(candidate) != distances.get(v, {}).get(candidate)
         )
         if gain > best_gain or (gain == best_gain and (best_node is None or candidate < best_node)):
             best_gain = gain
