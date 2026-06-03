@@ -25,6 +25,14 @@ class CategoryBanditRoutingPolicy:
     arms: tuple[str, ...] = ("broadcast", "quality-aware-greedy", "cost-aware-greedy")
     epsilon: float = 0.10
     seed: int = 0
+    default_arm: str | None = None
+    """Safe fallback for a category with no observations yet.
+
+    With little training data, many eval categories are never seen. Falling back to
+    a known-strong default (rather than an arbitrary index tiebreak) stops the policy
+    from regressing baseline tasks it has learned nothing about. Defaults to the
+    first arm when unset."""
+    cost_weight: float = 0.10
     stats: dict[str, dict[str, BanditArmStats]] = field(default_factory=dict)
     _rng: random.Random = field(init=False, repr=False)
 
@@ -33,18 +41,33 @@ class CategoryBanditRoutingPolicy:
             raise ValueError("arms must not be empty")
         if not 0 <= self.epsilon <= 1:
             raise ValueError("epsilon must be between 0 and 1")
+        if self.default_arm is not None and self.default_arm not in self.arms:
+            raise ValueError(f"default_arm must be one of arms: {self.default_arm!r}")
+        if self.cost_weight < 0:
+            raise ValueError("cost_weight must be non-negative")
         self._rng = random.Random(self.seed)
 
-    def choose(self, category: str) -> str:
-        """Choose a routing policy for a task category."""
+    def choose(self, category: str, *, explore: bool = True) -> str:
+        """Choose a routing policy for a task category.
+
+        Set ``explore=False`` when scoring held-out tasks so a graded eval never
+        regresses on a random exploration pick."""
 
         category_stats = self._category_stats(category)
-        if self._rng.random() < self.epsilon:
+        if all(stats.count == 0 for stats in category_stats.values()):
+            # Cold start: no evidence for this category — use the safe default.
+            return self.default_arm or self.arms[0]
+        if explore and self._rng.random() < self.epsilon:
             return self._rng.choice(self.arms)
         return max(
             self.arms,
             key=lambda arm: (category_stats[arm].value, -self.arms.index(arm)),
         )
+
+    def exploit(self, category: str) -> str:
+        """Greedy, exploration-free selection for scoring/eval."""
+
+        return self.choose(category, explore=False)
 
     def update(
         self,
@@ -55,14 +78,20 @@ class CategoryBanditRoutingPolicy:
         token_savings: float,
         quality_score: float | None = None,
     ) -> None:
-        """Update an arm using real success and cost feedback."""
+        """Update an arm using real success and cost feedback.
+
+        Correctness dominates: a failure is penalized regardless of how cheap it
+        was, and the token-savings bonus is credited only when the task passed, so
+        the policy never trades a pass for a cheaper failure."""
 
         if arm not in self.arms:
             raise ValueError(f"unknown arm: {arm}")
         quality = quality_score if quality_score is not None else (1.0 if passed else 0.0)
-        reward = quality + 0.25 * token_savings
-        if not passed:
-            reward -= 1.0
+        # Bound the cost term so an extremely token-hungry *pass* can never score
+        # below a failure's reward (quality - 1.0): the savings bonus stays within
+        # [-cost_weight, +cost_weight].
+        bounded_savings = max(-1.0, min(1.0, token_savings))
+        reward = quality + self.cost_weight * bounded_savings if passed else quality - 1.0
         self._category_stats(category)[arm].update(reward)
 
     def values(self, category: str) -> dict[str, float]:
