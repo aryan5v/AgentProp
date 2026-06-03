@@ -9,7 +9,7 @@ from dataclasses import dataclass
 import networkx as nx
 
 from agentprop.core import AgentGraph, NodeType
-from agentprop.propagation import IndependentCascade, PropagationModel
+from agentprop.propagation import IndependentCascade, PropagationModel, RandomizedZeroForcing
 
 ScoreMap = dict[str, float]
 
@@ -476,3 +476,37 @@ def _pagerank_edge_weight(
     if reverse:
         return max(graph.edge(target, source).weight, 0.0)
     return max(graph.edge(source, target).weight, 0.0)
+
+
+def rzf_centrality_seed_selection(
+    graph: AgentGraph,
+    k: int,
+    *,
+    trials: int = 50,
+    seed: int = 0,
+) -> list[str]:
+    """Select seeds by Randomized Zero Forcing process-based centrality.
+
+    Scores each candidate by simulating RZF from that node alone and computing
+    coverage / expected_propagation_time — a dynamic centrality measure native
+    to the weighted directed propagation structure (Geneson 2026). This is
+    O(n * trials) vs O(k * n * trials) for greedy, making it ~k times cheaper.
+
+    For tree-structured graphs the expected propagation time has an exact
+    Markov-chain closed form (Geneson 2022); Monte Carlo is used here for
+    generality across all workflow topologies.
+    """
+
+    _validate_budget(k)
+    candidates = _seed_eligible_nodes(graph)
+    if not candidates:
+        return []
+
+    model = RandomizedZeroForcing(seed=seed)
+    scores: ScoreMap = {}
+    for node_id in candidates:
+        result = model.simulate(graph, [node_id], trials=trials)
+        propagation_time = result.expected_propagation_time or float(result.propagation_time)
+        scores[node_id] = result.coverage / max(1.0, propagation_time)
+
+    return sorted(candidates, key=lambda n: (-scores[n], n))[:k]

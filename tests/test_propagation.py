@@ -1,7 +1,10 @@
 from agentprop.core import AgentGraph
+from agentprop.evaluation import graded_context_allocations
 from agentprop.propagation import (
     IndependentCascade,
     LinearThreshold,
+    QualityCascade,
+    QualityCascadeResult,
     RandomizedZeroForcing,
     ZeroForcing,
 )
@@ -60,3 +63,58 @@ def test_zero_forcing_deterministically_forces_path() -> None:
     assert result.full_activation_probability == 1.0
     assert result.expected_propagation_time == 2.0
     assert result.coverage_by_round == [1 / 3, 2 / 3, 1.0]
+
+
+def test_quality_cascade_seeds_have_full_quality() -> None:
+    from agentprop.workflows import chain_workflow
+
+    graph = chain_workflow()
+    seed_id = graph.nodes()[0].id
+
+    result = QualityCascade().simulate(graph, [seed_id])
+
+    assert isinstance(result, QualityCascadeResult)
+    assert result.node_qualities[seed_id] == 1.0
+
+
+def test_quality_degrades_monotonically_along_chain() -> None:
+    from agentprop.workflows import chain_workflow
+
+    graph = chain_workflow()
+    nodes = graph.nodes()
+    seed_id = nodes[0].id
+
+    result = QualityCascade().simulate(graph, [seed_id])
+
+    qualities = [result.node_qualities.get(n.id, 0.0) for n in nodes]
+    for i in range(len(qualities) - 1):
+        assert qualities[i] >= qualities[i + 1]
+
+
+def test_quality_cascade_drives_context_allocation() -> None:
+    from agentprop.workflows import chain_workflow
+
+    graph = chain_workflow()
+    seed_id = graph.nodes()[0].id
+
+    result = QualityCascade().simulate(graph, [seed_id])
+    ratios = graded_context_allocations(graph, seeds=[seed_id], quality_result=result)
+
+    from agentprop.core import NodeType
+
+    assert ratios[seed_id] == 1.0
+    for node in graph.nodes()[1:]:
+        if node.type == NodeType.OUTPUT:
+            continue
+        expected = result.node_qualities.get(node.id, 0.0)
+        assert abs(ratios[node.id] - expected) < 1e-9
+
+
+def test_quality_cascade_mean_output_quality_is_populated() -> None:
+    from agentprop.workflows import chain_workflow
+
+    graph = chain_workflow()
+
+    result = QualityCascade().simulate(graph, [graph.nodes()[0].id])
+
+    assert 0.0 <= result.mean_output_quality <= 1.0

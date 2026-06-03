@@ -16,6 +16,7 @@ from agentprop.algorithms import (
     pure_greedy_seed_selection,
     quality_aware_greedy_seed_selection,
     random_seed_selection,
+    rzf_centrality_seed_selection,
 )
 from agentprop.core import AgentGraph
 from agentprop.evaluation.metrics import compare_routing
@@ -25,6 +26,8 @@ from agentprop.propagation import (
     LearnedPropagation,
     LinearThreshold,
     PropagationModel,
+    QualityCascade,
+    QualityCascadeResult,
     RandomizedZeroForcing,
     ZeroForcing,
 )
@@ -45,6 +48,7 @@ class BenchmarkRow:
     broadcast_cost: float
     optimized_cost: float
     estimated_savings: float
+    mean_output_quality: float = 0.0
 
     def to_dict(self) -> dict[str, object]:
         """Serialize row for JSON output."""
@@ -70,6 +74,11 @@ def run_benchmark(
             seeds = select_seeds(graph, algorithm, budget, model, trials)
             propagation = model.simulate(graph, seeds, trials=trials)
             report = compare_routing(graph, seeds, model.name, propagation)
+            mean_quality = (
+                propagation.mean_output_quality
+                if isinstance(propagation, QualityCascadeResult)
+                else 0.0
+            )
             rows.append(
                 BenchmarkRow(
                     workflow=workflow_name,
@@ -84,6 +93,7 @@ def run_benchmark(
                     broadcast_cost=report.broadcast_cost.total_cost,
                     optimized_cost=report.optimized_cost.total_cost,
                     estimated_savings=report.estimated_savings,
+                    mean_output_quality=mean_quality,
                 )
             )
     return rows
@@ -104,6 +114,8 @@ def make_propagation_model(name: str) -> PropagationModel:
         return ZeroForcing()
     if name in {"learned", "trace-learned"}:
         return LearnedPropagation(seed=0)
+    if name in {"quality-cascade", "qc"}:
+        return QualityCascade()
     raise ValueError(f"Unknown propagation model: {name}")
 
 
@@ -157,4 +169,6 @@ def select_seeds(
             propagation_model=model,
             trials=trials,
         )
+    if algorithm == "rzf-centrality":
+        return rzf_centrality_seed_selection(graph, budget, trials=trials, seed=0)
     raise ValueError(f"Unknown seed algorithm: {algorithm}")

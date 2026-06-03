@@ -9,6 +9,7 @@ from typing import Any
 
 from agentprop.core import AgentGraph, NodeType
 from agentprop.evaluation.metrics import CostSummary
+from agentprop.propagation.quality_cascade import QualityCascadeResult
 
 
 @dataclass(frozen=True, slots=True)
@@ -231,8 +232,16 @@ def graded_context_allocations(
     profile: ContextCompressionProfile | None = None,
     min_ratio: float = 0.25,
     max_non_seed_ratio: float = 0.85,
+    quality_result: QualityCascadeResult | None = None,
 ) -> dict[str, float]:
-    """Assign each node a context ratio instead of binary full-or-summary routing."""
+    """Assign each node a context ratio instead of binary full-or-summary routing.
+
+    When quality_result is provided (a QualityCascadeResult), uses the
+    propagated quality scores as context ratios directly. This replaces the
+    heuristic formula with theoretically principled scores: each node receives
+    context proportional to the expected quality of its inputs under the
+    quality cascade model.
+    """
 
     seed_set = set(seeds)
     active = {node.id for node in graph.nodes()} if activated_nodes is None else activated_nodes
@@ -246,6 +255,10 @@ def graded_context_allocations(
             allocations[node.id] = 1.0
         elif node.id not in active:
             allocations[node.id] = 0.0
+        elif quality_result is not None:
+            allocations[node.id] = max(
+                0.0, min(1.0, quality_result.node_qualities.get(node.id, 0.0))
+            )
         else:
             importance = _importance(node.importance_score, node.type, node.id, node.role)
             relevance = _incoming_relevance(graph, node.id)

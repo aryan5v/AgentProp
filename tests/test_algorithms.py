@@ -16,13 +16,16 @@ from agentprop.algorithms import (
     greedy_seed_selection,
     k_core_seed_selection,
     low_reliability_cut_points,
+    metric_dimension_verifier_placement,
     observability_coverage,
     observability_scores,
     pagerank_seed_selection,
     pagerank_verifier_placement,
     pure_greedy_seed_selection,
     quality_aware_greedy_seed_selection,
+    resolving_coverage,
     risk_aware_verifier_placement,
+    rzf_centrality_seed_selection,
     verifier_observability_placement,
 )
 from agentprop.propagation import IndependentCascade
@@ -150,3 +153,50 @@ def test_richer_verifier_placement_methods_return_budgeted_nodes() -> None:
     assert len(greedy_correction_coverage_placement(graph, 2)) == 2
     assert len(context_sensitive_verifier_placement(graph, {"coder": 0.25}, 2)) == 2
     assert set(error_propagation_centrality(graph)) == {node.id for node in graph.nodes()}
+
+
+def test_rzf_centrality_seed_selection_returns_unique_budgeted_nodes() -> None:
+    from agentprop.workflows import chain_workflow
+
+    graph = chain_workflow()
+
+    seeds = rzf_centrality_seed_selection(graph, 2, trials=10, seed=0)
+
+    assert len(seeds) == 2
+    assert len(set(seeds)) == 2
+    assert all(s in {node.id for node in graph.nodes()} for s in seeds)
+
+
+def test_rzf_centrality_score_is_process_based() -> None:
+    from agentprop.workflows import chain_workflow
+
+    graph = chain_workflow()
+    node_ids = {node.id for node in graph.nodes()}
+
+    seed = rzf_centrality_seed_selection(graph, 1, trials=20, seed=0)
+
+    assert len(seed) == 1
+    assert seed[0] in node_ids
+
+
+def test_metric_dimension_verifier_placement_resolves_all_pairs() -> None:
+    from agentprop.workflows import chain_workflow
+
+    graph = chain_workflow()
+
+    verifiers = metric_dimension_verifier_placement(graph, 1)
+
+    assert resolving_coverage(graph, verifiers) == 1.0
+
+
+def test_fault_tolerant_metric_dimension_survives_single_deletion() -> None:
+    from agentprop.workflows import chain_workflow
+
+    graph = chain_workflow()
+
+    verifiers = metric_dimension_verifier_placement(graph, 3, fault_tolerant=True)
+
+    assert len(verifiers) >= 2
+    for v in verifiers:
+        remaining = [x for x in verifiers if x != v]
+        assert resolving_coverage(graph, remaining) == 1.0
