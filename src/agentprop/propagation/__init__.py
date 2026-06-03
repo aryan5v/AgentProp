@@ -10,6 +10,7 @@ from agentprop.propagation.learned import (
     fit_learned_propagation_from_trace_dicts,
 )
 from agentprop.propagation.linear_threshold import LinearThreshold
+from agentprop.propagation.quality_cascade import QualityCascade, QualityCascadeResult
 from agentprop.propagation.randomized_zero_forcing import RandomizedZeroForcing
 from agentprop.propagation.zero_forcing import ZeroForcing
 
@@ -21,6 +22,8 @@ __all__ = [
     "LinearThreshold",
     "PropagationModel",
     "PropagationResult",
+    "QualityCascade",
+    "QualityCascadeResult",
     "RandomizedZeroForcing",
     "ZeroForcing",
     "fit_learned_propagation_from_graph",

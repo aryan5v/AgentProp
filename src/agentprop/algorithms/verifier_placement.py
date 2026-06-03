@@ -126,6 +126,189 @@ def context_sensitive_verifier_placement(
     return _rank_scores(scores, k)
 
 
+def metric_dimension_verifier_placement(
+    graph: AgentGraph,
+    k: int,
+    *,
+    fault_tolerant: bool = False,
+) -> list[str]:
+    """Place verifiers as a resolving set grounded in metric dimension theory.
+
+    A resolving set S guarantees that every distinct failure mode (node pair)
+    has a unique distance-vector signature to S, making any failure uniquely
+    localizable. When fault_tolerant=True, the set remains resolving even if
+    any single verifier fails (fault-tolerant metric dimension, Geneson 2026).
+
+    Uses undirected shortest-path distances for reachability across all node
+    pairs, matching the standard metric dimension definition.
+    """
+
+    _validate_k(k)
+    if graph.node_count == 0:
+        return []
+
+    nx_ug = graph.to_networkx().to_undirected()
+    node_ids = sorted(str(n) for n in nx_ug.nodes())
+    distances = dict(nx.all_pairs_shortest_path_length(nx_ug))
+
+    verifiers: list[str] = []
+    _extend_to_resolving(verifiers, node_ids, distances, k)
+
+    if fault_tolerant:
+        budget_remaining = k - len(verifiers)
+        while budget_remaining > 0:
+            if _is_fault_tolerant_resolving(verifiers, node_ids, distances):
+                break
+            candidates = [n for n in node_ids if n not in verifiers]
+            if not candidates:
+                break
+            best = _best_fault_tolerant_candidate(verifiers, candidates, node_ids, distances)
+            if best is None:
+                break
+            verifiers.append(best)
+            budget_remaining -= 1
+
+    return verifiers
+
+
+def resolving_coverage(graph: AgentGraph, verifiers: list[str]) -> float:
+    """Fraction of node pairs uniquely resolved by the verifier set.
+
+    A pair (u, v) is resolved if there exists a verifier w such that
+    d(u, w) != d(v, w). Returns 1.0 when the verifier set is a full
+    resolving set (metric dimension guarantee satisfied).
+    """
+
+    if graph.node_count < 2:
+        return 1.0
+    nx_ug = graph.to_networkx().to_undirected()
+    node_ids = sorted(str(n) for n in nx_ug.nodes())
+    distances = dict(nx.all_pairs_shortest_path_length(nx_ug))
+    verifier_set = [v for v in verifiers if v in nx_ug]
+
+    resolved = 0
+    total = 0
+    for i, u in enumerate(node_ids):
+        for v in node_ids[i + 1 :]:
+            total += 1
+            if _is_resolved(u, v, verifier_set, distances):
+                resolved += 1
+
+    return resolved / max(total, 1)
+
+
+def _extend_to_resolving(
+    verifiers: list[str],
+    node_ids: list[str],
+    distances: dict[str, dict[str, int]],
+    budget: int,
+) -> None:
+    while len(verifiers) < budget:
+        candidates = [n for n in node_ids if n not in verifiers]
+        if not candidates:
+            break
+        best = _best_resolving_candidate(verifiers, candidates, node_ids, distances)
+        if best is None:
+            break
+        verifiers.append(best)
+
+
+def _best_resolving_candidate(
+    verifiers: list[str],
+    candidates: list[str],
+    node_ids: list[str],
+    distances: dict[str, dict[str, int]],
+) -> str | None:
+    unresolved_pairs = [
+        (u, v)
+        for i, u in enumerate(node_ids)
+        for v in node_ids[i + 1 :]
+        if not _is_resolved(u, v, verifiers, distances)
+    ]
+    if not unresolved_pairs:
+        return None
+
+    best_node = None
+    best_gain = -1
+    for candidate in candidates:
+        gain = sum(
+            1
+            for u, v in unresolved_pairs
+            if distances.get(u, {}).get(candidate) != distances.get(v, {}).get(candidate)
+        )
+        if gain > best_gain or (gain == best_gain and (best_node is None or candidate < best_node)):
+            best_gain = gain
+            best_node = candidate
+    return best_node if best_gain > 0 else None
+
+
+def _is_resolved(
+    u: str,
+    v: str,
+    verifiers: list[str],
+    distances: dict[str, dict[str, int]],
+) -> bool:
+    for w in verifiers:
+        d_uw = distances.get(u, {}).get(w)
+        d_vw = distances.get(v, {}).get(w)
+        if d_uw != d_vw:
+            return True
+    return False
+
+
+def _best_fault_tolerant_candidate(
+    verifiers: list[str],
+    candidates: list[str],
+    node_ids: list[str],
+    distances: dict[str, dict[str, int]],
+) -> str | None:
+    """Find the candidate that backs up the most singly-covered node pairs.
+
+    A pair is "singly covered" if exactly one current verifier resolves it;
+    adding a candidate that resolves it provides fault-tolerant redundancy.
+    """
+    singly_covered: list[tuple[str, str]] = []
+    for j, u in enumerate(node_ids):
+        for v in node_ids[j + 1 :]:
+            coverage_count = sum(
+                1
+                for w in verifiers
+                if distances.get(u, {}).get(w) != distances.get(v, {}).get(w)
+            )
+            if coverage_count == 1:
+                singly_covered.append((u, v))
+
+    if not singly_covered:
+        return None
+
+    best_node = None
+    best_gain = -1
+    for candidate in candidates:
+        gain = sum(
+            1
+            for u, v in singly_covered
+            if distances.get(u, {}).get(candidate) != distances.get(v, {}).get(candidate)
+        )
+        if gain > best_gain or (gain == best_gain and (best_node is None or candidate < best_node)):
+            best_gain = gain
+            best_node = candidate
+    return best_node if best_gain > 0 else None
+
+
+def _is_fault_tolerant_resolving(
+    verifiers: list[str],
+    node_ids: list[str],
+    distances: dict[str, dict[str, int]],
+) -> bool:
+    for i, _removed in enumerate(verifiers):
+        remaining = verifiers[:i] + verifiers[i + 1 :]
+        for j, u in enumerate(node_ids):
+            for v in node_ids[j + 1 :]:
+                if not _is_resolved(u, v, remaining, distances):
+                    return False
+    return True
+
+
 def _observable_nodes(nx_graph: nx.DiGraph, node_id: str) -> set[str]:
     if node_id not in nx_graph:
         return set()

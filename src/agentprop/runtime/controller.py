@@ -8,12 +8,16 @@ from typing import Literal, Protocol
 
 import networkx as nx
 
-from agentprop.algorithms import greedy_seed_selection, quality_aware_greedy_seed_selection
+from agentprop.algorithms import (
+    greedy_seed_selection,
+    quality_aware_greedy_seed_selection,
+    rzf_centrality_seed_selection,
+)
 from agentprop.core import AgentGraph, AgentNode, NodeType
 from agentprop.evaluation import graded_context_allocations, routing_risks
 from agentprop.propagation import IndependentCascade
 
-SeedSelectorName = Literal["quality_aware", "greedy"]
+SeedSelectorName = Literal["quality_aware", "greedy", "rzf"]
 ActivationMode = Literal["all", "propagated"]
 
 
@@ -216,6 +220,13 @@ class AgentPropRuntimeController:
                 self.config.seed_budget,
                 propagation_model=model,
                 trials=self.config.trials,
+            )
+        if self.config.seed_selector == "rzf":
+            return rzf_centrality_seed_selection(
+                self.graph,
+                self.config.seed_budget,
+                trials=self.config.trials,
+                seed=self.config.seed,
             )
         return quality_aware_greedy_seed_selection(
             self.graph,
