@@ -85,7 +85,11 @@ class CategoryBanditRoutingPolicy:
         if arm not in self.arms:
             raise ValueError(f"unknown arm: {arm}")
         quality = quality_score if quality_score is not None else (1.0 if passed else 0.0)
-        reward = quality + self.cost_weight * token_savings if passed else quality - 1.0
+        # Bound the cost term so an extremely token-hungry *pass* can never score
+        # below a failure's reward (quality - 1.0): the savings bonus stays within
+        # [-cost_weight, +cost_weight].
+        bounded_savings = max(-1.0, min(1.0, token_savings))
+        reward = quality + self.cost_weight * bounded_savings if passed else quality - 1.0
         self._category_stats(category)[arm].update(reward)
 
     def values(self, category: str) -> dict[str, float]:

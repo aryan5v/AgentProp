@@ -585,6 +585,7 @@ def test_controlled_terminal_loop_proactive_verify_runs_command_alongside() -> N
     )
     executed: list[str] = []
     verified: list[str] = []
+    verifier_saw_commands: list[str | None] = []
 
     def proposer(request: TerminalTurnRequest) -> TerminalCommandProposal:
         return TerminalCommandProposal(command=f"python solve.py #{request.step}")
@@ -604,6 +605,10 @@ def test_controlled_terminal_loop_proactive_verify_runs_command_alongside() -> N
     ) -> TerminalCommandResult:
         assert blocked_proposal is not None
         verified.append(blocked_proposal.command)
+        # The verifier must see the just-executed command in its request transcript,
+        # not a stale snapshot from before the alongside execution.
+        last = request.transcript[-1].command if request.transcript else None
+        verifier_saw_commands.append(last)
         return TerminalCommandResult(
             event=ExecutionEvent(
                 step=request.step,
@@ -621,6 +626,8 @@ def test_controlled_terminal_loop_proactive_verify_runs_command_alongside() -> N
     # and is then verified alongside, rather than being thrown away.
     assert executed == ["python solve.py #1", "python solve.py #2"]
     assert verified == ["python solve.py #2"]
+    # The verifier saw the freshly-executed command, not a stale request.
+    assert verifier_saw_commands == ["python solve.py #2"]
     assert [decision.action for decision in result.decisions] == [
         "CONTINUE",
         "FORCE_VERIFY",

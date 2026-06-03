@@ -172,6 +172,12 @@ class ControlledTerminalLoop:
                 if not decision.defer_command:
                     work = executor(request, proposal)
                     self._observe_result(tracker, work, stdout_parts, stderr_parts)
+                    # Refresh the request so the verifier sees the command it ran.
+                    request = replace(
+                        request,
+                        features=self._features(tracker),
+                        transcript=tuple(tracker.events),
+                    )
                 result = verifier(request, proposal)
                 # Guarantee the forced verification counts as a verifier run so the
                 # staleness counter resets and we do not trigger a verify-every-step

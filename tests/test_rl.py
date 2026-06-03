@@ -128,6 +128,19 @@ def test_category_bandit_never_prefers_cheaper_failure() -> None:
     assert policy.values("api-design")["cost-aware-greedy"] < 0
 
 
+def test_category_bandit_token_hungry_pass_still_beats_failure() -> None:
+    # An extremely token-hungry pass (large negative savings) must still out-rank a
+    # failure: the cost term is bounded so it cannot drag a pass below quality - 1.0.
+    policy = CategoryBanditRoutingPolicy(epsilon=0.0)
+    policy.update("infra", "quality-aware-greedy", passed=True, token_savings=-50.0)
+    policy.update("infra", "cost-aware-greedy", passed=False, token_savings=0.0)
+
+    assert policy.values("infra")["quality-aware-greedy"] > policy.values("infra")[
+        "cost-aware-greedy"
+    ]
+    assert policy.exploit("infra") == "quality-aware-greedy"
+
+
 def test_category_bandit_cold_start_uses_safe_default() -> None:
     policy = CategoryBanditRoutingPolicy(
         arms=("broadcast", "quality-aware-greedy", "cost-aware-greedy"),
