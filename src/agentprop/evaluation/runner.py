@@ -19,7 +19,7 @@ from agentprop.algorithms import (
     rzf_centrality_seed_selection,
 )
 from agentprop.core import AgentGraph
-from agentprop.evaluation.metrics import compare_routing
+from agentprop.evaluation.metrics import compare_routing, coverage_constrained_cost
 from agentprop.propagation import (
     BootstrapPercolation,
     IndependentCascade,
@@ -49,6 +49,10 @@ class BenchmarkRow:
     optimized_cost: float
     estimated_savings: float
     mean_output_quality: float = 0.0
+    critical_coverage: float = 0.0
+    cost_per_coverage: float = 0.0
+    constrained_savings: float = 0.0
+    reached_goal: bool = False
 
     def to_dict(self) -> dict[str, object]:
         """Serialize row for JSON output."""
@@ -74,6 +78,12 @@ def run_benchmark(
             seeds = select_seeds(graph, algorithm, budget, model, trials)
             propagation = model.simulate(graph, seeds, trials=trials)
             report = compare_routing(graph, seeds, model.name, propagation)
+            constrained = coverage_constrained_cost(
+                graph,
+                propagation,
+                optimized_cost=report.optimized_cost,
+                broadcast_cost_summary=report.broadcast_cost,
+            )
             mean_quality = (
                 propagation.mean_output_quality
                 if isinstance(propagation, QualityCascadeResult)
@@ -94,6 +104,10 @@ def run_benchmark(
                     optimized_cost=report.optimized_cost.total_cost,
                     estimated_savings=report.estimated_savings,
                     mean_output_quality=mean_quality,
+                    critical_coverage=constrained.critical_coverage,
+                    cost_per_coverage=constrained.cost_per_coverage,
+                    constrained_savings=constrained.constrained_savings,
+                    reached_goal=constrained.reached_goal,
                 )
             )
     return rows

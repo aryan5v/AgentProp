@@ -27,6 +27,12 @@ class ExecutionEvent:
     elapsed_s: float = 0.0
     error_signature: str | None = None
     final_answer_written: bool = False
+    trusted: bool = True
+    """Whether a verifier result is from an independent/trusted check.
+
+    Defaults to True for backward compatibility. A harness should set this to
+    False for the agent's own self-reported evaluation (e.g. a locally-run
+    ``eval.py``), so the controller does not finalize on an unconfirmed pass."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,6 +52,8 @@ class ExecutionStateFeatures:
     last_error_signature: str | None = None
     token_budget_fraction: float | None = None
     wall_time_budget_fraction: float | None = None
+    unconfirmed_pass: bool = False
+    """A pass was claimed by an untrusted verifier but not independently confirmed."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,6 +74,9 @@ class StoppingControllerConfig:
     repeated_error_threshold: int = 2
     token_budget: int | None = None
     wall_time_budget_s: float | None = None
+    require_independent_verification: bool = True
+    """When True, a self-reported (untrusted) pass triggers FORCE_VERIFY rather
+    than finalizing — closing the false-local-pass failure mode."""
 
 
 @dataclass(slots=True)
@@ -102,11 +113,16 @@ class ExecutionStateTracker:
                 final_answer_written=False,
                 token_budget_fraction=_budget_fraction(0, token_budget),
                 wall_time_budget_fraction=_budget_fraction(0.0, wall_time_budget_s),
+                unconfirmed_pass=False,
             )
 
         latest = self.events[-1]
         total_tokens = sum(event.tokens_used for event in self.events)
         elapsed_s = sum(event.elapsed_s for event in self.events)
+        trusted_pass = any(
+            event.verifier_passed is True and event.trusted for event in self.events
+        )
+        claimed_pass = any(event.verifier_passed is True for event in self.events)
         return ExecutionStateFeatures(
             step_count=len(self.events),
             total_tokens=total_tokens,
@@ -118,11 +134,12 @@ class ExecutionStateTracker:
                 1 for event in self.events if event.verifier_run and event.verifier_passed is False
             ),
             last_exit_code=latest.exit_code,
-            evaluator_passed=any(event.verifier_passed is True for event in self.events),
+            evaluator_passed=trusted_pass,
             final_answer_written=any(event.final_answer_written for event in self.events),
             last_error_signature=latest.error_signature,
             token_budget_fraction=_budget_fraction(total_tokens, token_budget),
             wall_time_budget_fraction=_budget_fraction(elapsed_s, wall_time_budget_s),
+            unconfirmed_pass=claimed_pass and not trusted_pass,
         )
 
 
@@ -136,8 +153,16 @@ class StoppingController:
         """Choose the next mechanical action for a real execution loop."""
 
         if features.evaluator_passed:
-            return ControlDecision("FINALIZE", "verifier/evaluator passed")
+            return ControlDecision("FINALIZE", "independent verifier passed")
+        if self.config.require_independent_verification and features.unconfirmed_pass:
+            return ControlDecision(
+                "FORCE_VERIFY", "confirm self-reported pass with an independent check"
+            )
         if features.final_answer_written:
+            if self.config.require_independent_verification and not features.evaluator_passed:
+                return ControlDecision(
+                    "FORCE_VERIFY", "verify final answer before finalizing"
+                )
             return ControlDecision("FINALIZE", "final answer already written")
         if (
             self.config.token_budget is not None
@@ -232,6 +257,7 @@ def execution_features_to_dict(features: ExecutionStateFeatures) -> dict[str, ob
         "last_error_signature": features.last_error_signature,
         "token_budget_fraction": features.token_budget_fraction,
         "wall_time_budget_fraction": features.wall_time_budget_fraction,
+        "unconfirmed_pass": features.unconfirmed_pass,
     }
 
 

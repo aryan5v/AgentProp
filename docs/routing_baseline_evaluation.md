@@ -18,7 +18,10 @@ PYTHONPATH=src:. python experiments/evaluate_routing_baselines.py \
 The experiment writes:
 
 - `rows`: per-workflow, per-policy coverage, cost, latency, propagation time,
-  savings, and efficiency metrics.
+  savings, and efficiency metrics. Rows also include `constrained_savings`
+  (savings credited only when all critical nodes are reached),
+  `critical_coverage` (fraction of OUTPUT and VERIFIER nodes activated), and
+  `cost_per_coverage` (total cost normalized by coverage).
 - `summary`: mean coverage, total cost, savings, and efficiency grouped by
   policy.
 

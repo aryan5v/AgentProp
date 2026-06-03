@@ -148,6 +148,94 @@ def test_stopping_controller_forces_verify_and_switches_strategy() -> None:
     assert controller.decide(repeated).action == "SWITCH_STRATEGY"
 
 
+def test_self_reported_pass_forces_independent_verification() -> None:
+    controller = StoppingController(StoppingControllerConfig())
+
+    # Agent's own local eval claims a pass but is not a trusted/independent check.
+    self_reported = ExecutionStateTracker(
+        [ExecutionEvent(step=1, verifier_run=True, verifier_passed=True, trusted=False)]
+    ).features()
+    assert self_reported.unconfirmed_pass is True
+    assert self_reported.evaluator_passed is False
+    assert controller.decide(self_reported).action == "FORCE_VERIFY"
+
+    # An independent (trusted) verifier pass is allowed to finalize.
+    independent = ExecutionStateTracker(
+        [ExecutionEvent(step=1, verifier_run=True, verifier_passed=True, trusted=True)]
+    ).features()
+    assert independent.evaluator_passed is True
+    assert controller.decide(independent).action == "FINALIZE"
+
+
+def test_independent_verification_can_be_disabled() -> None:
+    controller = StoppingController(
+        StoppingControllerConfig(require_independent_verification=False)
+    )
+    self_reported = ExecutionStateTracker(
+        [ExecutionEvent(step=1, verifier_run=True, verifier_passed=True, trusted=False)]
+    ).features()
+
+    # With the guard off, a self-reported pass still does not finalize on its own,
+    # but it is no longer escalated to FORCE_VERIFY either.
+    assert controller.decide(self_reported).action == "CONTINUE"
+
+
+def test_final_answer_without_verification_is_gated() -> None:
+    controller = StoppingController(StoppingControllerConfig())
+    written = ExecutionStateTracker(
+        [ExecutionEvent(step=1, final_answer_written=True)]
+    ).features()
+
+    assert controller.decide(written).action == "FORCE_VERIFY"
+
+
+def test_force_verify_then_finalize_recovers_false_local_pass() -> None:
+    """A self-reported pass is escalated, then an independent verifier finalizes."""
+
+    def proposer(request: TerminalTurnRequest) -> TerminalCommandProposal:
+        return TerminalCommandProposal(command=f"python eval.py # step {request.step}")
+
+    def executor(
+        request: TerminalTurnRequest, proposal: TerminalCommandProposal
+    ) -> TerminalCommandResult:
+        # The agent runs its own eval and self-reports a pass (untrusted).
+        return TerminalCommandResult(
+            event=ExecutionEvent(
+                step=request.step,
+                command=proposal.command,
+                verifier_run=True,
+                verifier_passed=True,
+                trusted=False,
+            )
+        )
+
+    def verifier(
+        request: TerminalTurnRequest,
+        blocked_proposal: TerminalCommandProposal | None = None,
+    ) -> TerminalCommandResult:
+        # The independent verifier confirms the result (trusted).
+        return TerminalCommandResult(
+            event=ExecutionEvent(
+                step=request.step,
+                command="agentprop:independent_verify",
+                verifier_run=True,
+                verifier_passed=True,
+                trusted=True,
+            )
+        )
+
+    loop = ControlledTerminalLoop(
+        controller=StoppingController(StoppingControllerConfig(max_steps_without_verifier=4)),
+        config=TerminalLoopConfig(max_steps=6),
+    )
+    result = loop.run(task="t", proposer=proposer, executor=executor, verifier=verifier)
+
+    # The self-reported pass triggered an independent check, which then finalized.
+    assert "FORCE_VERIFY" in [d.action for d in result.decisions]
+    assert result.decisions[-1].action == "FINALIZE"
+    assert result.passed is True
+
+
 def test_runtime_reward_logger_updates_bandit_from_real_outcome(tmp_path) -> None:
     log_path = tmp_path / "rewards.jsonl"
     logger = RuntimeRewardLogger(

@@ -7,7 +7,7 @@ from typing import Any
 
 import networkx as nx
 
-from agentprop.core import AgentGraph
+from agentprop.core import AgentGraph, NodeType
 from agentprop.propagation import PropagationResult
 
 
@@ -79,6 +79,76 @@ class QualityCostSummary:
     latency: float
     cost_adjusted_success: float
     efficiency_score: float
+
+
+@dataclass(slots=True)
+class CoverageConstrainedCost:
+    """Cost metrics that reward reaching critical nodes, not minimizing activity.
+
+    The plain ``estimated_savings`` metric is confounded with coverage: a
+    strategy that activates fewer nodes always looks cheaper, so random seeding
+    can "win" by reaching almost nothing. These metrics close that loophole by
+    treating OUTPUT/VERIFIER nodes as a goal that must be reached: savings are
+    only credited when every critical node is activated, and cost is normalized
+    by coverage so doing nothing is penalized rather than rewarded.
+    """
+
+    critical_coverage: float
+    """Fraction of critical (OUTPUT/VERIFIER) nodes that are activated."""
+
+    cost_per_coverage: float
+    """Optimized total cost divided by overall coverage (lower is better)."""
+
+    constrained_savings: float
+    """Estimated savings, credited only when all critical nodes are reached."""
+
+    reached_goal: bool
+    """True when every critical node is activated."""
+
+
+CRITICAL_NODE_TYPES: frozenset[NodeType] = frozenset({NodeType.OUTPUT, NodeType.VERIFIER})
+
+
+def coverage_constrained_cost(
+    graph: AgentGraph,
+    propagation: PropagationResult,
+    *,
+    optimized_cost: CostSummary,
+    broadcast_cost_summary: CostSummary,
+) -> CoverageConstrainedCost:
+    """Compute goal-aware cost metrics that 'do nothing' cannot win.
+
+    Critical nodes are OUTPUT and VERIFIER nodes — the workflow only succeeds
+    if these are reached. ``constrained_savings`` credits cost reduction only
+    when all critical nodes are activated; ``cost_per_coverage`` normalizes the
+    optimized cost by coverage so low-coverage strategies are penalized.
+    """
+
+    critical = {node.id for node in graph.nodes() if node.type in CRITICAL_NODE_TYPES}
+    activated = set(propagation.activated_nodes)
+    if critical:
+        critical_coverage = len(critical & activated) / len(critical)
+    else:
+        # No explicit goal nodes: fall back to overall coverage as the target.
+        critical_coverage = propagation.coverage
+    reached_goal = critical_coverage >= 1.0 - 1e-9
+
+    coverage = max(propagation.coverage, 1e-9)
+    cost_per_coverage = optimized_cost.total_cost / coverage
+
+    estimated_savings = 0.0
+    if broadcast_cost_summary.total_cost > 0:
+        estimated_savings = (
+            broadcast_cost_summary.total_cost - optimized_cost.total_cost
+        ) / broadcast_cost_summary.total_cost
+    constrained_savings = estimated_savings if reached_goal else 0.0
+
+    return CoverageConstrainedCost(
+        critical_coverage=critical_coverage,
+        cost_per_coverage=cost_per_coverage,
+        constrained_savings=constrained_savings,
+        reached_goal=reached_goal,
+    )
 
 
 def broadcast_cost(graph: AgentGraph) -> CostSummary:

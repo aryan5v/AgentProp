@@ -27,11 +27,13 @@ from agentprop.evaluation.llm_execution import (
 )
 from agentprop.evaluation.metrics import (
     CostSummary,
+    CoverageConstrainedCost,
     PruningRiskSummary,
     QualityCostSummary,
     RecommendationReport,
     RobustnessSummary,
     compare_routing,
+    coverage_constrained_cost,
     quality_cost_summary,
     robustness_under_failures,
 )
@@ -98,6 +100,7 @@ __all__ = [
     "ArtifactKind",
     "ArtifactRecord",
     "CostSummary",
+    "CoverageConstrainedCost",
     "ContextCompressionProfile",
     "DEFAULT_BUDGET_POLICIES",
     "ExactMatchScorer",
@@ -137,6 +140,7 @@ __all__ = [
     "classify_benchmark_failure",
     "collect_harbor_trial_results",
     "compare_routing",
+    "coverage_constrained_cost",
     "estimate_expected_success",
     "evaluate_pruning",
     "graded_context_allocations",
