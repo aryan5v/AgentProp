@@ -58,7 +58,8 @@ class QualityCascade:
         """Propagate quality from seeds through the workflow graph."""
 
         seed_set = set(seeds)
-        qualities: dict[str, float] = {seed: 1.0 for seed in seed_set if seed in {n.id for n in graph.nodes()}}
+        valid_ids = {n.id for n in graph.nodes()}
+        qualities: dict[str, float] = {s: 1.0 for s in seed_set if s in valid_ids}
         nx_graph = graph.to_networkx()
 
         if nx.is_directed_acyclic_graph(nx_graph):
@@ -66,7 +67,11 @@ class QualityCascade:
         else:
             self._propagate_cyclic(graph, nx_graph, qualities, seed_set)
 
-        activation_rounds: dict[str, int] = {node_id: 0 for node_id in qualities if qualities[node_id] >= self.quality_floor}
+        activation_rounds: dict[str, int] = {
+            node_id: 0
+            for node_id in qualities
+            if qualities[node_id] >= self.quality_floor
+        }
         node_count = max(graph.node_count, 1)
         activated = {nid for nid, q in qualities.items() if q >= self.quality_floor}
         coverage = len(activated) / node_count

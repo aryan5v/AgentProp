@@ -294,7 +294,7 @@ def _is_fault_tolerant_resolving(
     node_ids: list[str],
     distances: dict[str, dict[str, int]],
 ) -> bool:
-    for i, removed in enumerate(verifiers):
+    for i, _removed in enumerate(verifiers):
         remaining = verifiers[:i] + verifiers[i + 1 :]
         for j, u in enumerate(node_ids):
             for v in node_ids[j + 1 :]:
