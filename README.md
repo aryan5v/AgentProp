@@ -27,8 +27,8 @@ The research wedge is simple:
 - **Metric dimension** is the core contribution: framing verifier placement as a
   resolving set makes failure localization a *provable* property — if resolving
   coverage is 1.0, every distinct failure produces a unique signature and any
-  single faulty node is uniquely identifiable, even if one verifier itself fails.
-  No weighted-heuristic placement can promise this.
+  single faulty node is uniquely identifiable. With fault-tolerant metric dimension,
+  this holds even if one verifier itself fails. No weighted-heuristic placement can promise this.
 - **Quality cascade** models how correctness and compression propagate, so
   context allocation follows the quality actually reaching each node.
 - **Randomized Zero Forcing (RZF)** is a *secondary, scoped* result: process-based
