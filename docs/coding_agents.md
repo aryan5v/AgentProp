@@ -1,12 +1,24 @@
 # Coding Agent Integration
 
-AgentProp can be used in two ways by coding agents. In analysis mode, it tells
-agents which workflow nodes should receive full context, which verifiers should
-intercept mistakes, and which edges are safe candidates for pruning or
-summarization. In runtime-controller mode, AgentProp directly controls the
-context visible to each graph node and records the execution trace.
+AgentProp can be used by coding agents in two complementary ways.
 
-## One-Shot Workflow Brief
+For everyday coding tasks, AgentProp generates a workflow brief that tells Codex
+CLI, Claude Code, or another coding agent where to concentrate context, where to
+verify, and which handoffs are risky to summarize. The agent still uses the
+developer's normal authentication path, such as `codex login` or Claude Code's
+own login.
+
+For teams building multi-agent systems, AgentProp can also run as a tool layer:
+the CLI and `agentprop-mcp` expose graph diagnostics, verifier placement,
+routing recommendations, and benchmark/report generation to editor agents.
+
+For controlled runtime experiments, AgentProp can wrap an execution loop and
+record `ExecutionEvent` traces for stop/retry/verify decisions.
+
+## Everyday Codex And Claude Code Use
+
+Use this when you want a coding agent to implement or review a workflow with
+AgentProp's graph guidance in context, without running a benchmark.
 
 Generate a Claude Code or Codex-ready brief:
 
@@ -35,6 +47,26 @@ brief includes:
 - bottleneck nodes and pruning candidates
 - ML/RL experiment commands for workflow-improvement tasks
 - required evidence before the coding agent claims the task is done
+
+For Codex CLI, keep using the normal Codex session:
+
+```bash
+codex login
+codex exec "Use reports/codex_agent_brief.md while implementing the requested workflow change."
+```
+
+For Claude Code, use the included skill directory as the reusable procedure.
+Claude Code supports Agent Skills for reusable procedures and MCP for external
+tools:
+
+```text
+integrations/claude-code/agentprop-workflow-optimizer/SKILL.md
+```
+
+See the Claude Code docs for
+[Agent Skills](https://docs.claude.com/en/docs/claude-code/skills) and
+[MCP](https://code.claude.com/docs/en/mcp). `agentprop-mcp` is the path when
+Claude should call AgentProp directly instead of only reading a generated brief.
 
 ## Recommended Agent Instructions
 
@@ -135,11 +167,11 @@ result = loop.run(
 )
 ```
 
-Private benchmark adapters should translate `RuntimeNodeRequest` into the local
-agent or Harbor/Terminal-Bench action, translate terminal/model observations into
-`ExecutionEvent`, then persist runtime traces next to the benchmark outcome. Keep
-model keys, task sandboxes, and machine-local retry state out of the public
-repository.
+Benchmark adapters should translate `RuntimeNodeRequest` into the local agent
+or Harbor/Terminal-Bench action, translate terminal/model observations into
+`ExecutionEvent`, then persist runtime traces next to the benchmark outcome.
+Keep model keys, task sandboxes, and machine-local retry state in local
+configuration rather than committed artifacts.
 
 ## MCP Server Shape
 
@@ -163,9 +195,9 @@ Recommended tools:
 - `agentprop_case_study_analysis`: turns saved case-study results into tables
   and plots.
 
-The MCP server should keep secrets out of tool arguments. Token Router, OpenAI,
-Modal, and Hugging Face credentials should be read from local environment
-variables or uncommitted config files.
+The MCP server should keep secrets out of tool arguments. Provider credentials
+should be read from local environment variables, a secret manager, or
+uncommitted config files.
 
 Current implemented MCP-style tools:
 

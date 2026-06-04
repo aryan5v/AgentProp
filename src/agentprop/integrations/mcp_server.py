@@ -16,7 +16,7 @@ from agentprop.integrations.agent_instructions import (
     render_coding_agent_instructions,
 )
 
-SERVER_INFO = {"name": "agentprop", "version": "0.1.0a1"}
+SERVER_INFO = {"name": "agentprop", "version": "0.1.0a2"}
 
 
 def main() -> int:

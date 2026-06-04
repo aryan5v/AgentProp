@@ -235,7 +235,7 @@ def build_v1_readiness_report() -> ReadinessReport:
                 "as validation.",
             ),
             remaining=(
-                "Provide Token Router or OpenAI-compatible credentials.",
+                "Provide OpenAI-compatible credentials.",
                 "Run the routed multi-node arms and save cost, quality, trace, and "
                 "verification artifacts.",
                 "Use the verification harness against an environment that actually applies "

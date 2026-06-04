@@ -5,7 +5,8 @@ AgentProp publishes Python distributions to TestPyPI and PyPI from
 
 ## Current Release
 
-`agentprop==0.1.0a1` is published on:
+`agentprop==0.1.0a2` is the next public alpha release. After tagging and
+publishing, it should be available on:
 
 - PyPI: <https://pypi.org/project/agentprop/>
 - TestPyPI: <https://test.pypi.org/project/agentprop/>

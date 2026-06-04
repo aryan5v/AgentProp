@@ -1,33 +1,31 @@
 # AgentProp Documentation
 
-AgentProp is a graph optimization framework for multi-agent LLM workflows.
+AgentProp is a graph-control framework for AI-agent workflows. It models
+agents, tools, context, verifiers, and execution attempts as directed weighted
+graphs, then studies how information quality, failures, and cost propagate.
 
 ## Start Here
 
 - [Tutorial walkthrough](tutorial.md)
 - [Workflow JSON schema](workflow_schema.md)
-- [Trace ingestion](trace_ingestion.md)
-- [Learned propagation](learned_propagation.md)
-- [Visualization](visualization.md)
-- [Reinforcement learning routing](reinforcement_learning.md)
-- [Routing baseline evaluation](routing_baseline_evaluation.md)
 - [Quality-aware routing](routing_quality.md)
 - [Verifier semantics](verifier_semantics.md)
 - [Quality scoring](quality_scoring.md)
 - [Framework integrations](framework_integrations.md)
 - [Coding agent integration](coding_agents.md)
-- [Publishing](publishing.md)
 
 ## Research and Evaluation
 
+- [Research references](research/references.md)
 - [Literature review](research/literature_review.md)
-- [AgentProp research backlog](research/agentprop_research_backlog.md)
 - [Real LLM case-study protocol](research/case_study_protocol.md)
-- [Paper outline](research/paper_outline.md)
+- [Trace ingestion](trace_ingestion.md)
+- [Learned propagation](learned_propagation.md)
+- [Routing baseline evaluation](routing_baseline_evaluation.md)
+- [Reinforcement learning routing](reinforcement_learning.md)
+- [Deep learning guide](deep_learning.md)
 - [v1 benchmark artifacts](results/v1/README.md)
 - [Terminal-Bench guided benchmark](results/terminal_bench_guided/README.md)
-- [Terminal-Bench 2.1 preparation](terminal_bench_21.md)
-- [Deep learning guide](deep_learning.md)
 
 ## Common Commands
 
@@ -51,10 +49,12 @@ python experiments/rzf_scaling_study.py
 
 ## What AgentProp Proves
 
-The v1 goal is to show that multi-agent workflows can be treated as directed weighted graphs and optimized with:
+The alpha research goal is to test whether agent workflows can be treated as
+directed weighted graphs and optimized with:
 
-- training-free graph algorithms
-- propagation models
-- verifier-placement and observability metrics
+- metric-dimension-style verifier placement
+- quality-cascade propagation
+- randomized-zero-forcing-style scaling studies
+- runtime stop/retry/verify control
 - optional ML/DL/RL policies
 - reproducible benchmark artifacts

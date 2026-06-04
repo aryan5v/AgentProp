@@ -15,6 +15,15 @@ def test_cli_optimize_emits_json(capsys) -> None:  # type: ignore[no-untyped-def
     assert payload["estimated_savings"] >= 0
 
 
+def test_cli_analyze_accepts_builtin_workflow(capsys) -> None:  # type: ignore[no-untyped-def]
+    exit_code = main(["analyze", "planner_coder_tester_reviewer", "--json"])
+
+    assert exit_code == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["nodes"] == 5
+    assert payload["bottlenecks"]
+
+
 def test_cli_report_writes_markdown(tmp_path: Path) -> None:
     output = tmp_path / "report.md"
 

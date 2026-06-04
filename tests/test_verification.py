@@ -47,10 +47,10 @@ def test_run_verification_command_truncates_output() -> None:
 
 
 def test_run_python_code_tests_scrubs_parent_environment(monkeypatch) -> None:  # type: ignore[no-untyped-def]
-    monkeypatch.setenv("TOKEN_ROUTER_API_KEY", "secret")
+    monkeypatch.setenv("OPENAI_API_KEY", "secret")
 
     result = run_python_code_tests(
-        "import os\nassert 'TOKEN_ROUTER_API_KEY' not in os.environ",
+        "import os\nassert 'OPENAI_API_KEY' not in os.environ",
         "assert True",
     )
 

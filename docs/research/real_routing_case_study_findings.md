@@ -162,9 +162,9 @@ this harness now produces (per-node context level → real pass/fail + tokens).
 
 ```bash
 # Real run (needs an OpenAI-compatible endpoint + key):
-TOKEN_ROUTER_API_KEY=... \
-TOKEN_ROUTER_BASE_URL=https://.../v1 \
-TOKEN_ROUTER_MODEL=<model> \
+OPENAI_API_KEY=... \
+OPENAI_BASE_URL=https://.../v1 \
+OPENAI_MODEL=<model> \
 PYTHONPATH=src python experiments/run_real_routing_case_study.py --max-tokens 4000
 
 # Plumbing self-test (no key; validates the task suites against reference solutions):

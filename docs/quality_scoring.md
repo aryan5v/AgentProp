@@ -36,5 +36,5 @@ def judge(expected, actual, context):
 score = LLMJudgeScorer(judge).score(expected=None, actual="...", context="...")
 ```
 
-This keeps Token Router or provider-specific code out of the core package while
-making the case-study runner easy to wire later.
+This keeps provider-specific code out of the core package while making the
+case-study runner easy to wire later.

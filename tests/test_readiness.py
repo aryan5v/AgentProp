@@ -16,4 +16,4 @@ def test_v1_readiness_markdown_names_validation_blocker() -> None:
 
     assert "Private alpha ready: yes" in markdown
     assert "Public ready: no" in markdown
-    assert "Token Router or OpenAI-compatible credentials" in markdown
+    assert "OpenAI-compatible credentials" in markdown

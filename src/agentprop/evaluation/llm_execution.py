@@ -60,22 +60,19 @@ class OpenAICompatibleChatClient:
         base_url: str | None = None,
         timeout_s: float = 60.0,
     ) -> OpenAICompatibleChatClient:
-        """Build a client from Token Router or OpenAI-style environment variables."""
+        """Build a client from OpenAI-compatible environment variables."""
 
-        api_key = os.environ.get("TOKEN_ROUTER_API_KEY") or os.environ.get("OPENAI_API_KEY")
-        resolved_model = model or os.environ.get("TOKEN_ROUTER_MODEL") or os.environ.get(
-            "OPENAI_MODEL"
-        )
+        api_key = os.environ.get("OPENAI_API_KEY")
+        resolved_model = model or os.environ.get("OPENAI_MODEL")
         resolved_base_url = (
             base_url
-            or os.environ.get("TOKEN_ROUTER_BASE_URL")
             or os.environ.get("OPENAI_BASE_URL")
             or "https://api.openai.com/v1"
         )
         if not api_key:
-            raise ValueError("set TOKEN_ROUTER_API_KEY or OPENAI_API_KEY for LLM execution")
+            raise ValueError("set OPENAI_API_KEY for LLM execution")
         if not resolved_model:
-            raise ValueError("set --llm-model, TOKEN_ROUTER_MODEL, or OPENAI_MODEL")
+            raise ValueError("set --llm-model or OPENAI_MODEL")
         return cls(
             api_key=api_key,
             model=resolved_model,
@@ -139,21 +136,18 @@ def openai_compatible_env_status(
 ) -> dict[str, Any]:
     """Return credential/model readiness for OpenAI-compatible case-study runs."""
 
-    api_key_env = _first_present_env("TOKEN_ROUTER_API_KEY", "OPENAI_API_KEY")
-    resolved_model = model or os.environ.get("TOKEN_ROUTER_MODEL") or os.environ.get(
-        "OPENAI_MODEL"
-    )
+    api_key_env = _first_present_env("OPENAI_API_KEY")
+    resolved_model = model or os.environ.get("OPENAI_MODEL")
     resolved_base_url = (
         base_url
-        or os.environ.get("TOKEN_ROUTER_BASE_URL")
         or os.environ.get("OPENAI_BASE_URL")
         or "https://api.openai.com/v1"
     )
     missing = []
     if api_key_env is None:
-        missing.append("TOKEN_ROUTER_API_KEY or OPENAI_API_KEY")
+        missing.append("OPENAI_API_KEY")
     if not resolved_model:
-        missing.append("--llm-model, TOKEN_ROUTER_MODEL, or OPENAI_MODEL")
+        missing.append("--llm-model or OPENAI_MODEL")
     return {
         "ready": not missing,
         "api_key_env": api_key_env,
