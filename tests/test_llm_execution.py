@@ -53,24 +53,22 @@ def test_openai_compatible_chat_client_parses_response(monkeypatch) -> None:  # 
 
 
 def test_openai_compatible_env_status_reports_missing_credentials(monkeypatch) -> None:  # type: ignore[no-untyped-def]
-    monkeypatch.delenv("TOKEN_ROUTER_API_KEY", raising=False)
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
-    monkeypatch.delenv("TOKEN_ROUTER_MODEL", raising=False)
     monkeypatch.delenv("OPENAI_MODEL", raising=False)
 
     status = openai_compatible_env_status()
 
     assert not status["ready"]
-    assert "TOKEN_ROUTER_API_KEY or OPENAI_API_KEY" in status["missing"]
+    assert "OPENAI_API_KEY" in status["missing"]
 
 
-def test_openai_compatible_env_status_accepts_token_router_env(monkeypatch) -> None:  # type: ignore[no-untyped-def]
-    monkeypatch.setenv("TOKEN_ROUTER_API_KEY", "secret")
-    monkeypatch.setenv("TOKEN_ROUTER_MODEL", "router-model")
-    monkeypatch.setenv("TOKEN_ROUTER_BASE_URL", "https://router.example/v1")
+def test_openai_compatible_env_status_accepts_openai_compatible_env(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    monkeypatch.setenv("OPENAI_API_KEY", "secret")
+    monkeypatch.setenv("OPENAI_MODEL", "router-model")
+    monkeypatch.setenv("OPENAI_BASE_URL", "https://router.example/v1")
 
     status = openai_compatible_env_status()
 
     assert status["ready"]
-    assert status["api_key_env"] == "TOKEN_ROUTER_API_KEY"
+    assert status["api_key_env"] == "OPENAI_API_KEY"
     assert status["model"] == "router-model"
