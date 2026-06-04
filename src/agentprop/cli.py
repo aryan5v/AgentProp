@@ -547,7 +547,7 @@ def _terminal_bench(args: argparse.Namespace) -> int:
 
 
 def _analyze(args: argparse.Namespace) -> int:
-    _, graph = _load_workflow(str(args.workflow))
+    _, graph = _load_workflow(args.workflow)
     bottlenecks = bottleneck_nodes(graph)
     pruning_candidates = low_weight_edges(graph)
     verifier_candidates = risk_aware_verifier_placement(graph, min(3, graph.node_count))
