@@ -108,7 +108,7 @@ def _build_parser() -> argparse.ArgumentParser:
     optimize.add_argument("--json", action="store_true", help="emit machine-readable JSON")
 
     analyze = subparsers.add_parser("analyze", help="show graph diagnostics")
-    analyze.add_argument("workflow", type=Path)
+    analyze.add_argument("workflow", help="workflow JSON path or built-in workflow name")
     analyze.add_argument("--json", action="store_true")
 
     benchmark = subparsers.add_parser("benchmark", help="compare algorithms and propagation models")
@@ -547,7 +547,7 @@ def _terminal_bench(args: argparse.Namespace) -> int:
 
 
 def _analyze(args: argparse.Namespace) -> int:
-    graph = AgentGraph.from_json(args.workflow)
+    _, graph = _load_workflow(str(args.workflow))
     bottlenecks = bottleneck_nodes(graph)
     pruning_candidates = low_weight_edges(graph)
     verifier_candidates = risk_aware_verifier_placement(graph, min(3, graph.node_count))

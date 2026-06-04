@@ -114,15 +114,15 @@ PYTHONPATH=src:. python experiments/run_case_study.py \
 ```
 
 The preflight writes `preflight.json` with task count, policy arms, selected
-seeds, expected artifacts, and Token Router/OpenAI environment readiness. It
-does not call an LLM.
+seeds, expected artifacts, and OpenAI-compatible endpoint readiness. It does not
+call an LLM.
 
 Real LLM execution:
 
 ```bash
-export TOKEN_ROUTER_API_KEY=...
-export TOKEN_ROUTER_BASE_URL=...
-export TOKEN_ROUTER_MODEL=...
+export OPENAI_API_KEY=...
+export OPENAI_BASE_URL=...
+export OPENAI_MODEL=...
 
 PYTHONPATH=src:. python experiments/run_case_study.py \
   --execution-mode llm \
@@ -146,8 +146,8 @@ scores, traces, and `outputs.jsonl` with prompts and final model responses.
 `quality_passed` is the automatic rubric result. `verification_passed` is left
 unknown unless a separate execution environment actually runs
 `verification_command`; keyword mentions of `pytest` or expected terms do not
-count as verification. Keep the result directory private until a redaction pass
-confirms no secrets or private task data are present.
+count as verification. Redact raw result directories before publishing them so
+secrets, prompts, and task-specific private data are not committed.
 
 To capture real command evidence without changing the routing protocol, run LLM
 arms with the opt-in verification harness:

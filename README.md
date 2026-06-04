@@ -1,80 +1,75 @@
 # AgentProp
 
 <p align="center">
-  <img src="docs/assets/agentprop-logo.png" alt="AgentProp logo" width="180" />
+  <img src="docs/assets/agentprop-logo.png" alt="AgentProp logo" width="160" />
 </p>
 
 <p align="center">
-  <strong>Graph optimization for multi-agent LLM workflows.</strong>
+  <strong>Graph control for agent workflows.</strong>
 </p>
 
 <p align="center">
   <a href="https://github.com/aryan5v/AgentProp/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/aryan5v/AgentProp/actions/workflows/ci.yml/badge.svg" /></a>
   <a href="https://pypi.org/project/agentprop/"><img alt="PyPI" src="https://img.shields.io/pypi/v/agentprop.svg" /></a>
   <a href="https://github.com/aryan5v/AgentProp/security"><img alt="Security" src="https://img.shields.io/badge/security-policy-black" /></a>
-  <img alt="Version" src="https://img.shields.io/badge/version-0.1.0a1-black" />
+  <img alt="Version" src="https://img.shields.io/badge/version-0.1.0a2-black" />
   <img alt="License" src="https://img.shields.io/badge/license-Apache--2.0-black" />
   <img alt="Status" src="https://img.shields.io/badge/status-public_alpha-12c95b" />
 </p>
 
-AgentProp models agents, tools, memories, documents, and verifiers as nodes in a
-directed weighted graph. It then uses propagation models, classical graph
-algorithms, optional GNN-style policies, and reinforcement learning to optimize:
+AgentProp studies AI-agent workflows as directed weighted graphs. Agents,
+tools, context packets, verifier calls, terminal commands, and failure states
+become nodes and edges in a graph that can be measured, simulated, and
+controlled.
 
-- which agents receive full context first
-- which edges are redundant or risky to prune
-- where verifier agents should observe or intercept failures
-- how much cost is saved versus broadcast routing
-- how learned routing policies compare with graph-theoretic baselines
+The research wedge is simple:
 
-AgentProp is not a full agent framework. It is a graph controller and
-optimization layer for workflows you already have, want to inspect, or want to
-study. You can use it in analysis-only mode, or use the runtime controller to
-execute graph nodes with AgentProp-managed context routing and verifier
-interception.
+- **Metric dimension** gives the observability spine: where should verifiers or
+  logging landmarks sit so failures can be localized?
+- **Quality cascade** models how correctness, uncertainty, and compression
+  propagate through a workflow.
+- **Randomized Zero Forcing (RZF)** gives a stochastic graph-process baseline
+  for propagation time and scaling behavior.
+- **Runtime control** turns those ideas into actions: verify, retry, stop,
+  switch strategy, or send more context.
 
-## Status
+AgentProp is not another agent orchestrator. It is an analysis and control layer
+for workflows you already have, including coding-agent and benchmark runs.
 
-AgentProp is usable as a public alpha framework. The graph backbone, CLI,
-reports, workflow templates, ML/RL baselines, MCP/coding-agent briefs,
-runtime controller, checkpoints, and experiment artifact registry are
-implemented and tested.
+## Early Signal
 
-## First Benchmark
+On one Terminal-Bench 2.1 smoke task using Harbor's `codex` agent with
+`gpt-5.5`, the AgentProp A2 controller preserved success while reducing spend:
 
-We ran an AgentProp-guided Terminal-Bench comparison using Harbor on a frozen
-27-task subset completed by the local Gemini CLI baseline. The AgentProp-guided
-run completed 26 tasks; one task hung in the external harness and is excluded
-from the headline.
+| Task | Arm | Result | Tokens | Cost | Time |
+| --- | --- | --- | ---: | ---: | ---: |
+| `regex-log` | A0 raw Codex | pass | 123,731 | $0.333551 | 203.8s |
+| `regex-log` | A2 AgentProp control | pass | 81,949 | $0.196834 | 173.6s |
 
-On the 26 completed matched tasks, AgentProp-guided routing improved pass rate
-from **17/26 (65.4%)** to **18/26 (69.2%)**. The run produced three wins, two
-regressions, and twenty-one ties. On the 24 completed tasks with token data in
-both arms, AgentProp-guided used **2.4% fewer input+output tokens** with **1.1%
-higher reported cost** due to cache and completion mix.
+That is **33.8% fewer tokens**, **41.0% lower cost**, and **14.8% less wall
+time** on a pass-preserving comparison. This is a single-task early signal, not
+a benchmark claim; the point is that AgentProp can already act as a spend-aware
+controller around live coding-agent execution.
 
-The first value signal is the recovery of tasks that the initial local baseline
-failed. The baseline failed nine of the 26 completed matched tasks;
-AgentProp-guided routing converted three of those older failures into passes:
-`build-pov-ray`, `caffe-cifar-10`, and `sanitize-git-repo`. Those recoveries are
-the clearest early evidence for the framework: explicit planning, full context
-for implementation-sensitive work, and executable verification can change task
-outcomes instead of only reshuffling token usage.
+## What Is Implemented
 
-This is a first directional benchmark, not a leaderboard submission. It shows a
-small positive success-rate signal and several useful failure modes for future
-budget-aware routing. See the full artifact note:
-[Terminal-Bench guided benchmark](docs/results/terminal_bench_guided/README.md).
-
-The main limitation is evidence depth: real routed LLM validation should be
-treated as directional until larger, repeated studies are published. The current
-library prioritizes reproducible artifacts and conservative claims.
-
-Check the current rollout state:
-
-```bash
-agentprop readiness
-```
+- Directed weighted `AgentGraph` with JSON validation, NetworkX conversion, and
+  Graphviz export.
+- Propagation models: Independent Cascade, Linear Threshold, Bootstrap
+  Percolation, deterministic Zero Forcing, Randomized Zero Forcing, learned
+  propagation, and Quality Cascade.
+- Graph algorithms for seed selection, pruning, bottlenecks, k-core, bridges,
+  articulation points, centrality, verifier placement, and resolving coverage.
+- Metric-dimension verifier placement, including fault-tolerant resolving
+  coverage for single-verifier failure.
+- RZF process-based centrality for seed selection and scaling studies.
+- Runtime controllers for graph-node execution, terminal-loop control,
+  verifier forcing, local-pass distrust, retry/stop/switch decisions, and
+  category-conditioned bandit policies.
+- Optional ML/DL/RL baselines: learned seed scorers, torch GNNs, Q-learning,
+  REINFORCE, PPO, and artifact/checkpoint tooling.
+- Coding-agent integration helpers for Codex, Claude Code, MCP-style tools,
+  and framework adapters.
 
 ## Install
 
@@ -82,262 +77,128 @@ agentprop readiness
 python -m pip install agentprop
 ```
 
-For local development:
+For development:
 
 ```bash
 python -m pip install -e ".[dev]"
+python -m pytest
 ```
 
 Optional extras:
 
 ```bash
-python -m pip install -e ".[dl]"  # torch-backed GNN experiments
-python -m pip install -e ".[rl]"  # optional Gymnasium ecosystem compatibility
+python -m pip install -e ".[dl]"  # torch-backed graph models
+python -m pip install -e ".[rl]"  # Gymnasium-compatible RL experiments
 ```
 
-CUDA/GPU is not required for the current dependency-light alpha workflows.
-Modal/GPU becomes useful for larger torch sweeps and hyperparameter searches.
+## Quick Start
 
-## Runtime Controller
+Analyze a built-in workflow:
 
-Use `AgentPropRuntimeController` when you want AgentProp to control execution,
-not merely generate guidance for another agent. The controller chooses seed
-nodes, allocates full versus compressed context, runs graph nodes through an
-injected executor, forces verifier nodes to receive full context by default, and
-records per-node trace events.
+```bash
+agentprop analyze planner_coder_tester_reviewer
+```
+
+Recommend context seed nodes under the RZF propagation model:
+
+```bash
+agentprop optimize planner_coder_tester_reviewer \
+  --budget 2 \
+  --algorithm greedy \
+  --model rzf
+```
+
+Compare graph propagation policies:
+
+```bash
+PYTHONPATH=src:. python experiments/run_benchmark.py \
+  --workflows chain planner_coder_tester_reviewer research_writer_verifier \
+  --algorithms rzf-centrality greedy betweenness pagerank random \
+  --models quality-cascade independent-cascade \
+  --budget 2 --trials 50 --decay --decay-seed 0 \
+  --out-dir results/my_run
+```
+
+Generate verifier-placement evidence:
+
+```bash
+PYTHONPATH=src:. python experiments/verifier_placement_evidence.py
+```
+
+Run the RZF scaling study:
+
+```bash
+PYTHONPATH=src:. python experiments/rzf_scaling_study.py
+```
+
+Use the runtime controller from Python:
 
 ```python
-from agentprop.runtime import (
-    AgentPropRuntimeController,
-    RuntimeControllerConfig,
-    RuntimeNodeResult,
-)
+from agentprop.runtime import AgentPropRuntimeController, RuntimeControllerConfig
 from agentprop.workflows import planner_coder_tester_reviewer
 
 graph = planner_coder_tester_reviewer()
 controller = AgentPropRuntimeController(
     graph,
     config=RuntimeControllerConfig(seed_budget=2, fixed_seeds=("coder", "tester")),
-    compressor=lambda context, *, task, target_ratio: context[:400],
-)
-
-def executor(request):
-    # Call your model, tool, verifier, or benchmark harness here.
-    return RuntimeNodeResult(node_id=request.node.id, output="node output")
-
-result = controller.run(
-    task="Implement the benchmark task",
-    shared_context="Full task spec, constraints, traces, and prior outputs",
-    executor=executor,
 )
 ```
 
-The terminal loop (`ControlledTerminalLoop`) gates every proposed command through
-the same controller. Mark self-reported evaluation results with `trusted=False`
-on `ExecutionEvent` so the controller issues a `FORCE_VERIFY` action instead of
-finalizing — preventing false passes where an agent trusts its own miscalibrated
-evaluation script. An independent verifier result (`trusted=True`) advances the
-loop to `FINALIZE`.
+## Coding-Agent Integration
 
-Terminal-Bench-specific launchers, model keys, and machine-local run state should
-live in private benchmark operations repos until the evidence is ready to
-publish. The public contract is the runtime controller API and the saved trace
-shape.
-
-## First Recipes
-
-Analyze a workflow:
-
-```bash
-agentprop analyze benchmarks/workflows/planner_coder_tester_reviewer.json
-```
-
-Recommend seed agents for context routing:
-
-```bash
-agentprop optimize planner_coder_tester_reviewer --budget 2 --algorithm greedy
-```
-
-Use quality-aware routing when correctness-sensitive roles should be protected:
-
-```bash
-agentprop optimize planner_coder_tester_reviewer \
-  --budget 2 \
-  --algorithm quality-aware-greedy
-```
-
-Simulate propagation:
-
-```bash
-agentprop simulate chain --seeds node_0 --model zero-forcing
-```
-
-Prune toward a token-reduction target:
-
-```bash
-agentprop prune planner_coder_tester_reviewer --target-token-reduction 0.3
-```
-
-Write an HTML report:
-
-```bash
-agentprop report planner_coder_tester_reviewer --out reports/demo.html --format html
-```
-
-Generate a Codex or Claude Code brief:
+AgentProp can be used with Codex CLI, Claude Code, or any MCP-capable editor
+agent as a workflow-analysis layer. It does not need model API keys to generate
+briefs or run local graph analysis; Codex can keep using `codex login`, and
+Claude Code can use the included skill/MCP-style integration.
 
 ```bash
 agentprop agent-instructions planner_coder_tester_reviewer \
   --target codex \
   --out reports/codex_agent_brief.md
+
+agentprop agent-instructions planner_coder_tester_reviewer \
+  --target claude-code \
+  --out reports/claude_code_agent_brief.md
 ```
 
-## Experiment Recipes
+Use these briefs for everyday implementation/review tasks, or run
+`agentprop-mcp` when a coding agent should call AgentProp tools directly while
+designing or debugging a multi-agent workflow.
 
-Run the benchmark table and SVG plot:
+## Research Position
 
-```bash
-PYTHONPATH=src:. python experiments/run_benchmark.py \
-  --workflows planner_coder_tester_reviewer chain tree \
-  --algorithms rzf-centrality greedy betweenness pagerank random \
-  --models quality-cascade independent-cascade \
-  --budget 2 \
-  --trials 50 \
-  --out-dir results/benchmark
-```
+AgentProp sits between graph theory, diffusion models, and agent evaluation. The
+core hypothesis is that agent workflows should be optimized as communication
+graphs under quality, cost, and observability constraints, rather than treated
+as opaque prompt loops.
 
-Add `--decay` to inject heterogeneous edge reliability before benchmarking,
-which produces meaningful `mean_output_quality` values for the quality-cascade
-model:
+Key inspirations:
 
-```bash
-PYTHONPATH=src:. python experiments/run_benchmark.py \
-  --workflows planner_coder_tester_reviewer chain \
-  --algorithms rzf-centrality greedy betweenness \
-  --models quality-cascade independent-cascade \
-  --budget 2 --trials 50 --decay --decay-seed 0 \
-  --out-dir results/benchmark_decay
-```
+- Jesse Geneson et al., [Randomized Zero Forcing](https://arxiv.org/abs/2602.16300):
+  stochastic propagation on directed weighted graphs.
+- Jesse Geneson, [Metric dimension and pattern avoidance in graphs](https://arxiv.org/abs/1807.08334):
+  resolving sets and graph observability.
+- Jesse Geneson and Leslie Hogben,
+  [Propagation time for probabilistic zero forcing](https://arxiv.org/abs/1812.10476):
+  expected propagation time as a graph parameter.
+- Kempe, Kleinberg, and Tardos,
+  [Maximizing the Spread of Influence through a Social Network](https://www.cs.cornell.edu/home/kleinber/kdd03-inf.pdf):
+  influence maximization under cascade models.
+- [GPTSwarm](https://openreview.net/pdf?id=uTC9AFXIhg),
+  [DyLAN](https://arxiv.org/abs/2310.02170), and
+  [AgentPrune](https://arxiv.org/abs/2410.02506):
+  agent workflows as optimizable, sparse, task-adaptive communication graphs.
 
-Run the verifier-placement evidence script (resolving coverage vs budget
-across all workflow templates):
+See [the documentation index](docs/index.md),
+[research references](docs/research/references.md), and the
+[literature review](docs/research/literature_review.md) for more detail.
 
-```bash
-PYTHONPATH=src:. python experiments/verifier_placement_evidence.py
-```
+## Status
 
-Run the RZF seeding scaling study on larger workflow graphs:
-
-```bash
-PYTHONPATH=src:. python experiments/rzf_scaling_study.py
-```
-
-Run a small ML/RL sweep:
-
-```bash
-PYTHONPATH=src:. python experiments/run_ml_rl_sweep.py \
-  --config configs/sweeps/ml_rl_smoke.json \
-  --artifact-root results/ml_rl_smoke
-```
-
-Dry-run the full recipe suite:
-
-```bash
-PYTHONPATH=src:. python experiments/run_experiment_suite.py \
-  --config configs/experiment_suites/ml_core.json \
-  --artifact-root results/ml_core \
-  --dry-run
-```
-
-Preflight the real LLM case study without making LLM calls:
-
-```bash
-PYTHONPATH=src:. python experiments/run_case_study.py \
-  --execution-mode llm \
-  --preflight \
-  --out-dir docs/results/case_study_001
-```
-
-Prepare a Terminal-Bench 2.1 + Terminus-2 launch bundle without running the
-benchmark:
-
-```bash
-agentprop terminal-bench prepare \
-  --dataset terminal-bench/terminal-bench-2-1 \
-  --agent terminus-2 \
-  --model google/gemini-3.1-pro-preview \
-  --environment modal \
-  --out-dir benchmark-results/terminal-bench-2.1
-```
-
-## Artifacts
-
-AgentProp writes plain, inspectable artifacts:
-
-- `results.json` / `results.csv` for benchmark and case-study rows
-- `summary.json` for aggregate metrics
-- `traces.jsonl` and `outputs.jsonl` for routed LLM execution traces
-- `verification_logs.jsonl` when command verification is enabled
-- `registry.json` for ML/RL checkpoints and metric artifacts
-- `manifest.json`, `RUNBOOK.md`, and watchdog status JSON for prepared external
-  benchmark runs
-- `*.svg` plots for benchmark and case-study summaries
-- Markdown, JSON, or HTML optimization reports
-
-This recipe-first layout is intentional: every claim should point to a command
-and a saved artifact.
-
-## What Is Implemented
-
-- Directed weighted `AgentGraph` with JSON, validation, NetworkX conversion, and
-  Graphviz DOT export.
-- Propagation models: Independent Cascade, Linear Threshold, Bootstrap
-  Percolation, Randomized Zero Forcing, deterministic Zero Forcing, and learned
-  trace-calibrated propagation.
-- Classical baselines: random, degree, in-degree, out-degree, PageRank,
-  betweenness, closeness, k-core, greedy, CELF, cost-aware greedy, and
-  quality-aware greedy.
-- Bottleneck, articulation, bridge, low-reliability, failure-sensitive, pruning,
-  observability, and verifier-placement diagnostics.
-- Metric-dimension verifier placement with `resolving_coverage` and
-  `fault_tolerant_resolving_coverage` metrics; guarantees unique failure
-  localization when coverage reaches 1.0.
-- RZF process-based centrality (`rzf-centrality`) for seed selection: scores
-  nodes by propagation coverage divided by expected propagation time, grounded
-  in randomized zero-forcing dynamics.
-- Quality-cascade propagation model (`quality-cascade`): propagates a continuous
-  quality score in topological order, making context allocation proportional to
-  the quality of information reaching each node.
-- Coverage-constrained cost metrics (`constrained_savings`, `critical_coverage`,
-  `cost_per_coverage`) that credit savings only when all critical workflow nodes
-  are reached — preventing a "reach-nothing, save-everything" artefact.
-- `inject_quality_decay` workflow transform for controlled benchmarking with
-  heterogeneous edge reliability.
-- Role-critical routing with context-sensitivity scores, graded context
-  allocation, calibrated compression ratios, risk annotations, and
-  verifier-placement coupling.
-- Workflow templates for agent-inspired workflows and synthetic graph families.
-- Quality scorers for exact match, human labels, rubrics, and injected
-  LLM-as-judge adapters.
-- Dependency-light ML baselines, optional torch GNNs, Q-learning, REINFORCE, PPO,
-  expanded workflow-control actions, a category-conditioned online bandit,
-  checkpoints, and artifact registry.
-- Framework interchange adapters and optional native hooks for LangGraph, CrewAI,
-  and OpenAI Agents SDK.
-- Claude Code/Codex instructions and a lightweight stdio MCP server.
-
-## Documentation
-
-- [Documentation index](docs/index.md)
-- [Tutorial](docs/tutorial.md)
-- [Quality-aware routing](docs/routing_quality.md)
-- [Case-study protocol](docs/research/case_study_protocol.md)
-- [ML/DL/RL guide](docs/deep_learning.md)
-- [Coding-agent integration](docs/coding_agents.md)
-- [Framework integrations](docs/framework_integrations.md)
-- [Publishing](docs/publishing.md)
-- [Security policy](SECURITY.md)
-- [Contributing](CONTRIBUTING.md)
+AgentProp is public alpha research software. The graph backbone, propagation
+models, runtime-control APIs, CLI, tests, and experiment scripts are usable, but
+the benchmark evidence is still early. Treat live-agent results as directional
+until larger repeated studies are published.
 
 ## Development
 
@@ -347,4 +208,5 @@ mypy src
 pytest
 ```
 
-CI runs the same gates on every push and pull request.
+CI runs the same gates on pull requests. AgentProp is released under the Apache
+2.0 license.

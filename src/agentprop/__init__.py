@@ -1,4 +1,4 @@
-"""AgentProp: graph optimization for multi-agent LLM workflows."""
+"""AgentProp: graph control for AI-agent workflows."""
 
 from agentprop.core import AgentEdge, AgentGraph, AgentNode, NodeType
 

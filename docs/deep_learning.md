@@ -157,7 +157,7 @@ traces exist to justify neural RL.
 
 AgentProp also includes a recipe-style ML/RL suite inspired by the config-first
 discipline in `huggingface/ml-intern`: keep credentials in environment
-variables, write every artifact under one private result root, and make runtime
+variables, write every artifact under one local result root, and make runtime
 expectations explicit.
 
 Dry-run the suite:
