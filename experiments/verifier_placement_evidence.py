@@ -1,4 +1,31 @@
-"""Verifier-placement evidence: resolving_coverage vs k + failure localization."""
+"""Verifier-placement evidence: resolving_coverage vs k + failure localization.
+
+This script is deterministic. Running it on the 14 built-in workflow templates
+reproduces the numbers reported in the docs and paper draft. Expected output
+(mean over 14 workflows):
+
+    TABLE V1 — resolving_coverage vs k
+      method            k=1     k=2     k=3     k=4     k=5   min-k@1.0
+      metric_dim       0.790   0.904   0.956   0.980   0.992    3.50
+      metric_dim_ft    0.790   0.904   0.956   0.980   0.992    3.50
+      risk_aware       0.688   0.851   0.930   0.966   0.983    4.14
+      betweenness      0.669   0.814   0.911   0.954   0.976    4.50
+
+    TABLE V2 — workflows reaching resolving_coverage==1.0 by k=5
+      metric_dim: 11/14    betweenness: 8/14
+
+    TABLE V3 — fault-tolerant coverage at k=5 (worst case after any single
+               verifier fails)
+      metric_dim (plain)  ft_coverage=0.833  fully-robust=0/14
+      metric_dim_ft       ft_coverage=0.972  fully-robust=9/14
+
+    DEMO — on planner_coder_tester_reviewer, the resolving set gives every node a
+    unique signature; a single verifier collides planner and tester (two distinct
+    failures become indistinguishable).
+
+If your numbers differ, check your agentprop version and that no workflow
+template was modified.
+"""
 
 import statistics as st
 from collections import defaultdict

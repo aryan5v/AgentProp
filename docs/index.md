@@ -4,18 +4,28 @@ AgentProp is a graph-control framework for AI-agent workflows. It models
 agents, tools, context, verifiers, and execution attempts as directed weighted
 graphs, then studies how information quality, failures, and cost propagate.
 
+AgentProp wraps your existing agent loop rather than replacing it. The only
+contract a harness must satisfy is emitting one `ExecutionEvent` per step; the
+controller then decides whether to continue, force an independent verification,
+switch strategy, or finalize. Adapters for LangGraph, AutoGen, CrewAI, OpenAI
+Agents, and LlamaIndex are in [framework integrations](framework_integrations.md).
+
 ## Start Here
 
 - [Tutorial walkthrough](tutorial.md)
 - [Workflow JSON schema](workflow_schema.md)
 - [Quality-aware routing](routing_quality.md)
-- [Verifier semantics](verifier_semantics.md)
+- [Verifier semantics](verifier_semantics.md) — the core metric-dimension
+  contribution: place verifiers so every distinct failure is uniquely localizable
 - [Quality scoring](quality_scoring.md)
-- [Framework integrations](framework_integrations.md)
+- [Framework integrations](framework_integrations.md) — wrap an existing
+  LangGraph, AutoGen, CrewAI, OpenAI Agents, or LlamaIndex workflow
 - [Coding agent integration](coding_agents.md)
 
 ## Research and Evaluation
 
+- [Reproducible results](research/reproducible_results.md) — the headline
+  verifier-placement and RZF-scaling tables, with the scripts that produce them
 - [Research references](research/references.md)
 - [Literature review](research/literature_review.md)
 - [Real LLM case-study protocol](research/case_study_protocol.md)

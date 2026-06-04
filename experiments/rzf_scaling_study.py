@@ -1,4 +1,27 @@
-"""RZF scaling experiment: does RZF dominate on large / latency-heavy graphs?"""
+"""RZF scaling experiment: does RZF dominate on large / latency-heavy graphs?
+
+This script is deterministic (fixed seeds, trials=100). It tests the scoped claim
+that process-based RZF centrality helps on LARGE graphs where static centrality
+misjudges reachability. Expected output (large graphs, IC, k=3&5 pooled):
+
+    TABLE S1 — constrained_savings on LARGE graphs
+      rzf-centrality   constr_sav=0.377  crit_cov=1.000
+      random           constr_sav=0.350  crit_cov=0.938
+      betweenness      constr_sav=0.284  crit_cov=0.875
+      greedy           constr_sav=0.243  crit_cov=1.000
+      pagerank         constr_sav=0.193  crit_cov=0.875
+
+    Key finding: RZF maintains 100% critical-node (goal) coverage while
+    betweenness/pagerank strand the output node ~12.5% of the time.
+
+    TABLE S3 — RZF vs betweenness per large graph (constrained_savings)
+      RZF wins 5, ties 0, losses 3. Wins are large (chain_30 +0.795,
+      dense_20 +0.538); losses are on small single-bottleneck DAGs where
+      betweenness picks the one bottleneck directly.
+
+Contrast with small graphs (under ~15 nodes), where classical centrality is
+competitive or better — see experiments/run_benchmark.py on the 14 templates.
+"""
 
 import statistics as st
 from collections import defaultdict
