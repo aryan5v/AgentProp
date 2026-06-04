@@ -24,17 +24,47 @@ controlled.
 
 The research wedge is simple:
 
-- **Metric dimension** gives the observability spine: where should verifiers or
-  logging landmarks sit so failures can be localized?
-- **Quality cascade** models how correctness, uncertainty, and compression
-  propagate through a workflow.
-- **Randomized Zero Forcing (RZF)** gives a stochastic graph-process baseline
-  for propagation time and scaling behavior.
-- **Runtime control** turns those ideas into actions: verify, retry, stop,
-  switch strategy, or send more context.
+- **Metric dimension** is the core contribution: framing verifier placement as a
+  resolving set makes failure localization a *provable* property — if resolving
+  coverage is 1.0, every distinct failure produces a unique signature and any
+  single faulty node is uniquely identifiable. With fault-tolerant metric dimension,
+  this holds even if one verifier itself fails. No weighted-heuristic placement can promise this.
+- **Quality cascade** models how correctness and compression propagate, so
+  context allocation follows the quality actually reaching each node.
+- **Randomized Zero Forcing (RZF)** is a *secondary, scoped* result: process-based
+  RZF centrality helps on **large** workflows where static centrality misjudges
+  reachability; on small graphs (under ~15 nodes) classical centrality is
+  competitive. Reported honestly, not as a universal win.
+- **Runtime control** turns those ideas into actions: verify, retry, stop, switch
+  strategy, or send more context.
 
-AgentProp is not another agent orchestrator. It is an analysis and control layer
-for workflows you already have, including coding-agent and benchmark runs.
+AgentProp is not another agent orchestrator. It wraps a workflow you already
+have: each step your agent proposes work, the controller inspects the accumulated
+`ExecutionEvent` history, and decides what happens next.
+
+```
+   task ─► ┌─ AgentProp control loop ───────────────────────┐
+           │  ┌────────┐  propose   ┌─────────────────────┐  │
+           │  │  your  │ ─────────► │ Stopping Controller │  │
+           │  │ agent  │ ◄───────── │ CONTINUE/VERIFY/    │  │ ─► result +
+           │  └────────┘  decision  │ SWITCH/FINALIZE     │  │    decision trace
+           │      └─ ExecutionEvent ┴─────────────────────┘  │
+           │     (tokens, exit code, verifier_passed, ...)   │
+           └─────────────────────────────────────────────────┘
+```
+
+Every decision is logged, so the trace is auditable. The only contract your
+harness must satisfy is emitting one `ExecutionEvent` per step. AgentProp ships
+dependency-light adapters for **LangGraph, AutoGen, CrewAI, OpenAI Agents, and
+LlamaIndex** (see [framework integrations](docs/framework_integrations.md)), and
+controls any other harness that can return an `ExecutionEvent`.
+
+**Why metric dimension matters (intuition):** a workflow only fails *usefully* if
+you can tell *which* node failed. With verifiers placed badly, a bad planner
+output and a bad tester output can produce the *same* observable signature — so
+you cannot route a fix. A resolving set guarantees each node's vector of distances
+to the verifiers is unique, giving every distinct failure a distinct fingerprint.
+See [verifier semantics](docs/verifier_semantics.md).
 
 ## Early Signal
 
@@ -130,6 +160,12 @@ Run the RZF scaling study:
 ```bash
 PYTHONPATH=src:. python experiments/rzf_scaling_study.py
 ```
+
+Both scripts are deterministic and print an expected-output block at the top of
+the source so you can confirm you reproduced the published numbers (metric
+dimension reaching a resolving set at lower budget `k`, and RZF leading on large
+graphs). The headline figures are summarized in
+[reproducible results](docs/research/reproducible_results.md).
 
 Use the runtime controller from Python:
 
