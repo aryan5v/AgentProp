@@ -1,6 +1,6 @@
 # AgentProp Workflow Optimizer
 
-[![skills.sh](https://skills.sh/b/aryan5v/AgentProp)](https://skills.sh/aryan5v/AgentProp)
+[![skills.sh](https://www.skills.sh/b/aryan5v/AgentProp)](https://www.skills.sh/aryan5v/AgentProp)
 
 AgentProp Workflow Optimizer is an agent skill for improving multi-agent
 systems with graph analysis and runtime-control guidance.

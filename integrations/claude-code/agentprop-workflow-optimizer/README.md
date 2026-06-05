@@ -1,6 +1,6 @@
 # AgentProp Workflow Optimizer Skill
 
-[![skills.sh](https://skills.sh/b/aryan5v/AgentProp)](https://skills.sh/aryan5v/AgentProp)
+[![skills.sh](https://www.skills.sh/b/aryan5v/AgentProp)](https://www.skills.sh/aryan5v/AgentProp)
 
 This skill teaches coding agents how to install and use AgentProp as a graph
 analysis and control layer for multi-agent workflows.
