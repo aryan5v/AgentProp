@@ -170,3 +170,23 @@ def test_cli_readiness_emits_json(capsys) -> None:  # type: ignore[no-untyped-de
     assert payload["alpha_ready"] is True
     assert payload["public_ready"] is False
     assert "Real routed LLM case-study results" in payload["blockers"]
+
+
+def test_cli_control_demo_writes_artifacts(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    exit_code = main(
+        [
+            "control-demo",
+            "--demo",
+            "terminal",
+            "--out-dir",
+            str(tmp_path),
+            "--json",
+        ]
+    )
+
+    assert exit_code == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert Path(payload["artifacts"]["trace"]).exists()
+    assert Path(payload["artifacts"]["summary"]).exists()
+    assert Path(payload["artifacts"]["report"]).exists()
+    assert payload["summary"]["outcome"]["passed"] is True

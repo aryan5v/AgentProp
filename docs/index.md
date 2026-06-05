@@ -21,6 +21,7 @@ Agents, and LlamaIndex are in [framework integrations](framework_integrations.md
 - [Framework integrations](framework_integrations.md) — wrap an existing
   LangGraph, AutoGen, CrewAI, OpenAI Agents, or LlamaIndex workflow
 - [Coding agent integration](coding_agents.md)
+- [Control layer quickstart](control_layer_quickstart.md)
 
 ## Research and Evaluation
 
@@ -47,6 +48,7 @@ agentprop prune planner_coder_tester_reviewer --target-token-reduction 0.3
 agentprop benchmark planner_coder_tester_reviewer --budget 2 --trials 50
 agentprop report planner_coder_tester_reviewer --out reports/demo.html --format html
 agentprop agent-instructions planner_coder_tester_reviewer --target codex --out reports/codex_agent_brief.md
+agentprop control-demo --demo terminal --out-dir reports/control-demo
 agentprop viz planner_coder_tester_reviewer --out reports/workflow.dot
 ```
 

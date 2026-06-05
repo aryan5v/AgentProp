@@ -25,6 +25,7 @@ from agentprop.runtime.controller import (
     RuntimeNodeResult,
     RuntimeRunResult,
 )
+from agentprop.runtime.session import ControlAnalysis, ControlSession, ControlSessionConfig
 from agentprop.runtime.terminal_loop import (
     ControlledTerminalLoop,
     TerminalCommandProposal,
@@ -42,6 +43,9 @@ __all__ = [
     "AgentTurnRequest",
     "AgentTurnResult",
     "ControlDecision",
+    "ControlAnalysis",
+    "ControlSession",
+    "ControlSessionConfig",
     "ControlledAgentLoop",
     "ControlledTerminalLoop",
     "ExecutionEvent",

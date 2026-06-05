@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.1.0-alpha.3 - 2026-06-05
+
+Beta-control-layer and skill distribution refresh:
+
+- Added `ControlSession`, a public analysis-backed runtime facade that records
+  events, returns control decisions, and writes `trace.jsonl`, `summary.json`,
+  and `report.md`.
+- Added key-free `agentprop control-demo` flows for terminal, multi-agent, and
+  framework-style workflows.
+- Added FastMCP-backed MCP tools with a dependency-free JSON-RPC fallback:
+  analysis, optimization, report, coding-agent brief, and live control-session
+  lifecycle tools.
+- Added the optional `agentprop[mcp]` package extra.
+- Added the installable `agentprop-workflow-optimizer` skill package for
+  skills.sh-style distribution, including task-specific references for install,
+  workflow analysis, coding agents, runtime control, framework builders, and
+  benchmark evidence.
+- Updated public docs and README with control-layer quickstarts, MCP install
+  guidance, skills.sh install commands, and responsible evidence language.
+
 ## 0.1.0-alpha.2 - 2026-06-04
 
 Research-facing public alpha refresh:

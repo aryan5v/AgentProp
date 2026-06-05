@@ -11,8 +11,10 @@
 <p align="center">
   <a href="https://github.com/aryan5v/AgentProp/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/aryan5v/AgentProp/actions/workflows/ci.yml/badge.svg" /></a>
   <a href="https://pypi.org/project/agentprop/"><img alt="PyPI" src="https://img.shields.io/pypi/v/agentprop.svg" /></a>
+  <a href="https://skills.sh/aryan5v/AgentProp"><img alt="skills.sh" src="https://skills.sh/b/aryan5v/AgentProp" /></a>
+  <a href="docs/coding_agents.md#mcp-server-shape"><img alt="MCP" src="https://img.shields.io/badge/MCP-FastMCP-12c95b" /></a>
   <a href="https://github.com/aryan5v/AgentProp/security"><img alt="Security" src="https://img.shields.io/badge/security-policy-black" /></a>
-  <img alt="Version" src="https://img.shields.io/badge/version-0.1.0a2-black" />
+  <img alt="Version" src="https://img.shields.io/badge/version-0.1.0a3-black" />
   <img alt="License" src="https://img.shields.io/badge/license-Apache--2.0-black" />
   <img alt="Status" src="https://img.shields.io/badge/status-public_alpha-12c95b" />
 </p>
@@ -96,10 +98,12 @@ controller around live coding-agent execution.
 - Runtime controllers for graph-node execution, terminal-loop control,
   verifier forcing, local-pass distrust, retry/stop/switch decisions, and
   category-conditioned bandit policies.
+- `ControlSession`, a small public facade that starts with graph analysis,
+  observes real execution events, returns control decisions, and saves traces.
 - Optional ML/DL/RL baselines: learned seed scorers, torch GNNs, Q-learning,
   REINFORCE, PPO, and artifact/checkpoint tooling.
-- Coding-agent integration helpers for Codex, Claude Code, MCP-style tools,
-  and framework adapters.
+- Coding-agent integration helpers for Codex, Claude Code, FastMCP tools, and
+  framework adapters.
 
 ## Install
 
@@ -119,6 +123,7 @@ Optional extras:
 ```bash
 python -m pip install -e ".[dl]"  # torch-backed graph models
 python -m pip install -e ".[rl]"  # Gymnasium-compatible RL experiments
+python -m pip install -e ".[mcp]" # FastMCP server for editor-agent tools
 ```
 
 ## Quick Start
@@ -167,17 +172,39 @@ dimension reaching a resolving set at lower budget `k`, and RZF leading on large
 graphs). The headline figures are summarized in
 [reproducible results](docs/research/reproducible_results.md).
 
-Use the runtime controller from Python:
+Run a key-free control-layer demo:
+
+```bash
+agentprop control-demo --demo terminal --out-dir reports/control-demo
+```
+
+The demo writes `trace.jsonl`, `summary.json`, and `report.md`. The trace starts
+with graph analysis, then records runtime events, features, decisions, and the
+final outcome.
+
+Use the runtime control facade from Python:
 
 ```python
-from agentprop.runtime import AgentPropRuntimeController, RuntimeControllerConfig
-from agentprop.workflows import planner_coder_tester_reviewer
+from agentprop.runtime import ControlSession, ExecutionEvent
 
-graph = planner_coder_tester_reviewer()
-controller = AgentPropRuntimeController(
-    graph,
-    config=RuntimeControllerConfig(seed_budget=2, fixed_seeds=("coder", "tester")),
+session = ControlSession.start(
+    "planner_coder_tester_reviewer",
+    task_id="task-123",
+    category="implementation",
+    token_budget=120_000,
+    baseline_tokens=180_000,
 )
+decision = session.observe(
+    ExecutionEvent(
+        step=1,
+        command="pytest -q",
+        verifier_run=True,
+        verifier_passed=False,
+        error_signature="AssertionError:test_edge_case",
+        tokens_used=18_000,
+    )
+)
+session.write_artifacts("reports/task-123")
 ```
 
 ## Coding-Agent Integration
@@ -200,6 +227,23 @@ agentprop agent-instructions planner_coder_tester_reviewer \
 Use these briefs for everyday implementation/review tasks, or run
 `agentprop-mcp` when a coding agent should call AgentProp tools directly while
 designing or debugging a multi-agent workflow.
+
+```bash
+python -m pip install "agentprop[mcp]"
+agentprop-mcp
+```
+
+The MCP server uses [FastMCP](https://github.com/PrefectHQ/fastmcp) when the
+extra is installed and exposes both analysis tools and live control-session
+tools. See the [control layer quickstart](docs/control_layer_quickstart.md) and
+[coding-agent integration guide](docs/coding_agents.md).
+
+The installable agent skill lives at
+[`skills/agentprop-workflow-optimizer`](skills/agentprop-workflow-optimizer):
+
+```bash
+npx skills add https://github.com/aryan5v/AgentProp --skill agentprop-workflow-optimizer
+```
 
 ## Research Position
 
