@@ -28,6 +28,7 @@ from agentprop.evaluation.terminal_bench import (
     write_terminal_bench_summary_report,
 )
 from agentprop.integrations import graph_from_trace, render_coding_agent_instructions
+from agentprop.runtime.demos import CONTROL_DEMOS, run_control_demo
 from agentprop.visualization import write_dot
 from agentprop.workflows import WORKFLOW_TEMPLATES
 
@@ -60,6 +61,8 @@ def main(argv: list[str] | None = None) -> int:
         return _readiness(args)
     if args.command == "terminal-bench":
         return _terminal_bench(args)
+    if args.command == "control-demo":
+        return _control_demo(args)
 
     parser.print_help()
     return 1
@@ -306,6 +309,14 @@ def _build_parser() -> argparse.ArgumentParser:
     terminal_bench_summarize.add_argument("--registry-root", type=Path, default=None)
     terminal_bench_summarize.add_argument("--json", action="store_true")
 
+    control_demo = subparsers.add_parser(
+        "control-demo",
+        help="run a key-free analysis + runtime-control demo",
+    )
+    control_demo.add_argument("--demo", choices=CONTROL_DEMOS, default="terminal")
+    control_demo.add_argument("--out-dir", type=Path, default=Path("reports/control-demo"))
+    control_demo.add_argument("--json", action="store_true")
+
     return parser
 
 
@@ -542,6 +553,23 @@ def _terminal_bench(args: argparse.Namespace) -> int:
         print(json.dumps(payload, indent=2, sort_keys=True))
     else:
         for name, path in payload.items():
+            print(f"{name}: {path}")
+    return 0
+
+
+def _control_demo(args: argparse.Namespace) -> int:
+    result = run_control_demo(args.demo, args.out_dir)
+    payload = {
+        "demo": result.demo,
+        "out_dir": str(result.out_dir),
+        "artifacts": {name: str(path) for name, path in result.artifacts.items()},
+        "summary": result.summary,
+    }
+    if args.json:
+        print(json.dumps(payload, indent=2, sort_keys=True))
+    else:
+        print(f"Wrote AgentProp control demo to {result.out_dir}")
+        for name, path in result.artifacts.items():
             print(f"{name}: {path}")
     return 0
 

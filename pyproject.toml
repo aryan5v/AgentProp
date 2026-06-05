@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "agentprop"
-version = "0.1.0a2"
+version = "0.1.0a3"
 description = "Graph control for AI-agent workflows."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -50,6 +50,9 @@ rl = [
 ]
 dl = [
   "torch>=2.2",
+]
+mcp = [
+  "fastmcp>=2.0",
 ]
 
 [project.urls]

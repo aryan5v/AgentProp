@@ -1,40 +1,39 @@
-# AgentProp 0.1.0-alpha.2 Release Notes
+# AgentProp 0.1.0-alpha.3 Release Notes
 
-Release date: 2026-06-04
+Release date: 2026-06-05
 
-AgentProp `0.1.0-alpha.2` is a research-facing public alpha refresh. It
-sharpens the project around graph observability, propagation control, and live
-agent-runtime governance.
+AgentProp `0.1.0-alpha.3` adds the first beta-ready control-layer surface: a
+small Python SDK facade, key-free demos, MCP tools, and an installable agent
+skill package.
 
 ## Highlights
 
-- New README and docs index centered on:
-  - metric-dimension verifier placement,
-  - Quality Cascade propagation,
-  - Randomized Zero Forcing scaling,
-  - runtime stop/retry/verify control.
-- Public references page for the graph theory, influence-maximization, and
-  multi-agent topology papers that inspired AgentProp.
-- Metric-dimension verifier placement with resolving coverage and
-  fault-tolerant resolving coverage.
-- Quality Cascade propagation model and quality-decay benchmarking transform.
-- Runtime controller improvements for terminal-agent loops:
-  - local-pass distrust,
-  - verifier forcing,
-  - stale-verifier avoidance,
-  - deferred command handling,
-  - safer pass-preserving finalization.
-- Category-conditioned bandit policy and safer reward shaping for learned
-  runtime control.
-- Early Codex CLI A0-vs-A2 smoke signal: on `terminal-bench/regex-log`, both
-  arms passed, while A2 used 33.8% fewer tokens, 41.0% lower reported cost, and
-  14.8% less wall time.
+- `ControlSession` facade for analysis-backed runtime wrapping:
+  - starts with graph analysis,
+  - observes `ExecutionEvent` rows,
+  - returns `CONTINUE`, `FORCE_VERIFY`, `SWITCH_STRATEGY`, or `FINALIZE`,
+  - writes `trace.jsonl`, `summary.json`, and `report.md`.
+- New CLI demos:
+  - `agentprop control-demo --demo terminal`
+  - `agentprop control-demo --demo multi-agent`
+  - `agentprop control-demo --demo framework`
+- FastMCP-backed MCP server with optional extra:
+  - `python -m pip install "agentprop[mcp]"`
+  - `agentprop-mcp`
+- MCP tools for analysis, optimization, reports, coding-agent briefs, and live
+  control sessions.
+- Installable skills.sh-style package:
+  - `skills/agentprop-workflow-optimizer/SKILL.md`
+  - task-specific references for install/config, workflow analysis, coding
+    agents, runtime control, framework builders, and evidence.
+- README badges and docs now surface PyPI, skills.sh, and MCP usage.
 
 ## Validation Scope
 
-This is still public alpha research software. The Codex CLI result is a
-single-task early signal, not a benchmark claim. Strong claims require repeated
-matched runs across larger held-out task sets.
+This release improves the user-facing control-layer experience. The demos are
+deterministic and key-free; they are onboarding evidence, not benchmark claims.
+Live benchmark claims still require repeated matched runs with saved traces,
+tokens, cost, elapsed time, and verifier outcomes.
 
 ## Suggested Checks Before Tagging
 
@@ -42,6 +41,7 @@ matched runs across larger held-out task sets.
 python -m ruff check .
 python -m mypy src
 python -m pytest
-PYTHONPATH=src:. python experiments/verifier_placement_evidence.py
-PYTHONPATH=src:. python experiments/rzf_scaling_study.py
+PYTHONPATH=src python -m agentprop.cli control-demo --demo terminal --out-dir /tmp/agentprop-control-demo
+python -m build
+twine check dist/*
 ```

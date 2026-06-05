@@ -12,8 +12,9 @@ For teams building multi-agent systems, AgentProp can also run as a tool layer:
 the CLI and `agentprop-mcp` expose graph diagnostics, verifier placement,
 routing recommendations, and benchmark/report generation to editor agents.
 
-For controlled runtime experiments, AgentProp can wrap an execution loop and
-record `ExecutionEvent` traces for stop/retry/verify decisions.
+For controlled runtime experiments, AgentProp can wrap an execution loop through
+`ControlSession` and record `ExecutionEvent` traces for stop/retry/verify
+decisions.
 
 ## Everyday Codex And Claude Code Use
 
@@ -60,7 +61,38 @@ Claude Code supports Agent Skills for reusable procedures and MCP for external
 tools:
 
 ```text
+skills/agentprop-workflow-optimizer/SKILL.md
 integrations/claude-code/agentprop-workflow-optimizer/SKILL.md
+```
+
+Install the public skill package with:
+
+```bash
+npx skills add https://github.com/aryan5v/AgentProp --skill agentprop-workflow-optimizer
+```
+
+List skills before installing:
+
+```bash
+npx skills add aryan5v/AgentProp --list
+```
+
+Install globally for Codex and Claude Code:
+
+```bash
+npx skills add aryan5v/AgentProp \
+  --skill agentprop-workflow-optimizer \
+  --agent codex \
+  --agent claude-code \
+  --global
+```
+
+Try it without installing:
+
+```bash
+npx skills use aryan5v/AgentProp \
+  --skill agentprop-workflow-optimizer \
+  --agent codex
 ```
 
 See the Claude Code docs for
@@ -173,14 +205,49 @@ or Harbor/Terminal-Bench action, translate terminal/model observations into
 Keep model keys, task sandboxes, and machine-local retry state in local
 configuration rather than committed artifacts.
 
+For a smaller public facade, use `ControlSession`. It starts with graph analysis
+and then wraps real execution events:
+
+```python
+from agentprop.runtime import ControlSession, ExecutionEvent
+
+session = ControlSession.start(
+    "planner_coder_tester_reviewer",
+    task_id="codex-task-123",
+    category="implementation",
+    token_budget=120_000,
+)
+decision = session.observe(
+    ExecutionEvent(
+        step=1,
+        command="pytest -q",
+        verifier_run=True,
+        verifier_passed=False,
+        error_signature="AssertionError:test_edge_case",
+        tokens_used=18_000,
+    )
+)
+session.write_artifacts("reports/codex-task-123")
+```
+
+Run the key-free demos before wiring a real coding agent:
+
+```bash
+agentprop control-demo --demo terminal --out-dir reports/control-demo
+agentprop control-demo --demo multi-agent --out-dir reports/control-demo
+agentprop control-demo --demo framework --out-dir reports/control-demo
+```
+
 ## MCP Server Shape
 
 An MCP server is the best long-term integration for editor agents because it
 can expose AgentProp as tools instead of requiring agents to shell out.
 
-AgentProp includes a lightweight stdio JSON-RPC server:
+AgentProp uses [FastMCP](https://github.com/PrefectHQ/fastmcp) when installed,
+with a dependency-free JSON-RPC fallback for tests and minimal local setups:
 
 ```bash
+python -m pip install "agentprop[mcp]"
 agentprop-mcp
 ```
 
@@ -191,9 +258,11 @@ Recommended tools:
 - `agentprop_optimize`: returns seed recommendations and cost/coverage deltas.
 - `agentprop_report`: writes Markdown/JSON/HTML reports.
 - `agentprop_agent_instructions`: returns the coding-agent brief as Markdown.
-- `agentprop_run_suite`: launches configured ML/DL/RL experiment recipes.
-- `agentprop_case_study_analysis`: turns saved case-study results into tables
-  and plots.
+- `agentprop_control_start`: starts an analysis-backed control session.
+- `agentprop_control_observe`: records one runtime event and returns a decision.
+- `agentprop_control_decide`: returns the current decision without adding an
+  event.
+- `agentprop_control_finish`: records the final outcome and closes the session.
 
 The MCP server should keep secrets out of tool arguments. Provider credentials
 should be read from local environment variables, a secret manager, or
@@ -205,6 +274,10 @@ Current implemented MCP-style tools:
 - `agentprop_optimize`
 - `agentprop_report`
 - `agentprop_agent_instructions`
+- `agentprop_control_start`
+- `agentprop_control_observe`
+- `agentprop_control_decide`
+- `agentprop_control_finish`
 
 Claude Code skill template:
 
