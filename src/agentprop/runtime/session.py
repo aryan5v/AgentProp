@@ -153,7 +153,7 @@ class ControlSession:
     def observe(self, event: ExecutionEvent) -> ControlDecision:
         """Record one execution event and return the next control decision."""
 
-        features = self.tracker.observe(event)
+        features = self.tracker.observe(event)  # incremental: O(1) features, no full history rescan
         decision = self.controller.decide(features)
         self.decisions.append(decision)
         self._record(
