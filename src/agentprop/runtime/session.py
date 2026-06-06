@@ -188,8 +188,15 @@ class ControlSession:
         strategy: str = "agentprop_controller",
         quality_score: float | None = None,
         metadata: dict[str, object] | None = None,
+        regression_risk: float = 0.0,
     ) -> dict[str, object]:
-        """Record the final outcome and update the session's reward row."""
+        """Record the final outcome and update the session's reward row.
+
+        regression_risk (simple 0-1 signal) can be supplied by the caller after
+        consulting an ExpectedSuccessProfile built from trace_loader empirical
+        rows. It flows into the bandit update so the policy learns to avoid
+        strategies that historically caused regressions.
+        """
 
         features = self._features()
         reward_row = self._reward_logger.record(
@@ -205,6 +212,7 @@ class ControlSession:
             features=features,
             action=self.decisions[-1].action if self.decisions else None,
             outcome=metadata,
+            regression_risk=regression_risk,
         )
         self.outcome = reward_row
         self._record("outcome", reward_row)

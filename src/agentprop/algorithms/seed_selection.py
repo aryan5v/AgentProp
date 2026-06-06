@@ -5,11 +5,16 @@ from __future__ import annotations
 import random
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import networkx as nx
 
 from agentprop.core import AgentGraph, NodeType
 from agentprop.propagation import IndependentCascade, PropagationModel, RandomizedZeroForcing
+
+if TYPE_CHECKING:
+    # Only for annotations; loaded lazily to avoid import cycles with evaluation.
+    from agentprop.evaluation.routing import ExpectedSuccessProfile
 
 ScoreMap = dict[str, float]
 
@@ -202,16 +207,31 @@ def quality_aware_greedy_seed_selection(
     cost_weight: float = 0.001,
     quality_weight: float = 1.0,
     importance_weight: float = 1.0,
+    success_profile: ExpectedSuccessProfile | None = None,
 ) -> list[str]:
     """Select seeds for expected task success minus token cost.
 
-    This is the public bridge between topology-first influence maximization and
-    empirical quality-aware routing. It uses existing node metadata now and can be
-    swapped to learned expected-success estimators as trace data accumulates.
+    Phase 0 risk wiring: when an ExpectedSuccessProfile (calibrated from
+    trace_loader empirical rows via calibrate_expected_success) is supplied,
+    we boost protection/importance for nodes that empirical data shows suffer
+    large success regressions under compression. This is a simple scalar
+    adjustment on top of the existing importance_weight + protect flag so that
+    the "quality_aware" path (used by default in live ControlSession when
+    selector=quality_aware or auto on small graphs) incorporates regression risk
+    without changing the outer greedy algorithm.
     """
 
     def objective(coverage: float, propagation_time: float) -> float:
         return quality_weight * coverage - 0.02 * propagation_time
+
+    eff_importance = importance_weight + cost_weight
+    if success_profile is not None and success_profile.node_context_penalties:
+        # Simple boost: add average penalty mass to importance so high-risk
+        # (high regression under compression) nodes are preferentially seeded.
+        avg_pen = sum(success_profile.node_context_penalties.values()) / max(
+            1, len(success_profile.node_context_penalties)
+        )
+        eff_importance += 3.0 * max(0.0, min(2.0, avg_pen))
 
     return greedy_seed_selection(
         graph,
@@ -219,7 +239,7 @@ def quality_aware_greedy_seed_selection(
         propagation_model=propagation_model,
         trials=trials,
         objective=objective,
-        importance_weight=importance_weight + cost_weight,
+        importance_weight=eff_importance,
         protect_critical_nodes=True,
     )
 
