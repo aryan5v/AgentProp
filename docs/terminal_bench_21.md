@@ -4,6 +4,11 @@ AgentProp includes a dry-run preparation path for a future Terminal-Bench 2.1
 run with Terminus-2. The preparation command writes the run manifest, runbook,
 AgentProp guidance, and watchdog shell script without executing Harbor.
 
+> **Local output only.** Launch bundles are written to your chosen output
+> directory (for example `benchmark-results/`). Do not commit manifests, runbooks,
+> or watchdog scripts to the public repository. See
+> [results/ARTIFACTS.md](results/ARTIFACTS.md).
+
 ## Prepare The Launch Bundle
 
 ```bash

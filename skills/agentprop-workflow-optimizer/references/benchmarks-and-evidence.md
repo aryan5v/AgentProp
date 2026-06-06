@@ -30,7 +30,10 @@ For each result, save:
 
 ## Terminal-Bench Preparation
 
-Prepare launch bundles before running expensive benchmarks:
+Prepare launch bundles before running expensive benchmarks. Write them to a local
+output directory (`benchmark-results/`); do not commit manifests, runbooks, or
+watchdog scripts to the public repository. Only sanitized summaries belong under
+`docs/results/` (see `docs/results/ARTIFACTS.md`).
 
 ```bash
 agentprop terminal-bench prepare \

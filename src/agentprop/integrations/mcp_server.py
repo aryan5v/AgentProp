@@ -236,7 +236,7 @@ def create_fastmcp_app() -> Any:
     def agentprop_optimize(
         workflow: str,
         budget: int = 2,
-        algorithm: str = "greedy",
+        algorithm: str = "auto",
         model: str = "independent-cascade",
         trials: int = 100,
     ) -> dict[str, Any]:
@@ -491,7 +491,7 @@ def _recommendation(arguments: dict[str, Any], graph: AgentGraph) -> Recommendat
         RecommendationReport,
         _build_recommendation_report(
             graph,
-            algorithm=str(arguments.get("algorithm", "greedy")),
+            algorithm=str(arguments.get("algorithm", "auto")),
             model_name=str(arguments.get("model", "independent-cascade")),
             budget=int(arguments.get("budget", 2)),
             trials=int(arguments.get("trials", 100)),

@@ -1,0 +1,272 @@
+[
+  {
+    "algorithm": "quality-aware-greedy",
+    "arm": "qc_quality_aware",
+    "broadcast_cost": 6125.0,
+    "coverage": 1.0,
+    "estimated_savings": 0.31505102040816324,
+    "mean_output_quality": 1.0,
+    "model": "quality-cascade",
+    "optimized_cost": 4195.3125,
+    "seeds": [
+      "node_0",
+      "node_1"
+    ],
+    "workflow": "chain"
+  },
+  {
+    "algorithm": "pagerank",
+    "arm": "ic_pagerank",
+    "broadcast_cost": 6125.0,
+    "coverage": 1.0,
+    "estimated_savings": 0.31505102040816324,
+    "mean_output_quality": 0.0,
+    "model": "independent-cascade",
+    "optimized_cost": 4195.3125,
+    "seeds": [
+      "node_0",
+      "node_1"
+    ],
+    "workflow": "chain"
+  },
+  {
+    "algorithm": "greedy",
+    "arm": "ic_greedy",
+    "broadcast_cost": 6125.0,
+    "coverage": 1.0,
+    "estimated_savings": 0.3031122448979592,
+    "mean_output_quality": 0.0,
+    "model": "independent-cascade",
+    "optimized_cost": 4268.4375,
+    "seeds": [
+      "node_0",
+      "node_3"
+    ],
+    "workflow": "chain"
+  },
+  {
+    "algorithm": "quality-aware-greedy",
+    "arm": "qc_quality_aware",
+    "broadcast_cost": 7700,
+    "coverage": 0.8,
+    "estimated_savings": 0.37516233766233764,
+    "mean_output_quality": 1.0,
+    "model": "quality-cascade",
+    "optimized_cost": 4811.25,
+    "seeds": [
+      "coder",
+      "tester"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "pagerank",
+    "arm": "ic_pagerank",
+    "broadcast_cost": 7700,
+    "coverage": 1.0,
+    "estimated_savings": 0.10146103896103896,
+    "mean_output_quality": 0.0,
+    "model": "independent-cascade",
+    "optimized_cost": 6918.75,
+    "seeds": [
+      "coder",
+      "planner"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "greedy",
+    "arm": "ic_greedy",
+    "broadcast_cost": 7700,
+    "coverage": 0.8,
+    "estimated_savings": 0.37516233766233764,
+    "mean_output_quality": 0.0,
+    "model": "independent-cascade",
+    "optimized_cost": 4811.25,
+    "seeds": [
+      "coder",
+      "tester"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "algorithm": "quality-aware-greedy",
+    "arm": "qc_quality_aware",
+    "broadcast_cost": 8700,
+    "coverage": 1.0,
+    "estimated_savings": 0.2642241379310345,
+    "mean_output_quality": 1.0,
+    "model": "quality-cascade",
+    "optimized_cost": 6401.25,
+    "seeds": [
+      "verifier",
+      "planner"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "pagerank",
+    "arm": "ic_pagerank",
+    "broadcast_cost": 8700,
+    "coverage": 1.0,
+    "estimated_savings": 0.1956896551724138,
+    "mean_output_quality": 0.0,
+    "model": "independent-cascade",
+    "optimized_cost": 6997.5,
+    "seeds": [
+      "planner",
+      "writer"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "greedy",
+    "arm": "ic_greedy",
+    "broadcast_cost": 8700,
+    "coverage": 1.0,
+    "estimated_savings": 0.2642241379310345,
+    "mean_output_quality": 0.0,
+    "model": "independent-cascade",
+    "optimized_cost": 6401.25,
+    "seeds": [
+      "verifier",
+      "planner"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "algorithm": "quality-aware-greedy",
+    "arm": "qc_quality_aware",
+    "broadcast_cost": 7200,
+    "coverage": 1.0,
+    "estimated_savings": 0.24461805555555555,
+    "mean_output_quality": 1.0,
+    "model": "quality-cascade",
+    "optimized_cost": 5438.75,
+    "seeds": [
+      "verifier",
+      "query"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "pagerank",
+    "arm": "ic_pagerank",
+    "broadcast_cost": 7200,
+    "coverage": 1.0,
+    "estimated_savings": 0.21493055555555557,
+    "mean_output_quality": 0.0,
+    "model": "independent-cascade",
+    "optimized_cost": 5652.5,
+    "seeds": [
+      "query",
+      "retriever"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "greedy",
+    "arm": "ic_greedy",
+    "broadcast_cost": 7200,
+    "coverage": 1.0,
+    "estimated_savings": 0.24461805555555555,
+    "mean_output_quality": 0.0,
+    "model": "independent-cascade",
+    "optimized_cost": 5438.75,
+    "seeds": [
+      "verifier",
+      "query"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "algorithm": "quality-aware-greedy",
+    "arm": "qc_quality_aware",
+    "broadcast_cost": 8795.0,
+    "coverage": 1.0,
+    "estimated_savings": 0.2639638999431495,
+    "mean_output_quality": 1.0,
+    "model": "quality-cascade",
+    "optimized_cost": 6473.4375,
+    "seeds": [
+      "node_0",
+      "node_1"
+    ],
+    "workflow": "dense_graph"
+  },
+  {
+    "algorithm": "pagerank",
+    "arm": "ic_pagerank",
+    "broadcast_cost": 8795.0,
+    "coverage": 1.0,
+    "estimated_savings": 0.2639638999431495,
+    "mean_output_quality": 0.0,
+    "model": "independent-cascade",
+    "optimized_cost": 6473.4375,
+    "seeds": [
+      "node_0",
+      "node_1"
+    ],
+    "workflow": "dense_graph"
+  },
+  {
+    "algorithm": "greedy",
+    "arm": "ic_greedy",
+    "broadcast_cost": 8795.0,
+    "coverage": 1.0,
+    "estimated_savings": 0.2639638999431495,
+    "mean_output_quality": 0.0,
+    "model": "independent-cascade",
+    "optimized_cost": 6473.4375,
+    "seeds": [
+      "node_0",
+      "node_1"
+    ],
+    "workflow": "dense_graph"
+  },
+  {
+    "algorithm": "quality-aware-greedy",
+    "arm": "qc_quality_aware",
+    "broadcast_cost": 7500.0,
+    "coverage": 0.42857142857142855,
+    "estimated_savings": 0.7493333333333333,
+    "mean_output_quality": 1.0,
+    "model": "quality-cascade",
+    "optimized_cost": 1880.0,
+    "seeds": [
+      "verifier_a",
+      "verifier_b"
+    ],
+    "workflow": "layered_pipeline"
+  },
+  {
+    "algorithm": "pagerank",
+    "arm": "ic_pagerank",
+    "broadcast_cost": 7500.0,
+    "coverage": 1.0,
+    "estimated_savings": 0.24291666666666667,
+    "mean_output_quality": 0.0,
+    "model": "independent-cascade",
+    "optimized_cost": 5678.125,
+    "seeds": [
+      "planner",
+      "worker_a"
+    ],
+    "workflow": "layered_pipeline"
+  },
+  {
+    "algorithm": "greedy",
+    "arm": "ic_greedy",
+    "broadcast_cost": 7500.0,
+    "coverage": 0.42857142857142855,
+    "estimated_savings": 0.7493333333333333,
+    "mean_output_quality": 0.0,
+    "model": "independent-cascade",
+    "optimized_cost": 1880.0,
+    "seeds": [
+      "verifier_a",
+      "verifier_b"
+    ],
+    "workflow": "layered_pipeline"
+  }
+]

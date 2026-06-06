@@ -17,7 +17,7 @@ from agentprop.core import AgentGraph, AgentNode, NodeType
 from agentprop.evaluation import graded_context_allocations, routing_risks
 from agentprop.propagation import IndependentCascade
 
-SeedSelectorName = Literal["quality_aware", "greedy", "rzf"]
+SeedSelectorName = Literal["quality_aware", "greedy", "rzf", "auto"]
 ActivationMode = Literal["all", "propagated"]
 
 
@@ -41,7 +41,7 @@ class RuntimeControllerConfig:
 
     seed_budget: int = 2
     trials: int = 50
-    seed_selector: SeedSelectorName = "quality_aware"
+    seed_selector: SeedSelectorName = "auto"
     seed: int = 0
     force_verifier_full_context: bool = True
     compressed_context_ratio: float = 0.35
@@ -211,23 +211,37 @@ class AgentPropRuntimeController:
         )
 
     def _select_seeds(self) -> list[str]:
+        """Choose seeds for the control propagation simulation.
+
+        Phase 0 cheap-defaults: when seed_selector="auto" (the new default for
+        ControlSession / runtime analysis), pick the cheap rzf-centrality for
+        node_count > 15 and keep the previous quality_aware (greedy-based) for
+        small graphs. This keeps interactive ControlSession starts fast while
+        preserving exact behavior on tiny workflows.
+        """
         if self.config.fixed_seeds:
             return list(self.config.fixed_seeds[: self.config.seed_budget])
+
+        effective = self.config.seed_selector
+        if effective == "auto":
+            effective = "rzf" if self.graph.node_count > 15 else "quality_aware"
+
         model = IndependentCascade(seed=self.config.seed)
-        if self.config.seed_selector == "greedy":
+        if effective == "greedy":
             return greedy_seed_selection(
                 self.graph,
                 self.config.seed_budget,
                 propagation_model=model,
                 trials=self.config.trials,
             )
-        if self.config.seed_selector == "rzf":
+        if effective == "rzf":
             return rzf_centrality_seed_selection(
                 self.graph,
                 self.config.seed_budget,
                 trials=self.config.trials,
                 seed=self.config.seed,
             )
+        # quality_aware or fallback
         return quality_aware_greedy_seed_selection(
             self.graph,
             self.config.seed_budget,

@@ -1,0 +1,66 @@
+{
+  "nodes": [
+    {
+      "id": "planner",
+      "type": "PLANNER",
+      "name": "Planner",
+      "token_cost": 900,
+      "reliability": 0.92,
+      "error_rate": 0.05
+    },
+    {
+      "id": "coder",
+      "type": "EXECUTOR",
+      "name": "Coder",
+      "token_cost": 1200,
+      "reliability": 0.88,
+      "error_rate": 0.08
+    },
+    {
+      "id": "tester",
+      "type": "VERIFIER",
+      "name": "Tester",
+      "token_cost": 700,
+      "reliability": 0.9,
+      "error_rate": 0.04
+    },
+    {
+      "id": "final",
+      "type": "OUTPUT",
+      "name": "Final",
+      "token_cost": 300,
+      "reliability": 0.99,
+      "error_rate": 0.01
+    }
+  ],
+  "edges": [
+    {
+      "source": "planner",
+      "target": "coder",
+      "message_cost": 400,
+      "relevance": 0.9,
+      "weight": 1.0
+    },
+    {
+      "source": "coder",
+      "target": "tester",
+      "message_cost": 350,
+      "relevance": 0.85,
+      "weight": 0.9
+    },
+    {
+      "source": "tester",
+      "target": "coder",
+      "message_cost": 200,
+      "relevance": 0.7,
+      "weight": 0.6
+    },
+    {
+      "source": "tester",
+      "target": "final",
+      "message_cost": 250,
+      "relevance": 0.95,
+      "weight": 1.0
+    }
+  ]
+}

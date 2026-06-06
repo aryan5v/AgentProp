@@ -8,8 +8,44 @@ AgentProp is early, but the contribution standard is intentionally high: every f
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -e ".[dev]"
-pytest
+make test   # or: pytest
 ```
+
+With an editable install, `experiments/` and `examples/` run without
+`PYTHONPATH=src`. See [docs/environment.md](docs/environment.md).
+
+## Data, Secrets, And Benchmark Artifacts
+
+AgentProp is a **public** repository. Do not commit anything that should stay
+private or local.
+
+**Never commit:**
+
+- API keys, tokens, `.env` files, or Harbor/Modal/provider credentials
+- Local experiment output (`results/`, `reports/`, `benchmark-results/`)
+- In-progress benchmark files (`PARTIAL_REPORT.md`, `results_partial.json`,
+  `checkpoint.json`)
+- Raw LLM prompts or traces from paid runs
+- Terminal-Bench launch bundles (manifest, runbook, watchdog scripts) — generate
+  these locally with `agentprop terminal-bench prepare`
+
+**Safe to commit under `docs/results/` only when sanitized:**
+
+- Final `REPORT.md` and `results.json` with limitations stated
+- `outputs.jsonl` rows with task metadata, pass/fail, and token counts — not raw
+  prompts or secrets
+
+See [docs/results/ARTIFACTS.md](docs/results/ARTIFACTS.md) for the manifest of
+intentional public artifacts. CI runs a secret scan on every pull request.
+
+**Keep internal notes local:**
+
+- Paper outlines, research backlogs, release/publishing runbooks, extended
+  postmortems, and "what we should do next" roadmaps belong under `docs/local/`
+  (gitignored). Copy [docs/local/README.example.md](docs/local/README.example.md)
+  as a starting point.
+- If a doc has blockers, remaining work, or reads like notes to the team, it does
+  not belong in the public `docs/` tree.
 
 ## Quality Gates
 

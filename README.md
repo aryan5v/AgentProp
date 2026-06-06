@@ -114,16 +114,29 @@ python -m pip install agentprop
 For development:
 
 ```bash
+python -m venv .venv && source .venv/bin/activate
 python -m pip install -e ".[dev]"
+agentprop doctor --tier dev
 python -m pytest
 ```
+
+Editable install removes the need for `PYTHONPATH=src` when running
+`experiments/` or `examples/` from the venv. See [docs/environment.md](docs/environment.md).
 
 Optional extras:
 
 ```bash
+python -m pip install -e ".[ml]"  # numpy-backed ML scorers
 python -m pip install -e ".[dl]"  # torch-backed graph models
 python -m pip install -e ".[rl]"  # Gymnasium-compatible RL experiments
 python -m pip install -e ".[mcp]" # FastMCP server for editor-agent tools
+```
+
+Quick health check:
+
+```bash
+agentprop doctor --tier graph
+agentprop readiness --json
 ```
 
 ## Quick Start

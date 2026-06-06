@@ -56,14 +56,11 @@ codex login
 codex exec "Use reports/codex_agent_brief.md while implementing the requested workflow change."
 ```
 
-For Claude Code, use the included skill directory as the reusable procedure.
-Claude Code supports Agent Skills for reusable procedures and MCP for external
-tools:
-
-```text
-skills/agentprop-workflow-optimizer/SKILL.md
-integrations/claude-code/agentprop-workflow-optimizer/SKILL.md
-```
+For Claude Code, use the canonical skill at
+`skills/agentprop-workflow-optimizer/`. The
+`integrations/claude-code/agentprop-workflow-optimizer/` path is a thin install
+wrapper that adds Claude/Codex UI metadata (`agents/openai.yaml`) and points at
+the same skill content.
 
 Install the public skill package with:
 

@@ -134,8 +134,9 @@ task success.
 `tune-mjcf` ended with `AgentTimeoutError`, so it should be interpreted as a
 timeout-sensitive regression. `chess-best-move` is the cleaner behavioral
 regression and should be reviewed before making stronger benchmark claims.
-The concrete lessons and policy fixes are recorded in
-[regression_lessons.md](regression_lessons.md).
+Policy fixes from those regressions are incorporated into the guidance generated
+by `agentprop terminal-bench prepare` (see
+[Terminal-Bench 2.1 preparation](../../terminal_bench_21.md)).
 
 ## Failure Modes
 

@@ -16,6 +16,13 @@ workflow semantics:
 - `workflows/generic_dag.json`: layered directed acyclic propagation.
 - `workflows/layered_pipeline.json`: planner, worker, verifier, output layers.
 
+Research reproduction scripts (from repo checkout with editable install):
+
+```bash
+python experiments/failure_localization_study.py
+python experiments/quality_cascade_vs_ic.py
+```
+
 Recommended graph-family smoke test:
 
 ```bash

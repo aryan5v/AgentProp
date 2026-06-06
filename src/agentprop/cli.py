@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import importlib.metadata
 import json
+import shutil
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -14,7 +17,12 @@ from agentprop.algorithms import (
     risk_aware_verifier_placement,
 )
 from agentprop.core import AgentGraph
+from agentprop.core.validation import WorkflowValidationError
 from agentprop.evaluation import compare_routing, evaluate_pruning, summarize_pruning_risk
+from agentprop.evaluation.constants import (
+    PROPAGATION_MODEL_CHOICES,
+    SEED_ALGORITHM_CHOICES,
+)
 from agentprop.evaluation.readiness import (
     build_v1_readiness_report,
     render_v1_readiness_markdown,
@@ -30,15 +38,42 @@ from agentprop.evaluation.terminal_bench import (
 from agentprop.integrations import graph_from_trace, render_coding_agent_instructions
 from agentprop.runtime.demos import CONTROL_DEMOS, run_control_demo
 from agentprop.visualization import write_dot
-from agentprop.workflows import WORKFLOW_TEMPLATES
+from agentprop.workflows import WORKFLOW_DESCRIPTIONS, WORKFLOW_TEMPLATES
+
+_CLI_EPILOG = """
+examples:
+  agentprop analyze planner_coder_tester_reviewer --json
+  agentprop optimize planner_coder_tester_reviewer --budget 2
+  agentprop control-demo --demo terminal --out-dir reports/control-demo
+
+See docs/index.md for the full tutorial.
+"""
 
 
 def main(argv: list[str] | None = None) -> int:
     """Run the AgentProp CLI."""
 
     parser = _build_parser()
-    args = parser.parse_args(argv)
+    try:
+        args = parser.parse_args(argv)
+        if getattr(args, "version", False):
+            try:
+                print(importlib.metadata.version("agentprop"))
+            except importlib.metadata.PackageNotFoundError:
+                print("unknown (package not installed)")
+            return 0
+        return _dispatch(args, parser)
+    except WorkflowValidationError as error:
+        print("Workflow validation failed:", file=sys.stderr)
+        for issue in error.issues:
+            print(f"  {issue.format()}", file=sys.stderr)
+        return 2
+    except ValueError as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 2
 
+
+def _dispatch(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
     if args.command == "optimize":
         return _optimize(args)
     if args.command == "analyze":
@@ -63,29 +98,32 @@ def main(argv: list[str] | None = None) -> int:
         return _terminal_bench(args)
     if args.command == "control-demo":
         return _control_demo(args)
+    if args.command == "workflows":
+        return _workflows(args)
+    if args.command == "doctor":
+        return _doctor(args)
+    if args.command == "ingest-trace":
+        return _ingest_trace(args)
 
     parser.print_help()
     return 1
 
 
 def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="agentprop")
+    parser = argparse.ArgumentParser(
+        prog="agentprop",
+        description="Graph control for AI-agent workflows.",
+        epilog=_CLI_EPILOG,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument(
+        "--version",
+        action="store_true",
+        help="print package version and exit",
+    )
     subparsers = parser.add_subparsers(dest="command")
-    algorithm_choices = [
-        "random",
-        "degree",
-        "in-degree",
-        "out-degree",
-        "pagerank",
-        "betweenness",
-        "closeness",
-        "k-core",
-        "pure-greedy",
-        "greedy",
-        "celf",
-        "cost-aware-greedy",
-        "quality-aware-greedy",
-    ]
+    algorithm_choices = ["auto", *SEED_ALGORITHM_CHOICES]
+    model_choices = list(PROPAGATION_MODEL_CHOICES)
 
     optimize = subparsers.add_parser("optimize", help="recommend seed nodes for a workflow graph")
     optimize.add_argument("workflow", type=Path)
@@ -93,18 +131,15 @@ def _build_parser() -> argparse.ArgumentParser:
     optimize.add_argument(
         "--algorithm",
         choices=algorithm_choices,
-        default="greedy",
+        default="auto",
+        help=(
+            "Seed algorithm. 'auto' uses rzf-centrality for graphs with >15 nodes "
+            "and greedy for small graphs."
+        ),
     )
     optimize.add_argument(
         "--model",
-        choices=[
-            "independent-cascade",
-            "linear-threshold",
-            "bootstrap",
-            "rzf",
-            "zero-forcing",
-            "learned",
-        ],
+        choices=model_choices,
         default="independent-cascade",
     )
     optimize.add_argument("--trials", type=int, default=100)
@@ -128,14 +163,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "--models",
         nargs="+",
         default=["independent-cascade", "rzf"],
-        choices=[
-            "independent-cascade",
-            "linear-threshold",
-            "bootstrap",
-            "rzf",
-            "zero-forcing",
-            "learned",
-        ],
+        choices=model_choices,
     )
     benchmark.add_argument("--json", action="store_true")
 
@@ -145,18 +173,12 @@ def _build_parser() -> argparse.ArgumentParser:
     report.add_argument(
         "--algorithm",
         choices=algorithm_choices,
-        default="greedy",
+        default="auto",
+        help="Seed algorithm. 'auto' uses rzf-centrality for graphs with >15 nodes.",
     )
     report.add_argument(
         "--model",
-        choices=[
-            "independent-cascade",
-            "linear-threshold",
-            "bootstrap",
-            "rzf",
-            "zero-forcing",
-            "learned",
-        ],
+        choices=model_choices,
         default="independent-cascade",
     )
     report.add_argument("--trials", type=int, default=100)
@@ -180,14 +202,7 @@ def _build_parser() -> argparse.ArgumentParser:
     simulate.add_argument("--seeds", nargs="+", required=True)
     simulate.add_argument(
         "--model",
-        choices=[
-            "independent-cascade",
-            "linear-threshold",
-            "bootstrap",
-            "rzf",
-            "zero-forcing",
-            "learned",
-        ],
+        choices=model_choices,
         default="independent-cascade",
     )
     simulate.add_argument("--trials", type=int, default=100)
@@ -204,14 +219,7 @@ def _build_parser() -> argparse.ArgumentParser:
     prune.add_argument("--budget", "-k", type=int, default=2)
     prune.add_argument(
         "--model",
-        choices=[
-            "independent-cascade",
-            "linear-threshold",
-            "bootstrap",
-            "rzf",
-            "zero-forcing",
-            "learned",
-        ],
+        choices=model_choices,
         default="independent-cascade",
     )
     prune.add_argument("--trials", type=int, default=100)
@@ -234,18 +242,12 @@ def _build_parser() -> argparse.ArgumentParser:
     instructions.add_argument(
         "--algorithm",
         choices=algorithm_choices,
-        default="greedy",
+        default="auto",
+        help="Seed algorithm. 'auto' uses rzf-centrality for graphs with >15 nodes.",
     )
     instructions.add_argument(
         "--model",
-        choices=[
-            "independent-cascade",
-            "linear-threshold",
-            "bootstrap",
-            "rzf",
-            "zero-forcing",
-            "learned",
-        ],
+        choices=model_choices,
         default="independent-cascade",
     )
     instructions.add_argument("--trials", type=int, default=100)
@@ -262,10 +264,14 @@ def _build_parser() -> argparse.ArgumentParser:
 
     readiness = subparsers.add_parser(
         "readiness",
-        help="show evidence-backed v1 rollout readiness",
+        help="show implementation maturity by component area",
     )
     readiness.add_argument("--json", action="store_true", help="emit machine-readable JSON")
-    readiness.add_argument("--out", type=Path, help="write readiness report to a file")
+    readiness.add_argument(
+        "--out",
+        type=Path,
+        help="write maturity report to a file (use docs/local/ for private notes)",
+    )
 
     terminal_bench = subparsers.add_parser(
         "terminal-bench",
@@ -316,6 +322,47 @@ def _build_parser() -> argparse.ArgumentParser:
     control_demo.add_argument("--demo", choices=CONTROL_DEMOS, default="terminal")
     control_demo.add_argument("--out-dir", type=Path, default=Path("reports/control-demo"))
     control_demo.add_argument("--json", action="store_true")
+
+    workflows = subparsers.add_parser(
+        "workflows",
+        help="list built-in workflow template names",
+    )
+    workflows_sub = workflows.add_subparsers(dest="workflows_command")
+    workflows_list = workflows_sub.add_parser("list", help="print built-in workflow names")
+    workflows_list.add_argument("--json", action="store_true")
+
+    doctor = subparsers.add_parser(
+        "doctor",
+        help="check install, optional deps, and environment for a usage tier",
+    )
+    doctor.add_argument(
+        "--tier",
+        choices=["graph", "dev", "llm", "terminal-bench"],
+        default="graph",
+        help="usage tier to validate (default: graph — no API keys required)",
+    )
+    doctor.add_argument("--json", action="store_true")
+
+    ingest = subparsers.add_parser(
+        "ingest-trace",
+        help="convert a trace to workflow JSON, optimize seeds, and write a control brief",
+    )
+    ingest.add_argument("trace_file", type=Path)
+    ingest.add_argument("--out-workflow", type=Path, default=Path("results/ingested_workflow.json"))
+    ingest.add_argument("--out-brief", type=Path, default=Path("reports/ingested_brief.md"))
+    ingest.add_argument("--budget", "-k", type=int, default=2)
+    ingest.add_argument(
+        "--algorithm",
+        choices=algorithm_choices,
+        default="auto",
+    )
+    ingest.add_argument(
+        "--model",
+        choices=model_choices,
+        default="quality-cascade",
+    )
+    ingest.add_argument("--trials", type=int, default=50)
+    ingest.add_argument("--json", action="store_true")
 
     return parser
 
@@ -557,6 +604,148 @@ def _terminal_bench(args: argparse.Namespace) -> int:
     return 0
 
 
+def _workflows(args: argparse.Namespace) -> int:
+    if args.workflows_command != "list":
+        raise SystemExit("Error: workflows requires a subcommand: list")
+
+    rows = [
+        {"name": name, "description": WORKFLOW_DESCRIPTIONS.get(name, "")}
+        for name in sorted(WORKFLOW_TEMPLATES)
+    ]
+    if args.json:
+        print(json.dumps(rows, indent=2, sort_keys=True))
+    else:
+        print("Built-in workflow templates:")
+        for row in rows:
+            print(f"  {row['name']}: {row['description']}")
+    return 0
+
+
+def _doctor(args: argparse.Namespace) -> int:
+    checks: list[dict[str, object]] = []
+    ok = True
+
+    def record(name: str, passed: bool, detail: str) -> None:
+        nonlocal ok
+        if not passed:
+            ok = False
+        checks.append({"name": name, "ok": passed, "detail": detail})
+
+    try:
+        version = importlib.metadata.version("agentprop")
+        record("agentprop", True, f"version {version}")
+    except importlib.metadata.PackageNotFoundError:
+        record("agentprop", False, "package not installed; run pip install -e .")
+
+    record("networkx", _optional_import("networkx"), "core graph dependency")
+
+    if args.tier in {"dev", "llm", "terminal-bench"}:
+        record("pytest", _optional_import("pytest"), "dev extra: pip install -e '.[dev]'")
+        record("ruff", _optional_import("ruff"), "dev extra")
+        record("mypy", _optional_import("mypy"), "dev extra")
+
+    if args.tier in {"llm", "terminal-bench"}:
+        import os
+
+        has_key = bool(os.environ.get("OPENAI_API_KEY") or os.environ.get("TOKEN_ROUTER_API_KEY"))
+        record(
+            "llm_credentials",
+            has_key,
+            "set OPENAI_API_KEY or TOKEN_ROUTER_API_KEY (see docs/environment.md)",
+        )
+
+    if args.tier == "terminal-bench":
+        record("harbor", shutil.which("harbor") is not None, "Harbor CLI for Terminal-Bench runs")
+        record("dot", shutil.which("dot") is not None, "Graphviz dot for viz rendering")
+
+    graphviz_ok = shutil.which("dot") is not None
+    if args.tier == "graph":
+        checks.append(
+            {
+                "name": "graphviz_dot",
+                "ok": graphviz_ok,
+                "detail": "optional; required only to render .dot files",
+            }
+        )
+    else:
+        record("graphviz_dot", graphviz_ok, "optional; required only to render .dot files")
+
+    payload = {
+        "tier": args.tier,
+        "ok": ok,
+        "checks": checks,
+        "next_step": _doctor_next_step(args.tier, ok),
+    }
+    if args.json:
+        print(json.dumps(payload, indent=2, sort_keys=True))
+    else:
+        print(f"AgentProp doctor (tier={args.tier}): {'PASS' if ok else 'FAIL'}")
+        for check in checks:
+            status = "ok" if check["ok"] else "FAIL"
+            print(f"  [{status}] {check['name']}: {check['detail']}")
+        print(f"Next: {payload['next_step']}")
+    return 0 if ok else 1
+
+
+def _doctor_next_step(tier: str, ok: bool) -> str:
+    if ok and tier == "graph":
+        return "agentprop analyze planner_coder_tester_reviewer --json"
+    if ok and tier == "dev":
+        return "pytest"
+    if not ok and tier == "graph":
+        return "python -m pip install -e ."
+    if not ok and tier == "dev":
+        return "python -m pip install -e '.[dev]'"
+    return "see docs/environment.md"
+
+
+def _optional_import(module_name: str) -> bool:
+    try:
+        __import__(module_name)
+        return True
+    except ImportError:
+        return False
+
+
+def _ingest_trace(args: argparse.Namespace) -> int:
+    result = graph_from_trace(args.trace_file)
+    args.out_workflow.parent.mkdir(parents=True, exist_ok=True)
+    result.graph.to_json(args.out_workflow)
+
+    report = _build_recommendation_report(
+        result.graph,
+        algorithm=args.algorithm,
+        model_name=args.model,
+        budget=args.budget,
+        trials=args.trials,
+    )
+    brief = render_coding_agent_instructions(
+        report,
+        workflow_name=args.out_workflow.stem,
+        target="generic",
+    )
+    args.out_brief.parent.mkdir(parents=True, exist_ok=True)
+    args.out_brief.write_text(brief)
+
+    payload = {
+        "trace_file": str(args.trace_file),
+        "workflow": str(args.out_workflow),
+        "brief": str(args.out_brief),
+        "message_count": result.message_count,
+        "total_token_cost": result.total_token_cost,
+        "seeds": report.seeds,
+        "estimated_savings": report.estimated_savings,
+    }
+    if args.json:
+        print(json.dumps(payload, indent=2, sort_keys=True))
+    else:
+        print(f"Wrote workflow {args.out_workflow}")
+        print(f"Wrote brief {args.out_brief}")
+        print(f"Seeds: {', '.join(report.seeds)}")
+        print(f"Estimated savings: {report.estimated_savings:.1%}")
+    return 0
+
+
 def _control_demo(args: argparse.Namespace) -> int:
     result = run_control_demo(args.demo, args.out_dir)
     payload = {
@@ -621,6 +810,14 @@ def _build_recommendation_report(
     pruning_target_token_reduction: float = 0.3,
     pruning_strategy: str = "low-weight",
 ) -> Any:
+    # Phase 0 cheap-defaults: for CLI/MCP "analysis/optimize/report" paths,
+    # default expensive seed selection (greedy family) to the cheap rzf-centrality
+    # when the workflow is larger than ~15 nodes. This makes interactive use and
+    # MCP tools scale; exact greedy/CELF remain available (and are still the default
+    # for tiny graphs and for paper-grade exact results).
+    if algorithm in {"auto", "default"} or (algorithm == "greedy" and graph.node_count > 15):
+        algorithm = "rzf-centrality" if graph.node_count > 15 else "greedy"
+
     model = make_propagation_model(model_name)
     seeds = select_seeds(graph, algorithm, budget, model, trials)
     propagation = model.simulate(graph, seeds, trials=trials)

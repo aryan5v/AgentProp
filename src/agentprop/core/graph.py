@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -13,11 +14,26 @@ from agentprop.core.types import NodeType
 from agentprop.core.validation import validate_workflow_dict
 
 
+@dataclass(slots=True)
+class GraphAnalysisCache:
+    """Per-graph memo for derived analysis results (distances, centralities, etc).
+
+    Populated lazily by algorithms to avoid repeated expensive graph computations
+    such as all-pairs shortest paths for metric dimension / resolving sets.
+    Callers should treat fields as read-only; use AgentGraph helpers to populate.
+    """
+
+    undirected_node_ids: list[str] | None = None
+    undirected_distances: dict[str, dict[str, int]] | None = None
+    # Future phases will add: betweenness, core_numbers, ancestor closures, etc.
+
+
 class AgentGraph:
     """A directed weighted graph of agents, tools, memories, and verifiers."""
 
     def __init__(self) -> None:
         self._graph: nx.DiGraph = nx.DiGraph()
+        self._analysis_cache: GraphAnalysisCache = GraphAnalysisCache()
 
     @property
     def node_count(self) -> int:
@@ -63,6 +79,7 @@ class AgentGraph:
             metadata=metadata,
         )
         self._graph.add_node(node_id, **node.to_dict())
+        self._clear_analysis_cache()
         return node
 
     def add_agent(self, node_id: str, **metadata: Any) -> AgentNode:
@@ -118,6 +135,7 @@ class AgentGraph:
             metadata=metadata,
         )
         self._graph.add_edge(source, target, **edge.to_dict())
+        self._clear_analysis_cache()
         return edge
 
     def node(self, node_id: str) -> AgentNode:
@@ -178,6 +196,34 @@ class AgentGraph:
         """Return incoming neighbor ids."""
 
         return list(self._graph.predecessors(node_id))
+
+    def _clear_analysis_cache(self) -> None:
+        """Invalidate cached analysis results (e.g. after structural mutation)."""
+        self._analysis_cache.undirected_node_ids = None
+        self._analysis_cache.undirected_distances = None
+
+    def _ensure_undirected_distances(self) -> tuple[list[str], dict[str, dict[str, int]]]:
+        """Return (node_ids, distances) using memoized all-pairs shortest paths on the
+        undirected version of the graph. Used by metric dimension / resolving set
+        algorithms to avoid O(n * (n+m)) recomputation on every call.
+        """
+        cache = self._analysis_cache
+        if cache.undirected_distances is None or cache.undirected_node_ids is None:
+            nx_ug = self._graph.to_undirected()
+            node_ids = sorted(str(n) for n in nx_ug.nodes())
+            distances = dict(nx.all_pairs_shortest_path_length(nx_ug))
+            cache.undirected_node_ids = node_ids
+            cache.undirected_distances = distances
+        return cache.undirected_node_ids, cache.undirected_distances
+
+    def get_undirected_distances(self) -> tuple[list[str], dict[str, dict[str, int]]]:
+        """Return cached (node_ids, distances) for undirected shortest paths.
+
+        This powers metric-dimension verifier placement and resolving coverage
+        without repeated all-pairs computations. The cache is invalidated on
+        structural changes (add_node/add_edge).
+        """
+        return self._ensure_undirected_distances()
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize the graph to JSON-compatible data."""

@@ -19,6 +19,7 @@ from agentprop.algorithms import (
     rzf_centrality_seed_selection,
 )
 from agentprop.core import AgentGraph
+from agentprop.evaluation.constants import normalize_propagation_model
 from agentprop.evaluation.metrics import compare_routing, coverage_constrained_cost
 from agentprop.propagation import (
     BootstrapPercolation,
@@ -116,19 +117,20 @@ def run_benchmark(
 def make_propagation_model(name: str) -> PropagationModel:
     """Create a propagation model by CLI/API name."""
 
-    if name in {"independent-cascade", "ic"}:
+    name = normalize_propagation_model(name)
+    if name == "independent-cascade":
         return IndependentCascade(seed=0)
-    if name in {"linear-threshold", "lt"}:
+    if name == "linear-threshold":
         return LinearThreshold()
-    if name in {"bootstrap", "bootstrap-percolation"}:
+    if name == "bootstrap":
         return BootstrapPercolation()
     if name in {"rzf", "randomized-zero-forcing"}:
         return RandomizedZeroForcing(seed=0)
-    if name in {"zero-forcing", "zf"}:
+    if name == "zero-forcing":
         return ZeroForcing()
-    if name in {"learned", "trace-learned"}:
+    if name == "learned":
         return LearnedPropagation(seed=0)
-    if name in {"quality-cascade", "qc"}:
+    if name == "quality-cascade":
         return QualityCascade()
     raise ValueError(f"Unknown propagation model: {name}")
 
