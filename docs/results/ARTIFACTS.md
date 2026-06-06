@@ -38,6 +38,7 @@ Working notes use the gitignored [`docs/local/`](../local/README.example.md) lay
 | [failure_localization/](failure_localization/results.json) | Final | Synthetic collision-rate study |
 | [quality_cascade_vs_ic/](quality_cascade_vs_ic/results.json) | Final | QC vs IC routing comparison |
 | [terminal_bench_multi/](terminal_bench_multi/README.md) | Protocol | Multi-task A0 vs A2 comparison guide |
+| [scale_quality_evidence/](scale_quality_evidence/README.md) | Directional | Synthetic multi-workflow routing matrix (IMM/RZF/greedy arms) |
 
 Before adding a new directory, confirm the report labels limitations clearly and
 that `outputs.jsonl` contains no secrets or private prompts.

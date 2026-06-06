@@ -80,6 +80,8 @@ def _dispatch(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
         return _analyze(args)
     if args.command == "benchmark":
         return _benchmark(args)
+    if args.command == "run-evidence":
+        return _run_evidence(args)
     if args.command == "report":
         return _report(args)
     if args.command == "simulate":
@@ -133,7 +135,8 @@ def _build_parser() -> argparse.ArgumentParser:
         choices=algorithm_choices,
         default="auto",
         help=(
-            "Seed algorithm. 'auto' uses rzf-centrality for graphs with >15 nodes "
+            "Seed algorithm. 'auto' uses greedy (n≤15), rzf-centrality (15<n≤60), "
+            "or imm (n>60). "
             "and greedy for small graphs."
         ),
     )
@@ -167,6 +170,20 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     benchmark.add_argument("--json", action="store_true")
 
+    run_evidence = subparsers.add_parser(
+        "run-evidence",
+        help="run multi-workflow routing evidence matrix and write docs/results artifacts",
+    )
+    run_evidence.add_argument(
+        "--out-dir",
+        type=Path,
+        default=Path("docs/results/scale_quality_evidence"),
+    )
+    run_evidence.add_argument("--tasks-per-arm", type=int, default=30)
+    run_evidence.add_argument("--repeats", type=int, default=3)
+    run_evidence.add_argument("--seed-budget", type=int, default=3)
+    run_evidence.add_argument("--trials", type=int, default=50)
+
     report = subparsers.add_parser("report", help="write a Markdown, JSON, or HTML report")
     report.add_argument("workflow", help="workflow JSON path or built-in workflow name")
     report.add_argument("--budget", "-k", type=int, default=2)
@@ -174,7 +191,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "--algorithm",
         choices=algorithm_choices,
         default="auto",
-        help="Seed algorithm. 'auto' uses rzf-centrality for graphs with >15 nodes.",
+        help="Seed algorithm. 'auto' picks greedy/rzf-centrality/imm by graph size.",
     )
     report.add_argument(
         "--model",
@@ -243,7 +260,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "--algorithm",
         choices=algorithm_choices,
         default="auto",
-        help="Seed algorithm. 'auto' uses rzf-centrality for graphs with >15 nodes.",
+        help="Seed algorithm. 'auto' picks greedy/rzf-centrality/imm by graph size.",
     )
     instructions.add_argument(
         "--model",
@@ -381,6 +398,23 @@ def _optimize(args: argparse.Namespace) -> int:
         print(json.dumps(report_to_dict(report), indent=2, sort_keys=True))
     else:
         _print_report(report)
+    return 0
+
+
+def _run_evidence(args: argparse.Namespace) -> int:
+    from agentprop.evaluation.evidence_harness import (
+        EvidenceHarnessConfig,
+        write_evidence_artifacts,
+    )
+
+    config = EvidenceHarnessConfig(
+        tasks_per_arm=args.tasks_per_arm,
+        repeats=args.repeats,
+        seed_budget=args.seed_budget,
+        trials=args.trials,
+    )
+    results_path = write_evidence_artifacts(config, args.out_dir)
+    print(f"Wrote {results_path}")
     return 0
 
 
@@ -815,8 +849,12 @@ def _build_recommendation_report(
     # when the workflow is larger than ~15 nodes. This makes interactive use and
     # MCP tools scale; exact greedy/CELF remain available (and are still the default
     # for tiny graphs and for paper-grade exact results).
-    if algorithm in {"auto", "default"} or (algorithm == "greedy" and graph.node_count > 15):
-        algorithm = "rzf-centrality" if graph.node_count > 15 else "greedy"
+    from agentprop.algorithms.seed_selection import auto_seed_algorithm
+
+    if algorithm in {"auto", "default"} or (
+        algorithm == "greedy" and graph.node_count > 15
+    ):
+        algorithm = auto_seed_algorithm(graph, requested=algorithm)
 
     model = make_propagation_model(model_name)
     seeds = select_seeds(graph, algorithm, budget, model, trials)

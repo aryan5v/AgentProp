@@ -345,6 +345,31 @@ def feedback_loop_workflow() -> AgentGraph:
     return graph
 
 
+def dynamic_conditional_workflow() -> AgentGraph:
+    """Planner routes to fast or thorough paths via conditional edges."""
+
+    graph = AgentGraph()
+    graph.add_node("planner", type=NodeType.PLANNER, **_synthetic_node_metrics(0))
+    graph.add_agent("fast_worker", **_synthetic_node_metrics(1))
+    graph.add_agent("thorough_worker", **_synthetic_node_metrics(2))
+    graph.add_verifier("verifier", **_synthetic_node_metrics(3))
+    graph.add_node("final", type=NodeType.OUTPUT, **_synthetic_node_metrics(4))
+    graph.add_edge("planner", "fast_worker", message_cost=280, latency=0.2, weight=0.8)
+    graph.add_conditional_edge(
+        "planner",
+        "thorough_worker",
+        condition_key="route",
+        condition_value="thorough",
+        message_cost=360,
+        latency=0.3,
+        weight=0.85,
+    )
+    graph.add_edge("fast_worker", "verifier", message_cost=240, latency=0.2, weight=0.75)
+    graph.add_edge("thorough_worker", "verifier", message_cost=300, latency=0.25, weight=0.82)
+    graph.add_edge("verifier", "final", message_cost=180, latency=0.15, weight=0.9)
+    return graph
+
+
 def shared_memory_workflow() -> AgentGraph:
     """Agents read/write a shared memory node (document hub)."""
 
@@ -440,6 +465,7 @@ def _synthetic_node_metrics(index: int) -> dict[str, Any]:
 
 WORKFLOW_TEMPLATES = {
     "chain": chain_workflow,
+    "dynamic_conditional": dynamic_conditional_workflow,
     "fan_out_parallel": fan_out_parallel_workflow,
     "feedback_loop": feedback_loop_workflow,
     "shared_memory": shared_memory_workflow,
@@ -460,6 +486,7 @@ WORKFLOW_TEMPLATES = {
 
 WORKFLOW_DESCRIPTIONS: dict[str, str] = {
     "chain": "Linear propagation path for cut-point and bridge tests",
+    "dynamic_conditional": "Runtime-conditional fast vs thorough routing branches",
     "fan_out_parallel": "Planner fan-out to parallel workers merging at verifier",
     "feedback_loop": "Coder-tester correction loop with reviewer gate",
     "shared_memory": "Hub-and-spoke shared memory with planner/researcher/writer",

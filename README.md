@@ -48,7 +48,7 @@ Recent library work removes the main computational ceilings for interactive use:
 | --- | --- | --- |
 | Verifier placement / resolving sets | Repeated all-pairs recompute | Memoized distances + incremental resolving tracker (`n≈100` usable) |
 | Greedy / CELF seed selection | `O(k·n)` full MC re-sims | Lazy CELF re-evaluation + candidate sampling on large graphs |
-| Default CLI/MCP optimize | Always greedy MC | `auto` → `rzf-centrality` when `node_count > 15` |
+| Default CLI/MCP optimize | Always greedy MC | `auto` → greedy / RZF / IMM by graph size (15, 60 thresholds) |
 | IC / RZF propagation | `to_networkx()` copy per trial | Integer-indexed adjacency + optional `simulate_batch` |
 | Runtime control features | `O(steps)` rescans | Incremental `ExecutionStateTracker` (`O(1)` per step) |
 | Context compression | Blind ratio truncation | Structured **critical-fact** slices for convention-sensitive tasks |

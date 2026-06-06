@@ -187,4 +187,12 @@ def select_seeds(
         )
     if algorithm == "rzf-centrality":
         return rzf_centrality_seed_selection(graph, budget, trials=trials, seed=0)
+    if algorithm in {"imm", "tim"}:
+        from agentprop.algorithms.influence_maximization import (
+            imm_greedy_seed_selection,
+            tim_seed_selection,
+        )
+
+        selector = tim_seed_selection if algorithm == "tim" else imm_greedy_seed_selection
+        return selector(graph, budget, propagation_model=model, trials=trials)
     raise ValueError(f"Unknown seed algorithm: {algorithm}")

@@ -568,3 +568,29 @@ def rzf_centrality_seed_selection(
         scores[node_id] = result.coverage / max(1.0, propagation_time)
 
     return sorted(candidates, key=lambda n: (-scores[n], n))[:k]
+
+
+# Graph size at which interactive paths switch from exact greedy to RZF centrality.
+_CHEAP_DEFAULT_NODE_THRESHOLD = 15
+# Graph size at which greedy-family requests use IMM/TIM RR-set backend.
+_IMM_BACKEND_NODE_THRESHOLD = 60
+
+
+def auto_seed_algorithm(graph: AgentGraph, *, requested: str = "auto") -> str:
+    """Pick a seed algorithm for *requested* based on graph size.
+
+    - ``n <= 15``: exact ``greedy`` (or the explicit algorithm if not auto).
+    - ``15 < n <= 60``: ``rzf-centrality`` for auto/greedy on large graphs.
+    - ``n > 60``: ``imm`` TIM/IMM-style backend for greedy-family requests.
+    """
+
+    normalized = requested.strip().lower()
+    if normalized not in {"auto", "default", "greedy"}:
+        return normalized
+
+    node_count = graph.node_count
+    if node_count > _IMM_BACKEND_NODE_THRESHOLD:
+        return "imm"
+    if node_count > _CHEAP_DEFAULT_NODE_THRESHOLD:
+        return "rzf-centrality"
+    return "greedy"

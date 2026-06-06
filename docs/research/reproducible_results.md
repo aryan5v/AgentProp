@@ -22,8 +22,34 @@ Targets after Phase 0–1 (synthetic `chain` workflows, dev laptop class hardwar
 | `rzf_trials_n60` (50 trials) | 60 | < 3 s |
 | `tracker_long_trace` (200 steps) | — | < 0.25 s |
 
-Fast vs exact paths: interactive CLI/MCP defaults to `rzf-centrality` when
-`node_count > 15`; pass `--algorithm greedy` for paper-grade exact greedy/CELF.
+Fast vs exact paths: interactive CLI/MCP `auto` picks `greedy` (n≤15),
+`rzf-centrality` (15<n≤60), or `imm`/`tim` RR-set backend (n>60). Pass
+`--algorithm greedy` or `--algorithm celf` for paper-grade exact selection on
+small graphs.
+
+## Dynamic graphs (runtime mutations)
+
+`ControlSession` supports runtime `mutate_add_node`, `mutate_remove_node`,
+`mutate_add_edge`, `mutate_add_conditional_edge`, and `mutate_remove_edge`.
+Pass `routing_context` in runtime metadata (or call `effective_graph(context)`)
+to resolve conditional edges. Template: `dynamic_conditional`.
+
+## Scale / quality evidence matrix
+
+```bash
+agentprop run-evidence
+# or:
+PYTHONPATH=src:. python experiments/run_evidence_harness.py
+# quick smoke artifact:
+agentprop run-evidence --tasks-per-arm 5 --repeats 2
+```
+
+Artifacts: [docs/results/scale_quality_evidence/](../results/scale_quality_evidence/README.md)
+(`results.json`, `outputs.jsonl`, `REPORT.md`). Compares broadcast, greedy,
+quality-aware-greedy, RZF, IMM, and degree baselines across `fan_out_parallel`,
+`feedback_loop`, `shared_memory`, `dynamic_conditional`, and core templates.
+Default config: **N=30 tasks/arm, 3 repeats**. Label as **directional** until
+live LLM task runs are added.
 
 ## Verifier placement (core contribution)
 
