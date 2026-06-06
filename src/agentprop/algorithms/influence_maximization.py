@@ -6,7 +6,7 @@ import random
 from dataclasses import dataclass
 
 from agentprop.core import AgentGraph
-from agentprop.propagation import IndependentCascade, PropagationModel
+from agentprop.propagation import PropagationModel
 
 
 @dataclass(slots=True)
