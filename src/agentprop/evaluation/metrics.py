@@ -274,7 +274,7 @@ def seeded_routing_cost(
 def build_what_if_k_curve(
     graph: AgentGraph,
     *,
-    model,
+    model: Any,
     candidate_seeds: list[str],
     max_k: int,
     trials: int = 50,

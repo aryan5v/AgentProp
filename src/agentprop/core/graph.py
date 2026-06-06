@@ -186,12 +186,12 @@ class AgentGraph:
     def has_node(self, node_id: str) -> bool:
         """Return True when ``node_id`` exists (no graph copy)."""
 
-        return node_id in self._graph
+        return bool(node_id in self._graph)
 
     def has_edge(self, source: str, target: str) -> bool:
         """Return True when a directed edge exists (no graph copy)."""
 
-        return self._graph.has_edge(source, target)
+        return bool(self._graph.has_edge(source, target))
 
     def node_ids(self) -> list[str]:
         """Return all node ids without materializing AgentNode objects."""
@@ -201,7 +201,7 @@ class AgentGraph:
     def is_dag(self) -> bool:
         """Return True when the graph is a directed acyclic graph."""
 
-        return nx.is_directed_acyclic_graph(self._graph)
+        return bool(nx.is_directed_acyclic_graph(self._graph))
 
     def topological_order(self) -> list[str]:
         """Return a topological order for DAG workflows."""

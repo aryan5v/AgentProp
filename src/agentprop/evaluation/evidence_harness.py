@@ -143,4 +143,4 @@ def summaries_to_dict(summaries: list[EvidenceSummary]) -> list[dict[str, Any]]:
 def _ci_half_width(values: list[float], z: float = 1.96) -> float:
     if len(values) < 2:
         return 0.0
-    return z * pstdev(values) / (len(values) ** 0.5)
+    return float(z * pstdev(values) / (len(values) ** 0.5))

@@ -102,7 +102,7 @@ def min_k_for_quality_floor(
     *,
     quality_floor: float,
     candidate_seeds: list[str],
-    simulate,
+    simulate: Any,
     trials: int = 50,
     max_k: int | None = None,
 ) -> tuple[int, list[str], float]:

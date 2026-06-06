@@ -142,7 +142,7 @@ class AgentPropRuntimeController:
         risks = tuple(
             risk.to_dict() for risk in routing_risks(self.graph, context_ratios=context_ratios)
         )
-        compressed_context_cache: dict[tuple[float, str], str] = {}
+        compressed_context_cache: dict[tuple[float, str], str] = {}  # keyed by (ratio, node_id)
         outputs: dict[str, str] = {}
         results: list[RuntimeNodeResult] = []
         trace_events: list[dict[str, object]] = []
@@ -266,7 +266,7 @@ class AgentPropRuntimeController:
         shared_context: str,
         ratio: float,
         full_context: bool,
-        cache: dict[float, str],
+        cache: dict[tuple[float, str], str],
         node: AgentNode | None = None,
     ) -> str:
         if full_context:

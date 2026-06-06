@@ -14,17 +14,18 @@ if TYPE_CHECKING:
 
 _NUMPY_AVAILABLE = False
 try:
-    import numpy as np
+    import numpy as np  # noqa: F401
 
     _NUMPY_AVAILABLE = True
 except ImportError:  # pragma: no cover - optional dependency
-    np = None  # type: ignore[assignment]
+    pass
 
 
 def get_propagation_index(graph: AgentGraph) -> PropagationGraphIndex:
     """Return a cached propagation index for ``graph``."""
 
-    return graph.get_propagation_index()
+    index: PropagationGraphIndex = graph.get_propagation_index()
+    return index
 
 
 def ic_simulate_once_indexed(

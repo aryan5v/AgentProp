@@ -26,7 +26,7 @@ class PropagationGraphIndex:
     node_count: int
 
 
-def build_propagation_index(graph: AgentGraph) -> PropagationGraphIndex:  # type: ignore[name-defined]
+def build_propagation_index(graph: AgentGraph) -> PropagationGraphIndex:
     """Materialize adjacency lists with precomputed edge probabilities."""
 
     node_ids = graph.node_ids()

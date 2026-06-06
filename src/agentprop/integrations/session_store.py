@@ -164,7 +164,7 @@ class SessionStore:
             wall_time_budget_s=session.config.wall_time_budget_s,
         )
         if isinstance(outcome, dict):
-            token_savings = float(outcome.get("token_savings", 0.0) or 0.0)
+            token_savings = float(outcome.get("token_savings") or 0.0)  # type: ignore[arg-type]
             timeout_risk = self._risk_state.timeout_adjustment(session.config.category)
             self._bandit.update(
                 session.config.category,
