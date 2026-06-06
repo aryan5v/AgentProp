@@ -52,6 +52,35 @@ For example, if compressed coder context repeatedly coincides with failed
 verification while full coder context passes, future coder-starved plans receive
 a lower expected-success score.
 
+## Critical Facts (structured compression)
+
+Blind ratio truncation drops convention-sensitive sentences (documented 30 pp
+pass-rate regression in the real routing case study). The runtime controller now
+extracts **must-have facts** (requirements, conventions, inline code, verifier
+hints) before applying a ratio budget:
+
+```python
+from agentprop.runtime.critical_facts import build_context_slice, CriticalFactStore
+
+visible = build_context_slice(
+    shared_context,
+    task=task,
+    ratio=0.35,
+    node=node,
+    fact_store=CriticalFactStore(),
+)
+```
+
+`AgentPropRuntimeController` enables this path by default (`use_critical_facts=True`).
+Per-node facts learned from traces can be registered via `learn_facts_from_trace_row`.
+
+## Shaped rewards and risk predictors
+
+Bandit/RL updates now use `R = quality + α·savings − β·quality_loss − γ·timeout − δ·regression`.
+Lightweight `TimeoutRiskPredictor` and `AdaptiveRoutingScorer` live in
+`agentprop.ml.risk_predictors`; `min_k_for_quality_floor` solves minimal seed
+budget for a coverage/quality target.
+
 ## Calibrated and Graded Context
 
 Binary full-context versus summary-only routing is often too coarse. AgentProp

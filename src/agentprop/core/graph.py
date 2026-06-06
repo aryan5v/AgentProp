@@ -5,27 +5,48 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import networkx as nx
 
 from agentprop.core.models import AgentEdge, AgentNode
 from agentprop.core.types import NodeType
+
+if TYPE_CHECKING:
+    pass
 from agentprop.core.validation import validate_workflow_dict
 
 
 @dataclass(slots=True)
 class GraphAnalysisCache:
-    """Per-graph memo for derived analysis results (distances, centralities, etc).
+    """Per-graph memo for derived analysis results (distances, centralities, closures, etc).
 
     Populated lazily by algorithms to avoid repeated expensive graph computations
-    such as all-pairs shortest paths for metric dimension / resolving sets.
-    Callers should treat fields as read-only; use AgentGraph helpers to populate.
+    (all-pairs shortest paths, betweenness, core numbers, ancestor/descendant closures,
+    etc.). Callers should treat fields as read-only; use the AgentGraph accessors.
+    The cache is invalidated on any structural mutation (add_node / add_edge).
     """
 
+    # Distances (for metric dimension / resolving sets)
     undirected_node_ids: list[str] | None = None
     undirected_distances: dict[str, dict[str, int]] | None = None
-    # Future phases will add: betweenness, core_numbers, ancestor closures, etc.
+
+    # Centralities (weighted where applicable)
+    betweenness: dict[str, float] | None = None
+    edge_betweenness: dict[tuple[str, str], float] | None = None
+    closeness: dict[str, float] | None = None   # downstream closeness (reverse graph)
+    core_numbers: dict[str, int] | None = None  # undirected k-core
+
+    # Reachability closures (frequently used by bottlenecks, observability, pruning risk)
+    ancestor_closures: dict[str, set[str]] | None = None
+    descendant_closures: dict[str, set[str]] | None = None
+
+    # Stable fingerprint for the current graph structure (used to decide when to trust cache
+    # across sessions or for future persistent caching). Invalidated on mutation.
+    fingerprint: str | None = None
+
+    # Integer-indexed adjacency for fast propagation (phase1-fast-propagation).
+    propagation_index: Any | None = None
 
 
 class AgentGraph:
@@ -162,6 +183,43 @@ class AgentGraph:
 
         return [AgentEdge.from_dict(dict(data)) for _, _, data in self._graph.edges(data=True)]
 
+    def has_node(self, node_id: str) -> bool:
+        """Return True when ``node_id`` exists (no graph copy)."""
+
+        return bool(node_id in self._graph)
+
+    def has_edge(self, source: str, target: str) -> bool:
+        """Return True when a directed edge exists (no graph copy)."""
+
+        return bool(self._graph.has_edge(source, target))
+
+    def node_ids(self) -> list[str]:
+        """Return all node ids without materializing AgentNode objects."""
+
+        return [str(node_id) for node_id in self._graph.nodes()]
+
+    def is_dag(self) -> bool:
+        """Return True when the graph is a directed acyclic graph."""
+
+        return bool(nx.is_directed_acyclic_graph(self._graph))
+
+    def topological_order(self) -> list[str]:
+        """Return a topological order for DAG workflows."""
+
+        if not self.is_dag():
+            raise ValueError("graph is not a DAG")
+        return [str(node_id) for node_id in nx.topological_sort(self._graph)]
+
+    def out_degree(self, node_id: str) -> int:
+        """Outgoing edge count for a node."""
+
+        return int(self._graph.out_degree(node_id))
+
+    def in_degree(self, node_id: str) -> int:
+        """Incoming edge count for a node."""
+
+        return int(self._graph.in_degree(node_id))
+
     def to_networkx(self) -> nx.DiGraph:
         """Return a copy of the underlying NetworkX directed graph."""
 
@@ -199,8 +257,17 @@ class AgentGraph:
 
     def _clear_analysis_cache(self) -> None:
         """Invalidate cached analysis results (e.g. after structural mutation)."""
-        self._analysis_cache.undirected_node_ids = None
-        self._analysis_cache.undirected_distances = None
+        c = self._analysis_cache
+        c.undirected_node_ids = None
+        c.undirected_distances = None
+        c.betweenness = None
+        c.edge_betweenness = None
+        c.closeness = None
+        c.core_numbers = None
+        c.ancestor_closures = None
+        c.descendant_closures = None
+        c.fingerprint = None
+        c.propagation_index = None
 
     def _ensure_undirected_distances(self) -> tuple[list[str], dict[str, dict[str, int]]]:
         """Return (node_ids, distances) using memoized all-pairs shortest paths on the
@@ -224,6 +291,129 @@ class AgentGraph:
         structural changes (add_node/add_edge).
         """
         return self._ensure_undirected_distances()
+
+    # --- Phase 1 centrality / closure cache accessors (phase1-centrality-cache) ---
+
+    def _compute_fingerprint(self) -> str:
+        """Stable lightweight fingerprint of the current graph structure.
+
+        Used to guard cached values and (in the future) for cross-session or
+        on-disk cache keys. Changes on any node/edge add/remove or (for now)
+        on any mutation that calls _clear_analysis_cache.
+        """
+        nodes = tuple(sorted(str(n) for n in self._graph.nodes()))
+        # Include weight when present for weighted centralities to be safe
+        edges = tuple(
+            sorted(
+                (str(u), str(v), float(d.get("weight", 1.0)))
+                for u, v, d in self._graph.edges(data=True)
+            )
+        )
+        import hashlib
+        fingerprint_data = f"{nodes}:{edges}".encode()
+        h = hashlib.md5(fingerprint_data).hexdigest()
+        return f"n{len(nodes)}e{len(edges)}:{h}"
+
+    def _ensure_centrality_cache(self) -> None:
+        """Populate the expensive centrality fields if missing."""
+        c = self._analysis_cache
+        if c.betweenness is None or c.closeness is None or c.core_numbers is None:
+            nx_graph = self._graph
+            c.betweenness = (
+                nx.betweenness_centrality(nx_graph, weight="weight") if self.node_count else {}
+            )
+            # downstream closeness (standard for "how central as a source of info")
+            c.closeness = (
+                nx.closeness_centrality(nx_graph.reverse(copy=True)) if self.node_count else {}
+            )
+            c.core_numbers = nx.core_number(nx_graph.to_undirected()) if self.node_count else {}
+            c.fingerprint = self._compute_fingerprint()
+
+        if c.edge_betweenness is None:
+            nx_graph = self._graph
+            c.edge_betweenness = (
+                nx.edge_betweenness_centrality(nx_graph, weight="weight") if self.edge_count else {}
+            )
+
+    def _ensure_reachability_closures(self) -> None:
+        """Populate ancestor and descendant closures for all nodes (lazily)."""
+        c = self._analysis_cache
+        if c.ancestor_closures is None or c.descendant_closures is None:
+            nx_graph = self._graph
+            c.ancestor_closures = {}
+            c.descendant_closures = {}
+            for nid in nx_graph.nodes():
+                s = str(nid)
+                c.ancestor_closures[s] = {str(x) for x in nx.ancestors(nx_graph, nid)}
+                c.descendant_closures[s] = {str(x) for x in nx.descendants(nx_graph, nid)}
+            c.fingerprint = self._compute_fingerprint()
+
+    def get_betweenness_centrality(self) -> dict[str, float]:
+        """Cached weighted betweenness centrality."""
+        self._ensure_centrality_cache()
+        return self._analysis_cache.betweenness or {}
+
+    def get_edge_betweenness_centrality(self) -> dict[tuple[str, str], float]:
+        """Cached weighted edge betweenness centrality."""
+        self._ensure_centrality_cache()
+        return self._analysis_cache.edge_betweenness or {}
+
+    def get_closeness_centrality(self) -> dict[str, float]:
+        """Cached closeness on the reverse graph (downstream influence)."""
+        self._ensure_centrality_cache()
+        return self._analysis_cache.closeness or {}
+
+    def get_core_numbers(self) -> dict[str, int]:
+        """Cached undirected k-core numbers."""
+        self._ensure_centrality_cache()
+        return self._analysis_cache.core_numbers or {}
+
+    def get_ancestors(self, node_id: str) -> set[str]:
+        """Cached set of (proper) ancestors of node_id."""
+        self._ensure_reachability_closures()
+        return (self._analysis_cache.ancestor_closures or {}).get(str(node_id), set())
+
+    def get_descendants(self, node_id: str) -> set[str]:
+        """Cached set of (proper) descendants of node_id."""
+        self._ensure_reachability_closures()
+        return (self._analysis_cache.descendant_closures or {}).get(str(node_id), set())
+
+    def get_reachable_pair_count(self) -> float:
+        """Total number of reachable (source, descendant) pairs. Cached via closures."""
+        self._ensure_reachability_closures()
+        closures = self._analysis_cache.descendant_closures or {}
+        return float(sum(len(s) for s in closures.values()))
+
+    def get_propagation_index(self) -> Any:
+        """Return cached integer-indexed adjacency for propagation kernels."""
+
+        from agentprop.core.propagation_index import build_propagation_index
+
+        cache = self._analysis_cache
+        if cache.propagation_index is None:
+            cache.propagation_index = build_propagation_index(self)
+            cache.fingerprint = self._compute_fingerprint()
+        return cache.propagation_index
+
+    def analysis_fingerprint(self) -> str | None:
+        """Return the current graph fingerprint if the analysis cache is warm."""
+
+        return self._analysis_cache.fingerprint
+
+    def warm_analysis_cache(self) -> str:
+        """Precompute distances, centralities, and propagation index; return fingerprint."""
+
+        self.get_undirected_distances()
+        self._ensure_centrality_cache()
+        self._ensure_reachability_closures()
+        self.get_propagation_index()
+        return self._analysis_cache.fingerprint or self._compute_fingerprint()
+
+    def export_analysis_cache(self) -> GraphAnalysisCache:
+        """Return a shallow snapshot of the warm analysis cache."""
+
+        self.warm_analysis_cache()
+        return self._analysis_cache
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize the graph to JSON-compatible data."""

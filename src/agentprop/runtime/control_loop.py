@@ -273,8 +273,10 @@ class RuntimeRewardLogger:
         action: str | None = None,
         outcome: Mapping[str, object] | None = None,
         regression_risk: float = 0.0,
+        timeout_risk: float = 0.0,
+        quality_loss: float | None = None,
     ) -> dict[str, object]:
-        """Record one real task outcome and update the bandit arm (now with regression risk)."""
+        """Record one real task outcome and update the shaped bandit reward."""
 
         self.bandit.update(
             category,
@@ -283,6 +285,8 @@ class RuntimeRewardLogger:
             token_savings=token_savings,
             quality_score=quality_score,
             regression_risk=regression_risk,
+            timeout_risk=timeout_risk,
+            quality_loss=quality_loss,
         )
         row: dict[str, object] = {
             "task_id": task_id,
@@ -293,11 +297,15 @@ class RuntimeRewardLogger:
             "token_savings": token_savings,
             "quality_score": quality_score,
             "regression_risk": regression_risk,
+            "timeout_risk": timeout_risk,
+            "quality_loss": quality_loss,
             "outcome": {
                 "passed": passed,
                 "token_savings": token_savings,
                 "quality_score": quality_score,
                 "regression_risk": regression_risk,
+                "timeout_risk": timeout_risk,
+                "quality_loss": quality_loss,
                 **dict(outcome or {}),
             },
             "bandit_values": self.bandit.values(category),

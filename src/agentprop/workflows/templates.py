@@ -310,6 +310,70 @@ def generic_dag_workflow(layers: int = 3, width: int = 3) -> AgentGraph:
     return graph
 
 
+def fan_out_parallel_workflow(branches: int = 4) -> AgentGraph:
+    """Planner fans out to parallel workers that merge at a verifier."""
+
+    graph = AgentGraph()
+    graph.add_node("planner", type=NodeType.PLANNER, **_synthetic_node_metrics(0))
+    workers = [f"worker_{index}" for index in range(branches)]
+    for index, worker in enumerate(workers):
+        graph.add_agent(worker, **_synthetic_node_metrics(index + 1))
+        graph.add_edge("planner", worker, message_cost=320, latency=0.25, weight=0.82)
+    graph.add_verifier("verifier", **_synthetic_node_metrics(branches + 1))
+    graph.add_node("final", type=NodeType.OUTPUT, **_synthetic_node_metrics(branches + 2))
+    for worker in workers:
+        graph.add_edge(worker, "verifier", message_cost=240, latency=0.2, weight=0.75)
+    graph.add_edge("verifier", "final", message_cost=180, latency=0.15, weight=0.9)
+    return graph
+
+
+def feedback_loop_workflow() -> AgentGraph:
+    """Coder ↔ tester feedback loop with planner seed and reviewer output."""
+
+    graph = AgentGraph()
+    graph.add_node("planner", type=NodeType.PLANNER, **_synthetic_node_metrics(0))
+    graph.add_agent("coder", **_synthetic_node_metrics(1))
+    graph.add_verifier("tester", **_synthetic_node_metrics(2))
+    graph.add_node("reviewer", type=NodeType.REVIEWER, **_synthetic_node_metrics(3))
+    graph.add_node("final", type=NodeType.OUTPUT, **_synthetic_node_metrics(4))
+    graph.add_edge("planner", "coder", message_cost=420, latency=0.3, weight=0.85)
+    graph.add_edge("coder", "tester", message_cost=360, latency=0.25, weight=0.8)
+    graph.add_edge("tester", "coder", message_cost=280, latency=0.25, weight=0.7, relevance=0.85)
+    graph.add_edge("tester", "reviewer", message_cost=300, latency=0.2, weight=0.75)
+    graph.add_edge("reviewer", "final", message_cost=200, latency=0.15, weight=0.9)
+    graph.add_edge("planner", "reviewer", message_cost=250, latency=0.2, weight=0.55)
+    return graph
+
+
+def shared_memory_workflow() -> AgentGraph:
+    """Agents read/write a shared memory node (document hub)."""
+
+    graph = AgentGraph()
+    graph.add_node(
+        "shared_memory",
+        type=NodeType.MEMORY,
+        token_cost=500,
+        latency=0.1,
+        reliability=0.95,
+        importance_score=0.9,
+    )
+    for agent in ("planner", "researcher", "writer", "verifier"):
+        role_index = {"planner": 0, "researcher": 1, "writer": 2, "verifier": 3}[agent]
+        metrics = _synthetic_node_metrics(role_index)
+        node_type = NodeType.VERIFIER if agent == "verifier" else NodeType.AGENT
+        if agent == "planner":
+            node_type = NodeType.PLANNER
+        graph.add_node(agent, type=node_type, **metrics)
+        graph.add_edge(agent, "shared_memory", message_cost=220, latency=0.15, weight=0.7)
+        graph.add_edge("shared_memory", agent, message_cost=260, latency=0.15, weight=0.75)
+    graph.add_node("final", type=NodeType.OUTPUT, **_synthetic_node_metrics(4))
+    graph.add_edge("writer", "verifier", message_cost=300, latency=0.2, weight=0.8)
+    graph.add_edge("verifier", "final", message_cost=180, latency=0.15, weight=0.9)
+    graph.add_edge("planner", "researcher", message_cost=350, latency=0.25, weight=0.8)
+    graph.add_edge("researcher", "writer", message_cost=320, latency=0.25, weight=0.8)
+    return graph
+
+
 def layered_pipeline_workflow() -> AgentGraph:
     """Synthetic layered workflow with planner, workers, verifiers, and output."""
 
@@ -376,6 +440,9 @@ def _synthetic_node_metrics(index: int) -> dict[str, Any]:
 
 WORKFLOW_TEMPLATES = {
     "chain": chain_workflow,
+    "fan_out_parallel": fan_out_parallel_workflow,
+    "feedback_loop": feedback_loop_workflow,
+    "shared_memory": shared_memory_workflow,
     "planner_coder_tester_reviewer": planner_coder_tester_reviewer,
     "research_writer_verifier": research_writer_verifier,
     "debate_judge": debate_judge,
@@ -393,6 +460,9 @@ WORKFLOW_TEMPLATES = {
 
 WORKFLOW_DESCRIPTIONS: dict[str, str] = {
     "chain": "Linear propagation path for cut-point and bridge tests",
+    "fan_out_parallel": "Planner fan-out to parallel workers merging at verifier",
+    "feedback_loop": "Coder-tester correction loop with reviewer gate",
+    "shared_memory": "Hub-and-spoke shared memory with planner/researcher/writer",
     "planner_coder_tester_reviewer": "Software-agent loop with correction feedback",
     "research_writer_verifier": "Parallel research branches merging at writer",
     "debate_judge": "Many-to-one debate aggregation at judge node",

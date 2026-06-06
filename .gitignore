@@ -6,6 +6,7 @@
 htmlcov/
 
 .local_pkgs/
+.agentprop_sessions/
 
 .venv/
 venv/

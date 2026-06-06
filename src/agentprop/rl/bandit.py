@@ -33,6 +33,9 @@ class CategoryBanditRoutingPolicy:
     from regressing baseline tasks it has learned nothing about. Defaults to the
     first arm when unset."""
     cost_weight: float = 0.10
+    quality_loss_weight: float = 0.55
+    timeout_risk_weight: float = 0.25
+    regression_risk_weight: float = 0.50
     stats: dict[str, dict[str, BanditArmStats]] = field(default_factory=dict)
     _rng: random.Random = field(init=False, repr=False)
 
@@ -78,25 +81,27 @@ class CategoryBanditRoutingPolicy:
         token_savings: float,
         quality_score: float | None = None,
         regression_risk: float = 0.0,
+        timeout_risk: float = 0.0,
+        quality_loss: float | None = None,
     ) -> None:
-        """Update an arm using real success, cost, *and* regression-risk feedback.
-
-        Phase 0 wiring: regression_risk (0..1) comes from ExpectedSuccessProfile
-        (fit on trace_loader empirical rows). It penalizes arms that historically
-        cause quality regressions (e.g. via aggressive context compression on
-        critical nodes) even if they "pass" the verifier. This is the simple
-        regression-risk signal into bandit reward updates.
-        """
+        """Update an arm using shaped reward: savings − quality_loss − timeout − regression."""
 
         if arm not in self.arms:
             raise ValueError(f"unknown arm: {arm}")
         quality = quality_score if quality_score is not None else (1.0 if passed else 0.0)
         bounded_savings = max(-1.0, min(1.0, token_savings))
-        reward = quality + self.cost_weight * bounded_savings if passed else quality - 1.0
-        # Simple subtraction of risk (bounded) so high historical regression
-        # directly reduces the learned value of that strategy for the category.
+        loss = quality_loss if quality_loss is not None else max(0.0, 1.0 - quality)
+        timeout_pen = max(0.0, min(1.0, timeout_risk))
         risk_pen = max(0.0, min(1.0, regression_risk))
-        reward -= 0.5 * risk_pen
+        reward = (
+            quality
+            + self.cost_weight * bounded_savings
+            - self.quality_loss_weight * loss
+            - self.timeout_risk_weight * timeout_pen
+            - self.regression_risk_weight * risk_pen
+        )
+        if not passed:
+            reward *= 0.5
         self._category_stats(category)[arm].update(reward)
 
     def values(self, category: str) -> dict[str, float]:

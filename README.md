@@ -40,6 +40,24 @@ The research wedge is simple:
 - **Runtime control** turns those ideas into actions: verify, retry, stop, switch
   strategy, or send more context.
 
+## Performance at Scale (v0.1.0a3+)
+
+Recent library work removes the main computational ceilings for interactive use:
+
+| Path | Before | After (typical) |
+| --- | --- | --- |
+| Verifier placement / resolving sets | Repeated all-pairs recompute | Memoized distances + incremental resolving tracker (`n≈100` usable) |
+| Greedy / CELF seed selection | `O(k·n)` full MC re-sims | Lazy CELF re-evaluation + candidate sampling on large graphs |
+| Default CLI/MCP optimize | Always greedy MC | `auto` → `rzf-centrality` when `node_count > 15` |
+| IC / RZF propagation | `to_networkx()` copy per trial | Integer-indexed adjacency + optional `simulate_batch` |
+| Runtime control features | `O(steps)` rescans | Incremental `ExecutionStateTracker` (`O(1)` per step) |
+| Context compression | Blind ratio truncation | Structured **critical-fact** slices for convention-sensitive tasks |
+
+Microbenchmarks (`benchmarks/perf_micro.py`, gated in CI via `tests/test_perf_micro.py`)
+track verifier placement, greedy seeds, RZF trials, and long-trace tracker latency on
+`synthetic n=10/30/60` chains. MCP sessions are now file-backed (`~/.agentprop/sessions`)
+with shared graph-analysis cache and `agentprop_what_if_k` uncertainty curves.
+
 AgentProp is not another agent orchestrator. It wraps a workflow you already
 have: each step your agent proposes work, the controller inspects the accumulated
 `ExecutionEvent` history, and decides what happens next.

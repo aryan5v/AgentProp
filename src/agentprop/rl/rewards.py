@@ -72,6 +72,31 @@ class WorkflowControlReward:
         }
 
 
+def shaped_routing_reward(
+    *,
+    token_savings: float,
+    quality_score: float,
+    quality_loss: float | None = None,
+    timeout_risk: float = 0.0,
+    regression_risk: float = 0.0,
+    alpha: float = 0.10,
+    beta: float = 0.55,
+    gamma: float = 0.25,
+    delta: float = 0.50,
+) -> float:
+    """R = quality + α·token_savings − β·quality_loss − γ·timeout_risk − δ·regression_risk."""
+
+    bounded_savings = max(-1.0, min(1.0, token_savings))
+    loss = quality_loss if quality_loss is not None else max(0.0, 1.0 - quality_score)
+    return (
+        quality_score
+        + alpha * bounded_savings
+        - beta * max(0.0, min(1.0, loss))
+        - gamma * max(0.0, min(1.0, timeout_risk))
+        - delta * max(0.0, min(1.0, regression_risk))
+    )
+
+
 def propagation_reward(
     *,
     coverage: float,
