@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
 import networkx as nx
@@ -203,9 +203,8 @@ class AgentGraph:
         filtered = AgentGraph()
         filtered._graph = self._graph.copy()
         for edge in self.edges():
-            if not edge_is_active(edge, context):
-                if filtered.has_edge(edge.source, edge.target):
-                    filtered.remove_edge(edge.source, edge.target)
+            if not edge_is_active(edge, context) and filtered.has_edge(edge.source, edge.target):
+                filtered.remove_edge(edge.source, edge.target)
         return filtered
 
     def node(self, node_id: str) -> AgentNode:

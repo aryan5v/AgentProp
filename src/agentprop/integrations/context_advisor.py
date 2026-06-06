@@ -80,8 +80,11 @@ class ContextExpansionAdvisor:
                 tier=ContextTier.FACT,
             )
 
-        if node.importance_score is not None and node.importance_score >= 0.8:
-            if current_ratio < 0.75:
+        if (
+            node.importance_score is not None
+            and node.importance_score >= 0.8
+            and current_ratio < 0.75
+        ):
                 return ContextExpansionAdvice(
                     expand=True,
                     target_ratio=0.85,
