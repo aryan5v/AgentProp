@@ -13,6 +13,7 @@ from typing import Any
 from agentprop.evaluation.metrics import compare_routing
 from agentprop.evaluation.runner import make_propagation_model, select_seeds
 from agentprop.propagation import IndependentCascade
+from agentprop.propagation.base import PropagationModel
 from agentprop.workflows import WORKFLOW_TEMPLATES
 
 DEFAULT_EVIDENCE_ARMS = (
@@ -173,7 +174,7 @@ def _trial_seed(workflow: str, arm: str, repeat: int, task_index: int) -> int:
     return int(hashlib.md5(key).hexdigest(), 16) % (2**31)
 
 
-def _model_for_trial(model_name: str, trial_seed: int):
+def _model_for_trial(model_name: str, trial_seed: int) -> PropagationModel:
     normalized = model_name.strip().lower()
     if normalized == "independent-cascade":
         return IndependentCascade(seed=trial_seed)
