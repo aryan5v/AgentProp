@@ -129,7 +129,10 @@ def _build_parser() -> argparse.ArgumentParser:
         "--algorithm",
         choices=algorithm_choices,
         default="auto",
-        help="Seed selection algorithm. 'auto' (default) uses rzf-centrality (cheap) for graphs with >15 nodes and greedy for small graphs. See scope note in docs.",
+        help=(
+            "Seed algorithm. 'auto' uses rzf-centrality for graphs with >15 nodes "
+            "and greedy for small graphs."
+        ),
     )
     optimize.add_argument(
         "--model",
@@ -168,7 +171,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "--algorithm",
         choices=algorithm_choices,
         default="auto",
-        help="Seed selection algorithm. 'auto' (default) uses rzf-centrality (cheap) for >15 nodes.",
+        help="Seed algorithm. 'auto' uses rzf-centrality for graphs with >15 nodes.",
     )
     report.add_argument(
         "--model",
@@ -237,7 +240,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "--algorithm",
         choices=algorithm_choices,
         default="auto",
-        help="Seed selection algorithm. 'auto' (default) uses rzf-centrality (cheap) for >15 nodes.",
+        help="Seed algorithm. 'auto' uses rzf-centrality for graphs with >15 nodes.",
     )
     instructions.add_argument(
         "--model",
@@ -653,7 +656,16 @@ def _doctor(args: argparse.Namespace) -> int:
         record("dot", shutil.which("dot") is not None, "Graphviz dot for viz rendering")
 
     graphviz_ok = shutil.which("dot") is not None
-    record("graphviz_dot", graphviz_ok, "optional; required only to render .dot files")
+    if args.tier == "graph":
+        checks.append(
+            {
+                "name": "graphviz_dot",
+                "ok": graphviz_ok,
+                "detail": "optional; required only to render .dot files",
+            }
+        )
+    else:
+        record("graphviz_dot", graphviz_ok, "optional; required only to render .dot files")
 
     payload = {
         "tier": args.tier,

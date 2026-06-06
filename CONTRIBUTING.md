@@ -8,8 +8,11 @@ AgentProp is early, but the contribution standard is intentionally high: every f
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -e ".[dev]"
-pytest
+make test   # or: pytest
 ```
+
+With an editable install, `experiments/` and `examples/` run without
+`PYTHONPATH=src`. See [docs/environment.md](docs/environment.md).
 
 ## Data, Secrets, And Benchmark Artifacts
 

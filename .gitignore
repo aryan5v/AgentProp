@@ -5,6 +5,8 @@
 .coverage
 htmlcov/
 
+.local_pkgs/
+
 .venv/
 venv/
 __pycache__/

@@ -5,7 +5,9 @@ This walkthrough proves the main AgentProp loop end to end.
 ## 1. Install
 
 ```bash
-python -m pip install -e .
+python -m venv .venv && source .venv/bin/activate
+python -m pip install -e ".[dev]"
+agentprop doctor --tier dev
 ```
 
 ## 2. Optimize Context Seeding

@@ -2,6 +2,8 @@
 
 AgentProp workflows are directed weighted graphs serialized as JSON.
 
+Machine-readable schema: [schemas/workflow.json](../schemas/workflow.json)
+
 ## Top-Level Shape
 
 ```json

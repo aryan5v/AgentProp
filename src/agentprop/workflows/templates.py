@@ -390,3 +390,20 @@ WORKFLOW_TEMPLATES = {
     "star": star_workflow,
     "tree": tree_workflow,
 }
+
+WORKFLOW_DESCRIPTIONS: dict[str, str] = {
+    "chain": "Linear propagation path for cut-point and bridge tests",
+    "planner_coder_tester_reviewer": "Software-agent loop with correction feedback",
+    "research_writer_verifier": "Parallel research branches merging at writer",
+    "debate_judge": "Many-to-one debate aggregation at judge node",
+    "dense_graph": "Redundant paths and centrality tie stress case",
+    "generic_dag": "Layered directed acyclic propagation graph",
+    "rag_pipeline": "Retrieval-augmented generation with verifier",
+    "random_directed_graph": "Deterministic random directed stress graph",
+    "tool_use_pipeline": "Tool nodes with planner and executor handoffs",
+    "hub_and_spoke_supervisor": "Supervisor hub routing to worker spokes",
+    "layered_pipeline": "Planner, worker, verifier, and output layers",
+    "small_world_graph": "Local neighborhoods with shortcut edges",
+    "star": "Hub-dominant supervisor-style bottleneck",
+    "tree": "Branching propagation and articulation structure",
+}

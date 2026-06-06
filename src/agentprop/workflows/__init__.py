@@ -2,6 +2,7 @@
 
 from agentprop.workflows.export import export_builtin_workflows
 from agentprop.workflows.templates import (
+    WORKFLOW_DESCRIPTIONS,
     WORKFLOW_TEMPLATES,
     chain_workflow,
     debate_judge,
@@ -21,6 +22,7 @@ from agentprop.workflows.templates import (
 )
 
 __all__ = [
+    "WORKFLOW_DESCRIPTIONS",
     "WORKFLOW_TEMPLATES",
     "chain_workflow",
     "debate_judge",

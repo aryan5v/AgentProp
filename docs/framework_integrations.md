@@ -4,6 +4,19 @@ AgentProp includes dependency-light adapters for common agent orchestration
 frameworks. These adapters use plain dictionaries, so they do not require the
 framework packages at core install time.
 
+## Integration status
+
+| Framework | Dict interchange | Native builder | Round-trip tested | Notes |
+| --- | --- | --- | --- | --- |
+| `langgraph` | Yes | Yes (placeholder nodes) | Yes | Best E2E path; see `examples/langgraph_e2e.py` |
+| `crewai` | Yes | Yes when installed | Partial | Requires `crewai` package |
+| `openai-agents` | Yes | Yes when installed | Partial | Requires OpenAI Agents SDK |
+| `autogen` | Yes | No | Dict only | Native builder raises `NativeFrameworkUnavailable` |
+| `llamaindex` | Yes | No | Dict only | Native builder raises `NativeFrameworkUnavailable` |
+
+Dict adapters are **interchange specs**, not runtime launchers. Use
+`ControlSession` to wrap execution regardless of framework.
+
 Supported export/import targets:
 
 - `langgraph`

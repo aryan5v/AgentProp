@@ -38,6 +38,23 @@ Use 20 small engineering tasks:
 Each task should fit in one working session and have an objective verification
 command such as `pytest`, a CLI smoke test, or expected output diff.
 
+## Failure localization metrics
+
+For verifier-placement arms, also record:
+
+- `resolving_coverage` at the chosen verifier budget `k`
+- `signature_collision_rate`: fraction of nodes sharing a verifier-distance
+  signature with at least one other node (0 = fully localizable)
+- `mean_time_to_diagnose`: steps until a unique faulty node is identified in
+  simulated fault injection
+
+Reproduce synthetic localization tables with:
+
+```bash
+python experiments/failure_localization_study.py
+python experiments/verifier_placement_evidence.py
+```
+
 ## Measurements
 
 Record these fields per task and study arm:

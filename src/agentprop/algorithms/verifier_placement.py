@@ -241,10 +241,12 @@ def metric_dimension_verifier_placement(
             candidates = [n for n in node_ids if n not in verifiers]
             if not candidates:
                 break
-            best = _best_fault_tolerant_candidate(verifiers, candidates, node_ids, distances)
-            if best is None:
+            ft_candidate = _best_fault_tolerant_candidate(
+                verifiers, candidates, node_ids, distances
+            )
+            if ft_candidate is None:
                 break
-            verifiers.append(best)
+            verifiers.append(ft_candidate)
             budget_remaining -= 1
 
     return verifiers

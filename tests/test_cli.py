@@ -172,6 +172,123 @@ def test_cli_readiness_emits_json(capsys) -> None:  # type: ignore[no-untyped-de
     assert "items" in payload
 
 
+def test_cli_version_flag(capsys) -> None:  # type: ignore[no-untyped-def]
+    exit_code = main(["--version"])
+
+    assert exit_code == 0
+    assert capsys.readouterr().out.strip()
+
+
+def test_cli_workflows_list(capsys) -> None:  # type: ignore[no-untyped-def]
+    exit_code = main(["workflows", "list", "--json"])
+
+    assert exit_code == 0
+    payload = json.loads(capsys.readouterr().out)
+    names = {row["name"] for row in payload}
+    assert "planner_coder_tester_reviewer" in names
+
+
+def test_cli_doctor_graph_tier(capsys) -> None:  # type: ignore[no-untyped-def]
+    exit_code = main(["doctor", "--tier", "graph", "--json"])
+
+    assert exit_code == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["ok"] is True
+    assert payload["tier"] == "graph"
+
+
+def test_cli_simulate_quality_cascade(capsys) -> None:  # type: ignore[no-untyped-def]
+    exit_code = main(
+        [
+            "simulate",
+            "chain",
+            "--seeds",
+            "node_0",
+            "--model",
+            "quality-cascade",
+            "--trials",
+            "1",
+            "--json",
+        ]
+    )
+
+    assert exit_code == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["model"] == "quality-cascade"
+
+
+def test_cli_invalid_workflow_returns_validation_error(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    workflow = tmp_path / "bad.json"
+    workflow.write_text(
+        json.dumps(
+            {
+                "nodes": [{"id": "a"}, {"id": "a"}],
+                "edges": [],
+            }
+        )
+    )
+
+    exit_code = main(["analyze", str(workflow)])
+
+    assert exit_code == 2
+    assert "Workflow validation failed" in capsys.readouterr().err
+
+
+DOC_INDEX_COMMANDS = [
+    ["optimize", "benchmarks/workflows/planner_coder_tester_reviewer.json", "--budget", "2"],
+    ["simulate", "chain", "--seeds", "node_0", "--model", "zero-forcing"],
+    ["simulate", "chain", "--seeds", "node_0", "--model", "quality-cascade"],
+    ["prune", "planner_coder_tester_reviewer", "--target-token-reduction", "0.3"],
+    ["benchmark", "planner_coder_tester_reviewer", "--budget", "2", "--trials", "5"],
+    ["analyze", "planner_coder_tester_reviewer", "--json"],
+    ["workflows", "list"],
+    ["doctor", "--tier", "graph"],
+]
+
+
+def test_docs_index_common_commands_parse() -> None:
+    for argv in DOC_INDEX_COMMANDS:
+        cmd = list(argv)
+        if cmd[0] == "benchmark":
+            cmd.extend(["--trials", "1"])
+        exit_code = main(cmd)
+        assert exit_code == 0, f"failed for: {' '.join(argv)}"
+
+
+def test_cli_ingest_trace_pipeline(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    trace = tmp_path / "trace.json"
+    workflow = tmp_path / "workflow.json"
+    brief = tmp_path / "brief.md"
+    trace.write_text(
+        json.dumps(
+            {
+                "events": [
+                    {"source": "planner", "target": "coder", "token_cost": 120},
+                    {"source": "coder", "target": "tester", "token_cost": 90},
+                ]
+            }
+        )
+    )
+
+    exit_code = main(
+        [
+            "ingest-trace",
+            str(trace),
+            "--out-workflow",
+            str(workflow),
+            "--out-brief",
+            str(brief),
+            "--json",
+        ]
+    )
+
+    assert exit_code == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert workflow.exists()
+    assert brief.exists()
+    assert payload["seeds"]
+
+
 def test_cli_control_demo_writes_artifacts(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
     exit_code = main(
         [

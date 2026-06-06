@@ -113,6 +113,13 @@ class ExecutionStateTracker:
     repeated_error_count: int = 0
     _trailing_sig: str | None = None  # for incremental repeated_error tracking
 
+    def __post_init__(self) -> None:
+        if self.events:
+            initial_events = list(self.events)
+            self.events = []
+            for event in initial_events:
+                self.observe(event)
+
     def observe(self, event: ExecutionEvent) -> ExecutionStateFeatures:
         """Record one event (incremental) and return updated features."""
 

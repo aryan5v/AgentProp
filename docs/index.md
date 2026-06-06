@@ -14,6 +14,8 @@ Agents, and LlamaIndex are in [framework integrations](framework_integrations.md
 
 Getting started and day-to-day usage:
 
+- [Architecture overview](ARCHITECTURE.md)
+- [Environment setup](environment.md)
 - [Tutorial walkthrough](tutorial.md)
 - [Workflow JSON schema](workflow_schema.md)
 - [Quality-aware routing](routing_quality.md)
@@ -57,6 +59,8 @@ Working notes (paper drafts, roadmaps, release ops) belong in gitignored
 ## Common Commands
 
 ```bash
+agentprop doctor --tier graph
+agentprop workflows list
 agentprop optimize benchmarks/workflows/planner_coder_tester_reviewer.json --budget 2
 agentprop simulate chain --seeds node_0 --model zero-forcing
 agentprop simulate chain --seeds node_0 --model quality-cascade
@@ -65,6 +69,7 @@ agentprop benchmark planner_coder_tester_reviewer --budget 2 --trials 50
 agentprop report planner_coder_tester_reviewer --out reports/demo.html --format html
 agentprop agent-instructions planner_coder_tester_reviewer --target codex --out reports/codex_agent_brief.md
 agentprop control-demo --demo terminal --out-dir reports/control-demo
+agentprop readiness --json
 agentprop viz planner_coder_tester_reviewer --out reports/workflow.dot
 ```
 
@@ -73,6 +78,8 @@ Reproduce the verifier-placement and seeding scaling studies:
 ```bash
 python experiments/verifier_placement_evidence.py
 python experiments/rzf_scaling_study.py
+python experiments/failure_localization_study.py
+python experiments/quality_cascade_vs_ic.py
 ```
 
 ## What AgentProp Proves
