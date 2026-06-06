@@ -200,7 +200,8 @@ class AgentGraph:
 
         from agentprop.core.dynamic_graph import edge_is_active
 
-        filtered = AgentGraph.from_dict(self.to_dict())
+        filtered = AgentGraph()
+        filtered._graph = self._graph.copy()
         for edge in self.edges():
             if not edge_is_active(edge, context):
                 if filtered.has_edge(edge.source, edge.target):

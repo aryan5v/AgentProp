@@ -64,13 +64,13 @@ class ContextExpansionAdvisor:
                 tier=ContextTier.FACT if fact_id else ContextTier.NODE,
             )
 
-        missing_facts = []
+        high_score_facts = []
         if self.fact_store is not None:
             for fact in self.fact_store.facts_for(node_id):
                 if fact.score >= 0.7:
-                    missing_facts.append(fact)
+                    high_score_facts.append(fact)
 
-        if missing_facts and current_ratio < 0.6:
+        if high_score_facts and current_ratio < 0.6:
             return ContextExpansionAdvice(
                 expand=True,
                 target_ratio=min(1.0, current_ratio + 0.35),

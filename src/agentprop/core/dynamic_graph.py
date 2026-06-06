@@ -31,7 +31,8 @@ class DynamicGraphSession:
     _working: AgentGraph = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
-        self._working = AgentGraph.from_dict(self.base_graph.to_dict())
+        self._working = AgentGraph()
+        self._working._graph = self.base_graph._graph.copy()
 
     @property
     def graph(self) -> AgentGraph:
@@ -110,8 +111,8 @@ def edge_is_active(edge: AgentEdge, context: Mapping[str, Any]) -> bool:
     condition_key = edge.metadata.get("condition_key")
     if condition_key is None:
         return True
-    expected = edge.metadata.get("condition_value")
     actual = context.get(str(condition_key))
-    if expected is None:
+    if "condition_value" not in edge.metadata:
         return bool(actual)
+    expected = edge.metadata.get("condition_value")
     return actual == expected

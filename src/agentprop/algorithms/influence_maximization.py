@@ -54,7 +54,7 @@ def imm_greedy_seed_selection(
                 coverage_counts[idx] += 1
 
     if cfg.lazy and k > 1:
-        selected = _lazy_imm_select(candidates, coverage_counts, rr_sets, k, rng)
+        selected = _lazy_imm_select(candidates, coverage_counts, rr_sets, k)
     else:
         selected = _greedy_imm_select(candidates, coverage_counts, rr_sets, k)
 
@@ -140,28 +140,32 @@ def _lazy_imm_select(
     coverage_counts: list[int],
     rr_sets: list[set[str]],
     k: int,
-    rng: random.Random,
 ) -> list[str]:
+    import heapq
+
     selected: list[str] = []
     covered_rr: set[int] = set()
-    last_marginal = {idx: coverage_counts[idx] for idx in range(len(candidates))}
 
-    while len(selected) < min(k, len(candidates)):
-        remaining = [idx for idx in range(len(candidates)) if candidates[idx] not in selected]
-        if not remaining:
+    # heap items: (-gain, candidate_idx, round_when_gain_was_computed)
+    heap = [(-coverage_counts[idx], idx, 0) for idx in range(len(candidates))]
+    heapq.heapify(heap)
+
+    while len(selected) < min(k, len(candidates)) and heap:
+        neg_gain, idx, last_round = heapq.heappop(heap)
+        gain = -neg_gain
+        if gain <= 0:
             break
-        remaining.sort(key=lambda idx: (-last_marginal[idx], candidates[idx]))
-        best_idx = remaining[0]
-        true_gain = _marginal_rr_gain(best_idx, candidates, covered_rr, rr_sets)
-        if true_gain <= 0:
-            break
-        selected.append(candidates[best_idx])
-        for rr_index, rr in enumerate(rr_sets):
-            if candidates[best_idx] in rr:
-                covered_rr.add(rr_index)
-        for idx in remaining:
-            if idx != best_idx:
-                last_marginal[idx] = _marginal_rr_gain(idx, candidates, covered_rr, rr_sets)
+        if last_round == len(selected):
+            # Gain is current — select this candidate.
+            selected.append(candidates[idx])
+            for rr_index, rr in enumerate(rr_sets):
+                if candidates[idx] in rr:
+                    covered_rr.add(rr_index)
+        else:
+            # Gain is stale — recompute and reinsert.
+            true_gain = _marginal_rr_gain(idx, candidates, covered_rr, rr_sets)
+            heapq.heappush(heap, (-true_gain, idx, len(selected)))
+
     return selected
 
 
@@ -206,5 +210,5 @@ def _generate_rr_set(graph: AgentGraph, rng: random.Random) -> set[str]:
 def _seed_eligible_nodes(graph: AgentGraph) -> list[str]:
     from agentprop.core.types import NodeType
 
-    blocked = {NodeType.OUTPUT, NodeType.TOOL, NodeType.MEMORY}
+    blocked = {NodeType.OUTPUT}
     return [node.id for node in graph.nodes() if node.type not in blocked]

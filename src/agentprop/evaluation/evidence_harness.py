@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -168,7 +169,8 @@ def rows_to_dicts(rows: list[EvidenceRow]) -> list[dict[str, Any]]:
 
 
 def _trial_seed(workflow: str, arm: str, repeat: int, task_index: int) -> int:
-    return hash((workflow, arm, repeat, task_index)) % (2**31)
+    key = f"{workflow}:{arm}:{repeat}:{task_index}".encode()
+    return int(hashlib.md5(key).hexdigest(), 16) % (2**31)
 
 
 def _model_for_trial(model_name: str, trial_seed: int):

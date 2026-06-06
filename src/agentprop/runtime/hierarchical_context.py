@@ -57,13 +57,25 @@ class HierarchicalContextBundle:
             parts.append(self.task_context)
         ordered_facts = sorted(self.fact_slices, key=lambda s: -s.score)
         ordered_nodes = sorted(self.node_slices, key=lambda s: -s.score)
-        for slice_ in ordered_facts + ordered_nodes:
-            parts.append(slice_.text)
-        joined = "\n".join(parts)
+
         if ratio >= 0.99:
-            return joined
-        keep = max(1, int(len(joined) * max(0.0, min(1.0, ratio))))
-        return joined[:keep]
+            for slice_ in ordered_facts + ordered_nodes:
+                parts.append(slice_.text)
+            return "\n".join(parts)
+
+        # Truncate at slice boundaries to avoid mid-word or mid-sentence cuts.
+        total_len = sum(len(p) for p in parts) + sum(
+            len(s.text) for s in ordered_facts + ordered_nodes
+        )
+        target_len = max(1, int(total_len * max(0.0, min(1.0, ratio))))
+        current_len = sum(len(p) for p in parts)
+        for slice_ in ordered_facts + ordered_nodes:
+            if current_len + len(slice_.text) <= target_len or not parts:
+                parts.append(slice_.text)
+                current_len += len(slice_.text)
+            else:
+                break
+        return "\n".join(parts)
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -152,6 +164,8 @@ def place_fact_level_verifiers(
     ]
     if not verifier_nodes:
         verifier_nodes = metric_dimension_verifier_placement(graph, min(budget, graph.node_count))
+    if not verifier_nodes:
+        return []
 
     placements: list[FactLevelVerifier] = []
     for index, fact in enumerate(facts[:budget]):
