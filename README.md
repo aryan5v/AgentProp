@@ -200,8 +200,8 @@ PYTHONPATH=src:. python experiments/rzf_scaling_study.py
 Both scripts are deterministic and print an expected-output block at the top of
 the source so you can confirm you reproduced the published numbers (metric
 dimension reaching a resolving set at lower budget `k`, and RZF leading on large
-graphs). The headline figures are summarized in
-[reproducible results](docs/research/reproducible_results.md).
+graphs). Public benchmark artifacts live under
+[docs/results](docs/results/ARTIFACTS.md).
 
 Run a key-free control-layer demo:
 
@@ -300,9 +300,7 @@ Key inspirations:
   [AgentPrune](https://arxiv.org/abs/2410.02506):
   agent workflows as optimizable, sparse, task-adaptive communication graphs.
 
-See [the documentation index](docs/index.md),
-[research references](docs/research/references.md), and the
-[literature review](docs/research/literature_review.md) for more detail.
+See [the documentation index](docs/index.md) for the public guide and artifact map.
 
 ## Status
 

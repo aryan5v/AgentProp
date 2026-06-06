@@ -31,7 +31,7 @@ evaluation helpers.
 
 | Variable | Required for | Notes |
 | --- | --- | --- |
-| `OPENAI_API_KEY` | OpenAI-compatible LLM runs | See [case study protocol](research/case_study_protocol.md) |
+| `OPENAI_API_KEY` | OpenAI-compatible LLM runs | For local experiments only; keep prompts and keys out of git |
 | `OPENAI_MODEL` | Model selection | e.g. `gpt-4o-mini` |
 | `OPENAI_BASE_URL` | Custom endpoints | Optional; defaults to OpenAI |
 | `TOKEN_ROUTER_API_KEY` | Token-router harness | Alternative to `OPENAI_API_KEY` |

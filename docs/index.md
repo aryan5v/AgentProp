@@ -29,12 +29,8 @@ Getting started and day-to-day usage:
 
 ## Research And Evaluation
 
-Benchmarks, protocols, and reproducible studies:
+Benchmarks, reproducible scripts, and public evidence:
 
-- [Reproducible results](research/reproducible_results.md)
-- [Research references](research/references.md)
-- [Literature review](research/literature_review.md)
-- [Real LLM case-study protocol](research/case_study_protocol.md)
 - [Learned propagation](learned_propagation.md)
 - [Routing baseline evaluation](routing_baseline_evaluation.md)
 - [Reinforcement learning routing](reinforcement_learning.md)
@@ -54,7 +50,7 @@ Benchmarks, protocols, and reproducible studies:
 - [Agent guide for coding agents](../AGENTS.md)
 
 Working notes (paper drafts, roadmaps, release ops) belong in gitignored
-[`docs/local/`](local/README.example.md), not in the public tree.
+`docs/local/`, not in the public tree.
 
 ## Common Commands
 

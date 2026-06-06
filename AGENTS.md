@@ -76,7 +76,7 @@ Sanitized finalized benchmarks belong only under `docs/results/` per
 | `benchmarks/workflows/` | JSON workflow fixtures |
 | `experiments/` | Reproducible research scripts |
 | `docs/` | Public documentation |
-| `docs/local/` | Gitignored working notes (see `docs/local/README.example.md`) |
+| `docs/local/` | Gitignored working notes; never commit local research or ops notes |
 | `skills/agentprop-workflow-optimizer/` | Canonical agent skill (skills.sh) |
 | `integrations/claude-code/` | Claude Code install path |
 

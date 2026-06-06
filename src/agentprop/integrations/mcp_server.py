@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import json
 import sys
-from typing import Any, cast
+from collections.abc import Callable
+from typing import Any, TypeVar, cast
 
 from agentprop.algorithms import bottleneck_nodes, low_weight_edges, risk_aware_verifier_placement
 from agentprop.cli import _build_recommendation_report, _load_workflow
@@ -21,6 +22,7 @@ from agentprop.runtime import ControlSession, ExecutionEvent
 
 SERVER_INFO = {"name": "agentprop", "version": "0.1.0a3"}
 _SESSION_STORE: SessionStore | None = None
+_ToolFn = TypeVar("_ToolFn", bound=Callable[..., Any])
 
 
 def _get_session_store() -> SessionStore:
@@ -249,14 +251,15 @@ def create_fastmcp_app() -> Any:
         raise RuntimeError("Install agentprop[mcp] to run the FastMCP server.") from exc
 
     mcp = FastMCP("AgentProp")
+    tool = cast(Callable[[_ToolFn], _ToolFn], mcp.tool)
 
-    @mcp.tool  # type: ignore[untyped-decorator]
+    @tool
     def agentprop_analyze(workflow: str) -> dict[str, Any]:
         """Analyze graph bottlenecks, pruning candidates, and verifier placement."""
 
         return _analyze({"workflow": workflow})
 
-    @mcp.tool  # type: ignore[untyped-decorator]
+    @tool
     def agentprop_optimize(
         workflow: str,
         budget: int = 2,
@@ -276,7 +279,7 @@ def create_fastmcp_app() -> Any:
             }
         )
 
-    @mcp.tool  # type: ignore[untyped-decorator]
+    @tool
     def agentprop_agent_instructions(
         workflow: str,
         target: str = "generic",
@@ -298,7 +301,7 @@ def create_fastmcp_app() -> Any:
             }
         )
 
-    @mcp.tool  # type: ignore[untyped-decorator]
+    @tool
     def agentprop_report(
         workflow: str,
         budget: int = 2,
@@ -318,7 +321,7 @@ def create_fastmcp_app() -> Any:
             }
         )
 
-    @mcp.tool  # type: ignore[untyped-decorator]
+    @tool
     def agentprop_control_start(
         workflow: str,
         task_id: str,
@@ -340,7 +343,7 @@ def create_fastmcp_app() -> Any:
             }
         )
 
-    @mcp.tool  # type: ignore[untyped-decorator]
+    @tool
     def agentprop_control_observe(
         session_id: str,
         step: int,
@@ -374,13 +377,13 @@ def create_fastmcp_app() -> Any:
             }
         )
 
-    @mcp.tool  # type: ignore[untyped-decorator]
+    @tool
     def agentprop_control_decide(session_id: str) -> dict[str, Any]:
         """Return the current control decision for an active session."""
 
         return _control_decide({"session_id": session_id})
 
-    @mcp.tool  # type: ignore[untyped-decorator]
+    @tool
     def agentprop_control_finish(
         session_id: str,
         passed: bool,

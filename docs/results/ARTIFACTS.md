@@ -25,7 +25,7 @@ Never commit these under `docs/results/` or anywhere else in the repo:
   regression postmortems, launch runbooks)
 
 See [CONTRIBUTING.md](../../CONTRIBUTING.md#data-secrets-and-benchmark-artifacts) for the full policy.
-Working notes use the gitignored [`docs/local/`](../local/README.example.md) layout.
+Working notes use the gitignored `docs/local/` layout.
 
 ## Current public artifacts
 

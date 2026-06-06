@@ -42,8 +42,7 @@ intentional public artifacts. CI runs a secret scan on every pull request.
 
 - Paper outlines, research backlogs, release/publishing runbooks, extended
   postmortems, and "what we should do next" roadmaps belong under `docs/local/`
-  (gitignored). Copy [docs/local/README.example.md](docs/local/README.example.md)
-  as a starting point.
+  (gitignored).
 - If a doc has blockers, remaining work, or reads like notes to the team, it does
   not belong in the public `docs/` tree.
 
