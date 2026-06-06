@@ -24,6 +24,8 @@ Getting started and day-to-day usage:
 - [Quality scoring](quality_scoring.md)
 - [Framework integrations](framework_integrations.md)
 - [Coding agent integration](coding_agents.md)
+- [Beta quickstart for coding agents](beta_quickstart.md)
+- [Plugin distribution](plugin_distribution.md)
 - [Control layer quickstart](control_layer_quickstart.md)
 - [Trace ingestion](trace_ingestion.md)
 

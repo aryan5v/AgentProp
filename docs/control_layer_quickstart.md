@@ -99,6 +99,17 @@ extra is installed, and exposes these live-control tools:
 These tools do not execute user code. They observe events and return structured
 decisions for the host agent to obey.
 
+For a complete key-free reference that combines graph analysis, context advice,
+verifier placement, runtime decisions, budgets, and trace output, run:
+
+```bash
+python examples/coding_agent_full_suite.py
+```
+
+Use that example as the template for a Codex or Claude Code harness: the host
+agent does the work, and AgentProp supplies analysis, intervention decisions,
+and evidence.
+
 ## Framework Builders
 
 AgentProp can wrap custom, LangGraph-style, CrewAI-style, AutoGen-style,

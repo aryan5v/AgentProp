@@ -1,0 +1,40 @@
+{
+  "name": "agentprop",
+  "version": "0.1.0",
+  "description": "Graph control for coding-agent and multi-agent workflows.",
+  "author": {
+    "name": "AgentProp contributors",
+    "url": "https://github.com/aryan5v/AgentProp"
+  },
+  "homepage": "https://github.com/aryan5v/AgentProp",
+  "repository": "https://github.com/aryan5v/AgentProp",
+  "license": "Apache-2.0",
+  "keywords": [
+    "agent-workflows",
+    "multi-agent-systems",
+    "graph-control",
+    "coding-agents",
+    "mcp"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "AgentProp",
+    "shortDescription": "Analyze, route, verify, and control agent workflows.",
+    "longDescription": "AgentProp adds graph analysis, verifier placement, context-routing guidance, FastMCP tools, and runtime-control workflows for Codex users building or operating multi-agent systems.",
+    "developerName": "AgentProp contributors",
+    "category": "Productivity",
+    "capabilities": [
+      "Skills",
+      "MCP"
+    ],
+    "websiteURL": "https://github.com/aryan5v/AgentProp",
+    "brandColor": "#12c95b",
+    "logo": "./assets/agentprop-logo.png",
+    "defaultPrompt": [
+      "Use AgentProp to analyze this workflow.",
+      "Generate an AgentProp verifier and routing brief.",
+      "Wrap this agent loop with AgentProp control."
+    ]
+  },
+  "mcpServers": "./.mcp.json"
+}

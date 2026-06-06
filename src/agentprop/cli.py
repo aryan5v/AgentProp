@@ -698,6 +698,7 @@ def _doctor(args: argparse.Namespace) -> int:
             {
                 "name": "graphviz_dot",
                 "ok": graphviz_ok,
+                "optional": True,
                 "detail": "optional; required only to render .dot files",
             }
         )
@@ -715,7 +716,7 @@ def _doctor(args: argparse.Namespace) -> int:
     else:
         print(f"AgentProp doctor (tier={args.tier}): {'PASS' if ok else 'FAIL'}")
         for check in checks:
-            status = "ok" if check["ok"] else "FAIL"
+            status = "ok" if check["ok"] else ("warn" if check.get("optional") else "FAIL")
             print(f"  [{status}] {check['name']}: {check['detail']}")
         print(f"Next: {payload['next_step']}")
     return 0 if ok else 1

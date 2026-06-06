@@ -159,6 +159,9 @@ agentprop readiness --json
 
 ## Quick Start
 
+For the fastest beta path with Codex CLI, Claude Code, or a custom harness, see
+the [beta quickstart for coding agents](docs/beta_quickstart.md).
+
 Analyze a built-in workflow:
 
 ```bash
@@ -212,6 +215,17 @@ agentprop control-demo --demo terminal --out-dir reports/control-demo
 The demo writes `trace.jsonl`, `summary.json`, and `report.md`. The trace starts
 with graph analysis, then records runtime events, features, decisions, and the
 final outcome.
+
+Run the full-suite coding-agent wrapper example:
+
+```bash
+python examples/coding_agent_full_suite.py
+```
+
+This is the beta template for Codex CLI, Claude Code, or a custom harness:
+AgentProp analyzes the graph, writes routing/context/verifier guidance, observes
+real `ExecutionEvent` rows from the host agent, returns control decisions, and
+saves trace/report artifacts.
 
 Use the runtime control facade from Python:
 
@@ -267,7 +281,19 @@ agentprop-mcp
 The MCP server uses [FastMCP](https://github.com/PrefectHQ/fastmcp) when the
 extra is installed and exposes both analysis tools and live control-session
 tools. See the [control layer quickstart](docs/control_layer_quickstart.md) and
-[coding-agent integration guide](docs/coding_agents.md).
+[coding-agent integration guide](docs/coding_agents.md). For step-by-step
+Codex/Claude setup, use the [beta quickstart](docs/beta_quickstart.md).
+
+For Codex plugin beta testing, AgentProp ships a same-repo plugin bundle at
+[`plugins/agentprop`](plugins/agentprop) and a repo marketplace at
+`.agents/plugins/marketplace.json`:
+
+```bash
+codex plugin marketplace add aryan5v/AgentProp --sparse .agents --sparse plugins
+```
+
+Before broader beta distribution, this may move into a smaller dedicated plugin
+repo. See [plugin distribution](docs/plugin_distribution.md).
 
 The installable agent skill lives at
 [`skills/agentprop-workflow-optimizer`](skills/agentprop-workflow-optimizer):
