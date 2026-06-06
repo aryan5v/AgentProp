@@ -358,7 +358,8 @@ def shared_memory_workflow() -> AgentGraph:
         importance_score=0.9,
     )
     for agent in ("planner", "researcher", "writer", "verifier"):
-        metrics = _synthetic_node_metrics({"planner": 0, "researcher": 1, "writer": 2, "verifier": 3}[agent])
+        role_index = {"planner": 0, "researcher": 1, "writer": 2, "verifier": 3}[agent]
+        metrics = _synthetic_node_metrics(role_index)
         node_type = NodeType.VERIFIER if agent == "verifier" else NodeType.AGENT
         if agent == "planner":
             node_type = NodeType.PLANNER

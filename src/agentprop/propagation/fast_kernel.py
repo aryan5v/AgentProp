@@ -6,7 +6,7 @@ import random
 from collections import defaultdict
 from typing import TYPE_CHECKING
 
-from agentprop.core.propagation_index import PropagationGraphIndex, build_propagation_index
+from agentprop.core.propagation_index import PropagationGraphIndex
 from agentprop.propagation.base import PropagationResult, deterministic_result
 
 if TYPE_CHECKING:

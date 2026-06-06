@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from statistics import mean, pstdev
 from typing import Any
 
-from agentprop.evaluation.metrics import broadcast_cost, compare_routing
+from agentprop.evaluation.metrics import compare_routing
 from agentprop.evaluation.runner import make_propagation_model, select_seeds
 from agentprop.workflows import WORKFLOW_TEMPLATES
-
 
 DEFAULT_EVIDENCE_ARMS = (
     "broadcast",

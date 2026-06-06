@@ -86,7 +86,9 @@ class AdaptiveRoutingScorer:
         quality_loss = max(0.0, 1.0 - expected_success)
         token_savings = 0.0
         if broadcast_cost.total_cost > 0:
-            token_savings = (broadcast_cost.total_cost - cost.total_cost) / broadcast_cost.total_cost
+            token_savings = (
+                (broadcast_cost.total_cost - cost.total_cost) / broadcast_cost.total_cost
+            )
         return (
             expected_success
             + self.alpha_token_savings * max(-1.0, min(1.0, token_savings))

@@ -10,9 +10,9 @@ from typing import Any
 from uuid import uuid4
 
 from agentprop.core import AgentGraph, GraphAnalysisCache
+from agentprop.ml.risk_predictors import LearnedRiskState
 from agentprop.rl import CategoryBanditRoutingPolicy
 from agentprop.runtime import ControlSession
-from agentprop.ml.risk_predictors import LearnedRiskState
 
 _SHARED_ANALYSIS_CACHE: dict[str, GraphAnalysisCache] = {}
 

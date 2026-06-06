@@ -13,7 +13,7 @@ from agentprop.core.models import AgentEdge, AgentNode
 from agentprop.core.types import NodeType
 
 if TYPE_CHECKING:
-    from agentprop.core.propagation_index import PropagationGraphIndex
+    pass
 from agentprop.core.validation import validate_workflow_dict
 
 
@@ -310,7 +310,7 @@ class AgentGraph:
             )
         )
         import hashlib
-        fingerprint_data = f"{nodes}:{edges}".encode("utf-8")
+        fingerprint_data = f"{nodes}:{edges}".encode()
         h = hashlib.md5(fingerprint_data).hexdigest()
         return f"n{len(nodes)}e{len(edges)}:{h}"
 
@@ -319,9 +319,13 @@ class AgentGraph:
         c = self._analysis_cache
         if c.betweenness is None or c.closeness is None or c.core_numbers is None:
             nx_graph = self._graph
-            c.betweenness = nx.betweenness_centrality(nx_graph, weight="weight") if self.node_count else {}
+            c.betweenness = (
+                nx.betweenness_centrality(nx_graph, weight="weight") if self.node_count else {}
+            )
             # downstream closeness (standard for "how central as a source of info")
-            c.closeness = nx.closeness_centrality(nx_graph.reverse(copy=True)) if self.node_count else {}
+            c.closeness = (
+                nx.closeness_centrality(nx_graph.reverse(copy=True)) if self.node_count else {}
+            )
             c.core_numbers = nx.core_number(nx_graph.to_undirected()) if self.node_count else {}
             c.fingerprint = self._compute_fingerprint()
 

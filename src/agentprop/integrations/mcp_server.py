@@ -5,17 +5,17 @@ from __future__ import annotations
 import json
 import sys
 from typing import Any, cast
+
 from agentprop.algorithms import bottleneck_nodes, low_weight_edges, risk_aware_verifier_placement
 from agentprop.cli import _build_recommendation_report, _load_workflow
 from agentprop.core import AgentGraph
-from agentprop.evaluation.metrics import RecommendationReport
+from agentprop.evaluation.metrics import RecommendationReport, build_what_if_k_curve
 from agentprop.evaluation.reporting import render_markdown_report, report_to_dict
+from agentprop.evaluation.runner import make_propagation_model
 from agentprop.integrations.agent_instructions import (
     CodingAgentTarget,
     render_coding_agent_instructions,
 )
-from agentprop.evaluation.metrics import build_what_if_k_curve
-from agentprop.evaluation.runner import make_propagation_model
 from agentprop.integrations.session_store import SessionStore, warm_shared_analysis_cache
 from agentprop.runtime import ControlSession, ExecutionEvent
 
