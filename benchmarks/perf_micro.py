@@ -69,15 +69,14 @@ def run_microbenchmarks() -> list[BenchResult]:
             _timed(
                 f"rzf_trials_n{size}",
                 size,
-                lambda g=graph: RandomizedZeroForcing(seed=0).simulate(
+                lambda g=graph, s=size: RandomizedZeroForcing(seed=0).simulate(
                     g,
-                    [f"node_{size - 2}"],
+                    [f"node_{s - 2}"],
                     trials=50,
                 ),
             )
         )
 
-    tracker = ExecutionStateTracker()
     events = [
         ExecutionEvent(
             step=index,
