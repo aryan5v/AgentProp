@@ -309,7 +309,10 @@ class AgentGraph:
                 for u, v, d in self._graph.edges(data=True)
             )
         )
-        return f"n{len(nodes)}e{len(edges)}:{hash((nodes, edges))}"
+        import hashlib
+        fingerprint_data = f"{nodes}:{edges}".encode("utf-8")
+        h = hashlib.md5(fingerprint_data).hexdigest()
+        return f"n{len(nodes)}e{len(edges)}:{h}"
 
     def _ensure_centrality_cache(self) -> None:
         """Populate the expensive centrality fields if missing."""

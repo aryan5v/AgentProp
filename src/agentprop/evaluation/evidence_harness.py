@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from statistics import mean, pstdev
 from typing import Any
 
+from agentprop.evaluation.metrics import broadcast_cost, compare_routing
 from agentprop.evaluation.runner import make_propagation_model, select_seeds
 from agentprop.workflows import WORKFLOW_TEMPLATES
 
@@ -80,22 +81,20 @@ def run_evidence_harness(
         for arm in cfg.arms:
             coverages: list[float] = []
             savings: list[float] = []
+            algorithm = "rzf-centrality" if arm == "degree" else arm
+            if arm == "broadcast":
+                seeds = [node.id for node in graph.nodes()]
+            else:
+                seeds = select_seeds(
+                    graph,
+                    algorithm,
+                    cfg.seed_budget,
+                    model,
+                    cfg.trials,
+                )
             for repeat in range(cfg.repeats):
                 for task_index in range(cfg.tasks_per_arm):
-                    algorithm = "rzf-centrality" if arm == "degree" else arm
-                    if arm == "broadcast":
-                        seeds = [node.id for node in graph.nodes()]
-                    else:
-                        seeds = select_seeds(
-                            graph,
-                            algorithm,
-                            cfg.seed_budget,
-                            model,
-                            cfg.trials,
-                        )
                     propagation = model.simulate(graph, seeds, trials=cfg.trials)
-                    from agentprop.evaluation.metrics import broadcast_cost, compare_routing
-
                     report = compare_routing(
                         graph,
                         seeds,

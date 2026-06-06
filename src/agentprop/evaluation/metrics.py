@@ -295,17 +295,18 @@ def build_what_if_k_curve(
     broadcast = broadcast_cost(graph)
     remaining = list(ordered)
     for k in range(1, limit + 1):
-        if k == 1:
-            best = max(remaining, key=lambda seed: model.simulate(graph, [seed], trials=trials).coverage)
-            selected = [best]
-            remaining.remove(best)
+        candidate_sets = [selected + [seed] for seed in remaining]
+        if hasattr(model, "simulate_batch"):
+            results = model.simulate_batch(graph, candidate_sets, trials=trials)
+            best_idx = max(range(len(remaining)), key=lambda i: results[i].coverage)
+            best = remaining[best_idx]
         else:
             best = max(
                 remaining,
                 key=lambda seed: model.simulate(graph, selected + [seed], trials=trials).coverage,
             )
-            selected.append(best)
-            remaining.remove(best)
+        selected.append(best)
+        remaining.remove(best)
         propagation = model.simulate(graph, selected, trials=trials)
         allocations = graded_context_allocations(
             graph,

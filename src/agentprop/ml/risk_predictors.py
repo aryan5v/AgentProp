@@ -18,7 +18,7 @@ from agentprop.propagation.base import PropagationResult
 class TimeoutRiskPredictor:
     """Predict timeout risk from graph latency + node error rates."""
 
-    latency_weight: float = 0.02
+    latency_weight: float = 0.10
     error_weight: float = 0.35
     budget_penalty: float = 0.15
 

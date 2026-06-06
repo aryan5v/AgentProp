@@ -101,7 +101,7 @@ class CategoryBanditRoutingPolicy:
             - self.regression_risk_weight * risk_pen
         )
         if not passed:
-            reward -= 1.0
+            reward *= 0.5
         self._category_stats(category)[arm].update(reward)
 
     def values(self, category: str) -> dict[str, float]:

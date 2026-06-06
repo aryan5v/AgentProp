@@ -165,6 +165,7 @@ class SessionStore:
         )
         if isinstance(outcome, dict):
             token_savings = float(outcome.get("token_savings", 0.0) or 0.0)
+            timeout_risk = self._risk_state.timeout_adjustment(session.config.category)
             self._bandit.update(
                 session.config.category,
                 strategy,
@@ -172,6 +173,7 @@ class SessionStore:
                 token_savings=token_savings,
                 quality_score=quality_score,
                 regression_risk=regression_risk,
+                timeout_risk=timeout_risk,
             )
         record = self._records[session_id]
         record.summary = session.summary()
@@ -242,10 +244,10 @@ class SessionStore:
             if path.name in {"bandit.json", "risk_state.json"}:
                 continue
             try:
-                payload = json.loads(path.read_text())
-            except json.JSONDecodeError:
+                payload = json.loads(path.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError):
                 continue
-            if "session_id" not in payload:
+            if not isinstance(payload, dict) or "session_id" not in payload:
                 continue
             record = PersistedSessionRecord(
                 session_id=str(payload["session_id"]),

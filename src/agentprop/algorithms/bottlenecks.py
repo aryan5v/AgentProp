@@ -102,7 +102,6 @@ def failure_sensitive_nodes(graph: AgentGraph, *, limit: int = 5) -> list[tuple[
     nx_graph = graph.to_networkx()
     scored = []
     for node_id in list(nx_graph.nodes):
-        before = len(graph.get_descendants(str(node_id)))
         # simulate removal for loss
         reduced = nx_graph.copy()
         reduced.remove_node(node_id)
