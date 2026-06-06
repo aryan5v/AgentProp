@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+import agentprop.cli as cli
 from agentprop.cli import main
 
 
@@ -197,6 +198,24 @@ def test_cli_doctor_graph_tier(capsys) -> None:  # type: ignore[no-untyped-def]
     payload = json.loads(capsys.readouterr().out)
     assert payload["ok"] is True
     assert payload["tier"] == "graph"
+
+
+def test_cli_doctor_graph_tier_marks_optional_graphviz_as_warning(
+    capsys, monkeypatch
+) -> None:  # type: ignore[no-untyped-def]
+    def fake_which(command: str) -> str | None:
+        if command == "dot":
+            return None
+        return f"/usr/bin/{command}"
+
+    monkeypatch.setattr(cli.shutil, "which", fake_which)
+
+    exit_code = main(["doctor", "--tier", "graph"])
+
+    assert exit_code == 0
+    output = capsys.readouterr().out
+    assert "[warn] graphviz_dot" in output
+    assert "[FAIL] graphviz_dot" not in output
 
 
 def test_cli_simulate_quality_cascade(capsys) -> None:  # type: ignore[no-untyped-def]

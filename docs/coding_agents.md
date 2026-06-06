@@ -2,6 +2,10 @@
 
 AgentProp can be used by coding agents in two complementary ways.
 
+If you are setting this up for the first time, start with the
+[beta quickstart for coding agents](beta_quickstart.md). It includes exact Codex
+CLI, Claude Code, MCP, artifact, and troubleshooting commands.
+
 For everyday coding tasks, AgentProp generates a workflow brief that tells Codex
 CLI, Claude Code, or another coding agent where to concentrate context, where to
 verify, and which handoffs are risky to summarize. The agent still uses the
@@ -56,6 +60,21 @@ codex login
 codex exec "Use reports/codex_agent_brief.md while implementing the requested workflow change."
 ```
 
+For a fuller Codex integration, install the same-repo AgentProp plugin
+marketplace. The plugin packages the AgentProp skill plus the `agentprop-mcp`
+stdio server config:
+
+```bash
+python -m pip install "agentprop[mcp]"
+codex plugin marketplace add aryan5v/AgentProp --sparse .agents --sparse plugins
+```
+
+Then open the Codex plugin directory, choose the AgentProp marketplace, and
+install the AgentProp plugin. A separate repository is not required for this
+beta path; this repo can host the skill, plugin bundle, and marketplace
+metadata together while the integration is moving quickly. See
+[plugin distribution](plugin_distribution.md) for the dedicated-repo plan.
+
 For Claude Code, use the canonical skill at
 `skills/agentprop-workflow-optimizer/`. The
 `integrations/claude-code/agentprop-workflow-optimizer/` path is a thin install
@@ -96,6 +115,37 @@ See the Claude Code docs for
 [Agent Skills](https://docs.claude.com/en/docs/claude-code/skills) and
 [MCP](https://code.claude.com/docs/en/mcp). `agentprop-mcp` is the path when
 Claude should call AgentProp directly instead of only reading a generated brief.
+
+## Full-Suite Coding-Agent Wrapper
+
+For beta users, the preferred path is not instructions-only. Use the full suite
+when the host loop can observe real steps from Codex CLI, Claude Code, or a
+custom agent runner:
+
+```bash
+python examples/coding_agent_full_suite.py
+```
+
+The example writes:
+
+- `routing_report.md` and `routing_summary.json`: seed selection, quality/risk,
+  cost comparison, verifier candidates, bottlenecks, and pruning risk.
+- `context_advice.json`: critical-fact and graded-context advice for a
+  context-sensitive node.
+- `host_agent_prompt.md`: the small prompt you give Codex or Claude Code after
+  normal login.
+- `control_session/trace.jsonl`, `summary.json`, and `report.md`: the runtime
+  control evidence from observed `ExecutionEvent` rows.
+
+This is the shape to copy for real use:
+
+1. Run graph analysis before the coding agent starts.
+2. Give full context to selected seed roles and preserve critical facts.
+3. Place verifiers using metric-dimension/resolving coverage candidates.
+4. Let the coding agent work normally.
+5. Emit an `ExecutionEvent` after each plan/edit/test/review step.
+6. Obey `FORCE_VERIFY`, `SWITCH_STRATEGY`, `FINALIZE`, and budget decisions.
+7. Save trace/report artifacts before claiming the workflow improved.
 
 ## Recommended Agent Instructions
 
