@@ -40,6 +40,19 @@ def report_to_dict(report: RecommendationReport) -> dict[str, Any]:
         "context_allocations": dict(report.context_allocations),
         "routing_risks": [_routing_risk_to_dict(risk) for risk in report.routing_risks],
         "quality_objective_score": report.quality_objective_score,
+        "coverage_uncertainty": report.coverage_uncertainty,
+        "algorithm_path": report.algorithm_path,
+        "what_if_k": [
+            {
+                "k": entry.k,
+                "seeds": entry.seeds,
+                "coverage": entry.coverage,
+                "coverage_std": entry.coverage_std,
+                "estimated_savings": entry.estimated_savings,
+                "quality_objective_score": entry.quality_objective_score,
+            }
+            for entry in report.what_if_k
+        ],
     }
 
 

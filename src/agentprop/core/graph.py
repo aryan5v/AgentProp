@@ -5,12 +5,15 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import networkx as nx
 
 from agentprop.core.models import AgentEdge, AgentNode
 from agentprop.core.types import NodeType
+
+if TYPE_CHECKING:
+    from agentprop.core.propagation_index import PropagationGraphIndex
 from agentprop.core.validation import validate_workflow_dict
 
 
@@ -41,6 +44,9 @@ class GraphAnalysisCache:
     # Stable fingerprint for the current graph structure (used to decide when to trust cache
     # across sessions or for future persistent caching). Invalidated on mutation.
     fingerprint: str | None = None
+
+    # Integer-indexed adjacency for fast propagation (phase1-fast-propagation).
+    propagation_index: Any | None = None
 
 
 class AgentGraph:
@@ -177,6 +183,43 @@ class AgentGraph:
 
         return [AgentEdge.from_dict(dict(data)) for _, _, data in self._graph.edges(data=True)]
 
+    def has_node(self, node_id: str) -> bool:
+        """Return True when ``node_id`` exists (no graph copy)."""
+
+        return node_id in self._graph
+
+    def has_edge(self, source: str, target: str) -> bool:
+        """Return True when a directed edge exists (no graph copy)."""
+
+        return self._graph.has_edge(source, target)
+
+    def node_ids(self) -> list[str]:
+        """Return all node ids without materializing AgentNode objects."""
+
+        return [str(node_id) for node_id in self._graph.nodes()]
+
+    def is_dag(self) -> bool:
+        """Return True when the graph is a directed acyclic graph."""
+
+        return nx.is_directed_acyclic_graph(self._graph)
+
+    def topological_order(self) -> list[str]:
+        """Return a topological order for DAG workflows."""
+
+        if not self.is_dag():
+            raise ValueError("graph is not a DAG")
+        return [str(node_id) for node_id in nx.topological_sort(self._graph)]
+
+    def out_degree(self, node_id: str) -> int:
+        """Outgoing edge count for a node."""
+
+        return int(self._graph.out_degree(node_id))
+
+    def in_degree(self, node_id: str) -> int:
+        """Incoming edge count for a node."""
+
+        return int(self._graph.in_degree(node_id))
+
     def to_networkx(self) -> nx.DiGraph:
         """Return a copy of the underlying NetworkX directed graph."""
 
@@ -224,6 +267,7 @@ class AgentGraph:
         c.ancestor_closures = None
         c.descendant_closures = None
         c.fingerprint = None
+        c.propagation_index = None
 
     def _ensure_undirected_distances(self) -> tuple[list[str], dict[str, dict[str, int]]]:
         """Return (node_ids, distances) using memoized all-pairs shortest paths on the
@@ -332,6 +376,37 @@ class AgentGraph:
         self._ensure_reachability_closures()
         closures = self._analysis_cache.descendant_closures or {}
         return float(sum(len(s) for s in closures.values()))
+
+    def get_propagation_index(self) -> Any:
+        """Return cached integer-indexed adjacency for propagation kernels."""
+
+        from agentprop.core.propagation_index import build_propagation_index
+
+        cache = self._analysis_cache
+        if cache.propagation_index is None:
+            cache.propagation_index = build_propagation_index(self)
+            cache.fingerprint = self._compute_fingerprint()
+        return cache.propagation_index
+
+    def analysis_fingerprint(self) -> str | None:
+        """Return the current graph fingerprint if the analysis cache is warm."""
+
+        return self._analysis_cache.fingerprint
+
+    def warm_analysis_cache(self) -> str:
+        """Precompute distances, centralities, and propagation index; return fingerprint."""
+
+        self.get_undirected_distances()
+        self._ensure_centrality_cache()
+        self._ensure_reachability_closures()
+        self.get_propagation_index()
+        return self._analysis_cache.fingerprint or self._compute_fingerprint()
+
+    def export_analysis_cache(self) -> GraphAnalysisCache:
+        """Return a shallow snapshot of the warm analysis cache."""
+
+        self.warm_analysis_cache()
+        return self._analysis_cache
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize the graph to JSON-compatible data."""

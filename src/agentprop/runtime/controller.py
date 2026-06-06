@@ -6,8 +6,6 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Literal, Protocol
 
-import networkx as nx
-
 from agentprop.algorithms import (
     greedy_seed_selection,
     quality_aware_greedy_seed_selection,
@@ -16,6 +14,7 @@ from agentprop.algorithms import (
 from agentprop.core import AgentGraph, AgentNode, NodeType
 from agentprop.evaluation import graded_context_allocations, routing_risks
 from agentprop.propagation import IndependentCascade
+from agentprop.runtime.critical_facts import CriticalFactStore, build_context_slice
 
 SeedSelectorName = Literal["quality_aware", "greedy", "rzf", "auto"]
 ActivationMode = Literal["all", "propagated"]
@@ -44,6 +43,7 @@ class RuntimeControllerConfig:
     seed_selector: SeedSelectorName = "auto"
     seed: int = 0
     force_verifier_full_context: bool = True
+    use_critical_facts: bool = True
     compressed_context_ratio: float = 0.35
     full_context_threshold: float = 0.95
     fixed_seeds: tuple[str, ...] = ()
@@ -106,6 +106,7 @@ class AgentPropRuntimeController:
         self.graph = graph
         self.config = config or RuntimeControllerConfig()
         self.compressor = compressor
+        self.fact_store = CriticalFactStore()
 
     def run(
         self,
@@ -141,7 +142,7 @@ class AgentPropRuntimeController:
         risks = tuple(
             risk.to_dict() for risk in routing_risks(self.graph, context_ratios=context_ratios)
         )
-        compressed_context_cache: dict[float, str] = {}
+        compressed_context_cache: dict[tuple[float, str], str] = {}
         outputs: dict[str, str] = {}
         results: list[RuntimeNodeResult] = []
         trace_events: list[dict[str, object]] = []
@@ -156,6 +157,7 @@ class AgentPropRuntimeController:
                 ratio=ratio,
                 full_context=full_context,
                 cache=compressed_context_cache,
+                node=node,
             )
             upstream = {
                 source: outputs[source]
@@ -250,10 +252,8 @@ class AgentPropRuntimeController:
         )
 
     def _execution_order(self) -> list[AgentNode]:
-        nx_graph = self.graph.to_networkx()
-        if nx.is_directed_acyclic_graph(nx_graph):
-            node_ids = list(nx.topological_sort(nx_graph))
-            return [self.graph.node(str(node_id)) for node_id in node_ids]
+        if self.graph.is_dag():
+            return [self.graph.node(node_id) for node_id in self.graph.topological_order()]
         if not self.config.allow_cycles:
             raise ValueError(
                 "The workflow graph contains cycles, which is not supported "
@@ -269,22 +269,32 @@ class AgentPropRuntimeController:
         ratio: float,
         full_context: bool,
         cache: dict[float, str],
+        node: AgentNode | None = None,
     ) -> str:
         if full_context:
             return shared_context
         if ratio <= 0.0:
             return ""
         rounded_ratio = round(ratio, 2)
-        if rounded_ratio not in cache:
+        cache_key = (rounded_ratio, node.id if node is not None else "")
+        if cache_key not in cache:
             if self.compressor is not None:
-                cache[rounded_ratio] = self.compressor(
+                cache[cache_key] = self.compressor(
                     shared_context,
                     task=task,
                     target_ratio=rounded_ratio,
                 )
+            elif self.config.use_critical_facts:
+                cache[cache_key] = build_context_slice(
+                    shared_context,
+                    task=task,
+                    ratio=rounded_ratio,
+                    node=node,
+                    fact_store=self.fact_store,
+                )
             else:
-                cache[rounded_ratio] = _truncate_context(shared_context, rounded_ratio)
-        return cache[rounded_ratio]
+                cache[cache_key] = _truncate_context(shared_context, rounded_ratio)
+        return cache[cache_key]
 
 
 def _truncate_context(context: str, ratio: float) -> str:

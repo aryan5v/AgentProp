@@ -290,7 +290,7 @@ class AgentRoutingEnv:
         manual_edge_cost = sum(
             self.graph.edge(source, target).message_cost
             for source, target in self._used_edges
-            if self.graph.to_networkx().has_edge(source, target)
+            if self.graph.has_edge(source, target)
         )
         tool_cost = sum(self.graph.node(node_id).token_cost for node_id in self._called_tools)
         summary_cost = 0.1 * sum(
@@ -328,14 +328,14 @@ class AgentRoutingEnv:
             return
         if decision.action_type == RoutingAction.SEND_MESSAGE:
             edge = _required_edge(decision)
-            if not self.graph.to_networkx().has_edge(*edge):
+            if not self.graph.has_edge(*edge):
                 raise ValueError(f"Unknown edge: {edge[0]} -> {edge[1]}")
             if edge not in self._used_edges:
                 self._used_edges.append(edge)
             return
         if decision.action_type == RoutingAction.PRUNE_EDGE:
             edge = _required_edge(decision)
-            if not self.graph.to_networkx().has_edge(*edge):
+            if not self.graph.has_edge(*edge):
                 raise ValueError(f"Unknown edge: {edge[0]} -> {edge[1]}")
             if edge not in self._pruned_edges:
                 self._pruned_edges.append(edge)
@@ -428,7 +428,7 @@ def parse_routing_action(action: str, *, graph: AgentGraph | None = None) -> Rou
             raise ValueError(f"Edge action must use source->target payload: {action}")
         source, target = payload.split("->", 1)
         return RoutingDecision(action_type=action_type, edge=(source, target))
-    if graph is not None and payload not in graph.to_networkx():
+    if graph is not None and not graph.has_node(payload):
         raise ValueError(f"Unknown node: {payload}")
     return RoutingDecision(action_type=action_type, node_id=payload)
 

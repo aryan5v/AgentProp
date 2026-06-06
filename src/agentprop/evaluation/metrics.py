@@ -28,6 +28,18 @@ class CostSummary:
 
 
 @dataclass(slots=True)
+class WhatIfKEntry:
+    """Coverage/cost snapshot for a seed-budget what-if analysis."""
+
+    k: int
+    seeds: list[str]
+    coverage: float
+    coverage_std: float
+    estimated_savings: float
+    quality_objective_score: float | None = None
+
+
+@dataclass(slots=True)
 class RecommendationReport:
     """Single optimization report for CLI and library users."""
 
@@ -45,6 +57,9 @@ class RecommendationReport:
     context_allocations: dict[str, float] = field(default_factory=dict)
     routing_risks: list[Any] = field(default_factory=list)
     quality_objective_score: float | None = None
+    what_if_k: list[WhatIfKEntry] = field(default_factory=list)
+    coverage_uncertainty: float | None = None
+    algorithm_path: str = "exact"
 
 
 @dataclass(slots=True)
@@ -170,10 +185,10 @@ def broadcast_cost(graph: AgentGraph) -> CostSummary:
 def robustness_under_failures(graph: AgentGraph) -> RobustnessSummary:
     """Estimate reachability loss under single-node and single-edge failures."""
 
-    nx_graph = graph.to_networkx()
-    baseline_pairs = _reachable_pair_count(nx_graph)
+    baseline_pairs = graph.get_reachable_pair_count()
     if baseline_pairs == 0:
         return RobustnessSummary(0.0, 0.0, 0.0, 0.0, 0.0)
+    nx_graph = graph.to_networkx()
 
     node_losses = []
     for node_id in nx_graph.nodes:
@@ -256,6 +271,78 @@ def seeded_routing_cost(
     )
 
 
+def build_what_if_k_curve(
+    graph: AgentGraph,
+    *,
+    model,
+    candidate_seeds: list[str],
+    max_k: int,
+    trials: int = 50,
+) -> list[WhatIfKEntry]:
+    """Simulate coverage/cost for k=1..max_k using greedy seed augmentation."""
+
+    from agentprop.evaluation.routing import (
+        QualityAwareRoutingObjective,
+        graded_context_allocations,
+    )
+
+    if max_k < 1 or not candidate_seeds:
+        return []
+    ordered = list(dict.fromkeys(candidate_seeds))
+    limit = min(max_k, len(ordered))
+    selected: list[str] = []
+    entries: list[WhatIfKEntry] = []
+    broadcast = broadcast_cost(graph)
+    remaining = list(ordered)
+    for k in range(1, limit + 1):
+        if k == 1:
+            best = max(remaining, key=lambda seed: model.simulate(graph, [seed], trials=trials).coverage)
+            selected = [best]
+            remaining.remove(best)
+        else:
+            best = max(
+                remaining,
+                key=lambda seed: model.simulate(graph, selected + [seed], trials=trials).coverage,
+            )
+            selected.append(best)
+            remaining.remove(best)
+        propagation = model.simulate(graph, selected, trials=trials)
+        allocations = graded_context_allocations(
+            graph,
+            seeds=selected,
+            activated_nodes=propagation.activated_nodes,
+        )
+        optimized = seeded_routing_cost(
+            graph,
+            selected,
+            propagation.activated_nodes,
+            context_ratios=allocations,
+        )
+        savings = 0.0
+        if broadcast.total_cost > 0:
+            savings = (broadcast.total_cost - optimized.total_cost) / broadcast.total_cost
+        uncertainty = 0.0
+        if propagation.full_activation_probability is not None:
+            uncertainty = max(0.0, 1.0 - propagation.full_activation_probability)
+        entries.append(
+            WhatIfKEntry(
+                k=k,
+                seeds=list(selected),
+                coverage=propagation.coverage,
+                coverage_std=uncertainty,
+                estimated_savings=savings,
+                quality_objective_score=QualityAwareRoutingObjective().score(
+                    graph,
+                    seeds=selected,
+                    activated_nodes=propagation.activated_nodes,
+                    cost=optimized,
+                    context_ratios=allocations,
+                ),
+            )
+        )
+    return entries
+
+
 def compare_routing(
     graph: AgentGraph,
     seeds: list[str],
@@ -274,7 +361,7 @@ def compare_routing(
         QualityAwareRoutingObjective,
         graded_context_allocations,
         routing_risks,
-    )
+    )  # noqa: PLC0415 — local import avoids cycle with routing helpers
 
     context_allocations = graded_context_allocations(
         graph,
@@ -299,6 +386,10 @@ def compare_routing(
         context_ratios=context_allocations,
     )
 
+    uncertainty = None
+    if propagation.full_activation_probability is not None:
+        uncertainty = max(0.0, 1.0 - propagation.full_activation_probability)
+
     return RecommendationReport(
         seeds=seeds,
         propagation_model=propagation_model,
@@ -314,6 +405,8 @@ def compare_routing(
         context_allocations=context_allocations,
         routing_risks=routing_risks(graph, context_ratios=context_allocations),
         quality_objective_score=quality_score,
+        coverage_uncertainty=uncertainty,
+        algorithm_path="fast" if graph.node_count > 15 else "exact",
     )
 
 
