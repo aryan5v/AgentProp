@@ -57,7 +57,10 @@ def main(argv: list[str] | None = None) -> int:
     try:
         args = parser.parse_args(argv)
         if getattr(args, "version", False):
-            print(importlib.metadata.version("agentprop"))
+            try:
+                print(importlib.metadata.version("agentprop"))
+            except importlib.metadata.PackageNotFoundError:
+                print("unknown (package not installed)")
             return 0
         return _dispatch(args, parser)
     except WorkflowValidationError as error:

@@ -174,13 +174,12 @@ def greedy_seed_selection(
         aug_score[node_id] = sc
         return sc
 
-    import random as _rnd  # local for the approx sampling path
     while len(selected) < min(k, len(candidates)):
         active = [c for c in candidates if c not in selected]
         # simple approx sampling for very large graphs (keeps exact when n small or caller forces)
         if len(active) > 80:
-            # 30% sample keeps it cheap while still exploring; papers set trials high + pass small graphs
-            active = _rnd.sample(active, max(15, int(0.3 * len(active)))) if len(active) > 15 else active
+            # 30% sample keeps it cheap while still exploring
+            active = _sample(active, max(15, int(0.3 * len(active))))
 
         best_node = None
         best_sc = float("-inf")
@@ -193,14 +192,10 @@ def greedy_seed_selection(
                 best_sc = sc
                 best_node = node_id
 
-        if best_node is None or best_sc <= (  # early stop when no improvement over "do nothing more"
-            0.0 if not selected else
-            aug_score.get(selected[-1], 0.0)   # rough; in practice positive monotone keeps going until k
-        ):
-            # pruning / early-stop hook (submodular style)
-            if best_sc <= 0:
-                break
+        baseline_sc = 0.0 if not selected else aug_score.get(selected[-1], 0.0)
         if best_node is None:
+            break
+        if best_sc <= baseline_sc and best_sc <= 0:
             break
         selected.append(best_node)
 

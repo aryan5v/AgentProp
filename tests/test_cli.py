@@ -176,7 +176,9 @@ def test_cli_version_flag(capsys) -> None:  # type: ignore[no-untyped-def]
     exit_code = main(["--version"])
 
     assert exit_code == 0
-    assert capsys.readouterr().out.strip()
+    version = capsys.readouterr().out.strip()
+    assert version
+    assert version[0].isdigit() or version.startswith("unknown")
 
 
 def test_cli_workflows_list(capsys) -> None:  # type: ignore[no-untyped-def]
