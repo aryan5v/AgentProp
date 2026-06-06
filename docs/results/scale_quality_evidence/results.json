@@ -9,27 +9,29 @@
       "degree"
     ],
     "model": "independent-cascade",
-    "repeats": 2,
+    "repeats": 3,
     "seed_budget": 3,
-    "tasks_per_arm": 5,
-    "trials": 20,
+    "tasks_per_arm": 30,
+    "trials": 50,
     "workflows": [
       "planner_coder_tester_reviewer",
       "fan_out_parallel",
       "feedback_loop",
       "shared_memory",
+      "dynamic_conditional",
       "hub_and_spoke_supervisor"
     ]
   },
-  "generated_at": "2026-06-06T18:01:57.623923+00:00",
-  "row_count": 300,
+  "generated_at": "2026-06-06T18:05:59.370695+00:00",
+  "row_count": 3240,
   "summaries": [
     {
       "arm": "broadcast",
       "coverage_ci_half_width": 0.0,
       "mean_coverage": 1.0,
       "mean_savings": 0.0,
-      "runs": 10,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
       "workflow": "planner_coder_tester_reviewer"
     },
     {
@@ -37,7 +39,8 @@
       "coverage_ci_half_width": 0.0,
       "mean_coverage": 1.0,
       "mean_savings": 0.08295454545454546,
-      "runs": 10,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
       "workflow": "planner_coder_tester_reviewer"
     },
     {
@@ -45,7 +48,8 @@
       "coverage_ci_half_width": 0.0,
       "mean_coverage": 1.0,
       "mean_savings": 0.08295454545454546,
-      "runs": 10,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
       "workflow": "planner_coder_tester_reviewer"
     },
     {
@@ -53,7 +57,8 @@
       "coverage_ci_half_width": 0.0,
       "mean_coverage": 1.0,
       "mean_savings": 0.08295454545454546,
-      "runs": 10,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
       "workflow": "planner_coder_tester_reviewer"
     },
     {
@@ -61,15 +66,17 @@
       "coverage_ci_half_width": 0.0,
       "mean_coverage": 1.0,
       "mean_savings": 0.07857142857142857,
-      "runs": 10,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
       "workflow": "planner_coder_tester_reviewer"
     },
     {
       "arm": "degree",
       "coverage_ci_half_width": 0.0,
-      "mean_coverage": 1.0,
-      "mean_savings": 0.08295454545454546,
-      "runs": 10,
+      "mean_coverage": 0.8,
+      "mean_savings": 0.33766233766233766,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
       "workflow": "planner_coder_tester_reviewer"
     },
     {
@@ -77,15 +84,17 @@
       "coverage_ci_half_width": 0.0,
       "mean_coverage": 1.0,
       "mean_savings": 0.0,
-      "runs": 10,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
       "workflow": "fan_out_parallel"
     },
     {
       "arm": "greedy",
       "coverage_ci_half_width": 0.0,
       "mean_coverage": 1.0,
-      "mean_savings": 0.2567070237331623,
-      "runs": 10,
+      "mean_savings": 0.2568112572161642,
+      "runs": 90,
+      "savings_ci_half_width": 0.0004143712355881595,
       "workflow": "fan_out_parallel"
     },
     {
@@ -93,15 +102,17 @@
       "coverage_ci_half_width": 0.0,
       "mean_coverage": 1.0,
       "mean_savings": 0.21965202052597818,
-      "runs": 10,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
       "workflow": "fan_out_parallel"
     },
     {
       "arm": "quality-aware-greedy",
       "coverage_ci_half_width": 0.0,
       "mean_coverage": 1.0,
-      "mean_savings": 0.25717607440667095,
-      "runs": 10,
+      "mean_savings": 0.2564464400256575,
+      "runs": 90,
+      "savings_ci_half_width": 0.0004985680702882033,
       "workflow": "fan_out_parallel"
     },
     {
@@ -109,15 +120,17 @@
       "coverage_ci_half_width": 0.0,
       "mean_coverage": 1.0,
       "mean_savings": 0.210271007055805,
-      "runs": 10,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
       "workflow": "fan_out_parallel"
     },
     {
       "arm": "degree",
       "coverage_ci_half_width": 0.0,
       "mean_coverage": 1.0,
-      "mean_savings": 0.21965202052597818,
-      "runs": 10,
+      "mean_savings": 0.25717607440667095,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
       "workflow": "fan_out_parallel"
     },
     {
@@ -125,7 +138,8 @@
       "coverage_ci_half_width": 0.0,
       "mean_coverage": 1.0,
       "mean_savings": 0.0,
-      "runs": 10,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
       "workflow": "feedback_loop"
     },
     {
@@ -133,7 +147,8 @@
       "coverage_ci_half_width": 0.0,
       "mean_coverage": 1.0,
       "mean_savings": 0.20304432013769363,
-      "runs": 10,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
       "workflow": "feedback_loop"
     },
     {
@@ -141,7 +156,8 @@
       "coverage_ci_half_width": 0.0,
       "mean_coverage": 1.0,
       "mean_savings": 0.20304432013769363,
-      "runs": 10,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
       "workflow": "feedback_loop"
     },
     {
@@ -149,7 +165,8 @@
       "coverage_ci_half_width": 0.0,
       "mean_coverage": 1.0,
       "mean_savings": 0.20304432013769363,
-      "runs": 10,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
       "workflow": "feedback_loop"
     },
     {
@@ -157,15 +174,17 @@
       "coverage_ci_half_width": 0.0,
       "mean_coverage": 1.0,
       "mean_savings": 0.20304432013769363,
-      "runs": 10,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
       "workflow": "feedback_loop"
     },
     {
       "arm": "degree",
       "coverage_ci_half_width": 0.0,
-      "mean_coverage": 1.0,
-      "mean_savings": 0.20304432013769363,
-      "runs": 10,
+      "mean_coverage": 0.8,
+      "mean_savings": 0.39070567986230637,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
       "workflow": "feedback_loop"
     },
     {
@@ -173,7 +192,8 @@
       "coverage_ci_half_width": 0.0,
       "mean_coverage": 1.0,
       "mean_savings": 0.0,
-      "runs": 10,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
       "workflow": "shared_memory"
     },
     {
@@ -181,15 +201,17 @@
       "coverage_ci_half_width": 0.0,
       "mean_coverage": 1.0,
       "mean_savings": 0.2237037648612946,
-      "runs": 10,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
       "workflow": "shared_memory"
     },
     {
       "arm": "rzf-centrality",
       "coverage_ci_half_width": 0.0,
       "mean_coverage": 1.0,
-      "mean_savings": 0.1718130779392338,
-      "runs": 10,
+      "mean_savings": 0.19435270805812419,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
       "workflow": "shared_memory"
     },
     {
@@ -197,7 +219,8 @@
       "coverage_ci_half_width": 0.0,
       "mean_coverage": 1.0,
       "mean_savings": 0.2237037648612946,
-      "runs": 10,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
       "workflow": "shared_memory"
     },
     {
@@ -205,15 +228,17 @@
       "coverage_ci_half_width": 0.0,
       "mean_coverage": 1.0,
       "mean_savings": 0.18692206076618229,
-      "runs": 10,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
       "workflow": "shared_memory"
     },
     {
       "arm": "degree",
       "coverage_ci_half_width": 0.0,
       "mean_coverage": 1.0,
-      "mean_savings": 0.1718130779392338,
-      "runs": 10,
+      "mean_savings": 0.20599405548216645,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
       "workflow": "shared_memory"
     },
     {
@@ -221,7 +246,62 @@
       "coverage_ci_half_width": 0.0,
       "mean_coverage": 1.0,
       "mean_savings": 0.0,
-      "runs": 10,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
+      "workflow": "dynamic_conditional"
+    },
+    {
+      "arm": "greedy",
+      "coverage_ci_half_width": 0.0,
+      "mean_coverage": 1.0,
+      "mean_savings": 0.24818097014925372,
+      "runs": 90,
+      "savings_ci_half_width": 0.0006232194368324497,
+      "workflow": "dynamic_conditional"
+    },
+    {
+      "arm": "rzf-centrality",
+      "coverage_ci_half_width": 0.0,
+      "mean_coverage": 1.0,
+      "mean_savings": 0.20172574626865672,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
+      "workflow": "dynamic_conditional"
+    },
+    {
+      "arm": "quality-aware-greedy",
+      "coverage_ci_half_width": 0.0,
+      "mean_coverage": 1.0,
+      "mean_savings": 0.24772621268656717,
+      "runs": 90,
+      "savings_ci_half_width": 0.0006643541518970919,
+      "workflow": "dynamic_conditional"
+    },
+    {
+      "arm": "imm",
+      "coverage_ci_half_width": 0.0,
+      "mean_coverage": 1.0,
+      "mean_savings": 0.20172574626865672,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
+      "workflow": "dynamic_conditional"
+    },
+    {
+      "arm": "degree",
+      "coverage_ci_half_width": 0.0,
+      "mean_coverage": 1.0,
+      "mean_savings": 0.25,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
+      "workflow": "dynamic_conditional"
+    },
+    {
+      "arm": "broadcast",
+      "coverage_ci_half_width": 0.0,
+      "mean_coverage": 1.0,
+      "mean_savings": 0.0,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
       "workflow": "hub_and_spoke_supervisor"
     },
     {
@@ -229,7 +309,8 @@
       "coverage_ci_half_width": 0.0,
       "mean_coverage": 1.0,
       "mean_savings": 0.1700595238095238,
-      "runs": 10,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
       "workflow": "hub_and_spoke_supervisor"
     },
     {
@@ -237,7 +318,8 @@
       "coverage_ci_half_width": 0.0,
       "mean_coverage": 1.0,
       "mean_savings": 0.12720238095238096,
-      "runs": 10,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
       "workflow": "hub_and_spoke_supervisor"
     },
     {
@@ -245,7 +327,8 @@
       "coverage_ci_half_width": 0.0,
       "mean_coverage": 1.0,
       "mean_savings": 0.1700595238095238,
-      "runs": 10,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
       "workflow": "hub_and_spoke_supervisor"
     },
     {
@@ -253,15 +336,17 @@
       "coverage_ci_half_width": 0.0,
       "mean_coverage": 1.0,
       "mean_savings": 0.1700595238095238,
-      "runs": 10,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
       "workflow": "hub_and_spoke_supervisor"
     },
     {
       "arm": "degree",
       "coverage_ci_half_width": 0.0,
       "mean_coverage": 1.0,
-      "mean_savings": 0.12720238095238096,
-      "runs": 10,
+      "mean_savings": 0.13416666666666666,
+      "runs": 90,
+      "savings_ci_half_width": 0.0,
       "workflow": "hub_and_spoke_supervisor"
     }
   ]

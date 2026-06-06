@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 from agentprop.algorithms import bottleneck_nodes, low_weight_edges, risk_aware_verifier_placement
 from agentprop.core import AgentGraph
+from agentprop.core.dynamic_graph import DynamicGraphSession
 from agentprop.ml.risk_predictors import TimeoutRiskPredictor
 from agentprop.rl import CategoryBanditRoutingPolicy
 from agentprop.runtime.control_loop import (
@@ -89,6 +91,7 @@ class ControlSession:
     trace_rows: list[dict[str, object]] = field(default_factory=list)
     outcome: dict[str, object] | None = None
     _reward_logger: RuntimeRewardLogger = field(init=False, repr=False)
+    _dynamic: DynamicGraphSession | None = field(default=None, init=False, repr=False)
 
     def __post_init__(self) -> None:
         workflow_name, graph = _load_session_workflow(self.config.workflow)
@@ -150,6 +153,76 @@ class ControlSession:
                 trace_path=trace_path,
             )
         )
+
+    @property
+    def dynamic(self) -> DynamicGraphSession | None:
+        """Runtime graph mutation session, when enabled."""
+
+        return self._dynamic
+
+    def enable_dynamic_graph(self) -> DynamicGraphSession:
+        """Start tracking runtime add/remove/conditional edge mutations."""
+
+        self._dynamic = DynamicGraphSession(base_graph=self.graph)
+        return self._dynamic
+
+    def effective_graph(self, context: Mapping[str, Any] | None = None) -> AgentGraph:
+        """Return the working graph, optionally filtering conditional edges."""
+
+        if self._dynamic is not None:
+            return self._dynamic.active_graph(context)
+        if context:
+            return self.graph.filter_active_edges(context)
+        return self.graph
+
+    def mutate_add_node(self, node_id: str, **metadata: Any) -> None:
+        if self._dynamic is None:
+            self.enable_dynamic_graph()
+        assert self._dynamic is not None
+        self._dynamic.add_node(node_id, **metadata)
+        self._sync_graph_from_dynamic()
+
+    def mutate_remove_node(self, node_id: str) -> None:
+        if self._dynamic is None:
+            self.enable_dynamic_graph()
+        assert self._dynamic is not None
+        self._dynamic.remove_node(node_id)
+        self._sync_graph_from_dynamic()
+
+    def mutate_add_edge(self, source: str, target: str, **metadata: Any) -> None:
+        if self._dynamic is None:
+            self.enable_dynamic_graph()
+        assert self._dynamic is not None
+        self._dynamic.add_edge(source, target, **metadata)
+        self._sync_graph_from_dynamic()
+
+    def mutate_add_conditional_edge(
+        self,
+        source: str,
+        target: str,
+        *,
+        condition_key: str,
+        condition_value: object,
+        **metadata: Any,
+    ) -> None:
+        if self._dynamic is None:
+            self.enable_dynamic_graph()
+        assert self._dynamic is not None
+        self._dynamic.add_conditional_edge(
+            source,
+            target,
+            condition_key=condition_key,
+            condition_value=condition_value,
+            **metadata,
+        )
+        self._sync_graph_from_dynamic()
+
+    def mutate_remove_edge(self, source: str, target: str) -> None:
+        if self._dynamic is None:
+            self.enable_dynamic_graph()
+        assert self._dynamic is not None
+        self._dynamic.remove_edge(source, target)
+        self._sync_graph_from_dynamic()
 
     def observe(self, event: ExecutionEvent) -> ControlDecision:
         """Record one execution event and return the next control decision."""
@@ -330,6 +403,23 @@ class ControlSession:
         return self.tracker.features(
             token_budget=self.config.token_budget,
             wall_time_budget_s=self.config.wall_time_budget_s,
+        )
+
+    def _sync_graph_from_dynamic(self) -> None:
+        assert self._dynamic is not None
+        self.graph = self._dynamic.graph
+        self.graph.warm_analysis_cache()
+        self.analysis = _analyze_graph(
+            self.graph,
+            workflow_name=self.workflow_name,
+            seed_budget=self.config.seed_budget,
+        )
+        self._record(
+            "graph_mutation",
+            {
+                "version": self._dynamic.version,
+                "mutations": self._dynamic.mutations_to_dict(),
+            },
         )
 
     def _record(self, row_type: str, payload: dict[str, object]) -> None:

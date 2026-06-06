@@ -1,13 +1,12 @@
 # Scale / Quality Evidence Artifacts
 
 Sanitized synthetic routing matrix comparing broadcast, greedy-family, RZF,
-quality-aware, and IMM arms across expanded workflow templates.
+quality-aware, IMM, and degree baselines across expanded workflow templates.
 
 ## Command
 
 ```bash
-PYTHONPATH=src:. python experiments/run_evidence_harness.py \
-  --tasks-per-arm 5 --repeats 2 \
+agentprop run-evidence --tasks-per-arm 30 --repeats 3 \
   --out-dir docs/results/scale_quality_evidence
 ```
 
@@ -18,3 +17,4 @@ For a quick smoke check, pass `--tasks-per-arm 5 --repeats 2`.
 
 - [REPORT.md](REPORT.md) — human-readable table
 - [results.json](results.json) — machine-readable aggregates (no secrets)
+- [outputs.jsonl](outputs.jsonl) — per-task rows (coverage, savings, trial seed)

@@ -51,6 +51,25 @@ class DynamicGraphSession:
         self._record("add_edge", source=source, target=target)
         return edge
 
+    def add_conditional_edge(
+        self,
+        source: str,
+        target: str,
+        *,
+        condition_key: str,
+        condition_value: object,
+        **metadata: Any,
+    ) -> AgentEdge:
+        edge = self._working.add_conditional_edge(
+            source,
+            target,
+            condition_key=condition_key,
+            condition_value=condition_value,
+            **metadata,
+        )
+        self._record("add_edge", source=source, target=target)
+        return edge
+
     def remove_edge(self, source: str, target: str) -> None:
         self._working.remove_edge(source, target)
         self._record("remove_edge", source=source, target=target)
@@ -59,6 +78,18 @@ class DynamicGraphSession:
         """Return a snapshot with only edges whose conditions match *context*."""
 
         return self._working.filter_active_edges(context or {})
+
+    def mutations_to_dict(self) -> list[dict[str, object]]:
+        return [
+            {
+                "action": mutation.action,
+                "node_id": mutation.node_id,
+                "source": mutation.source,
+                "target": mutation.target,
+                "version": mutation.version,
+            }
+            for mutation in self.mutations
+        ]
 
     def _record(self, action: str, **payload: str | None) -> None:
         self.version += 1

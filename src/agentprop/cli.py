@@ -80,6 +80,8 @@ def _dispatch(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
         return _analyze(args)
     if args.command == "benchmark":
         return _benchmark(args)
+    if args.command == "run-evidence":
+        return _run_evidence(args)
     if args.command == "report":
         return _report(args)
     if args.command == "simulate":
@@ -167,6 +169,20 @@ def _build_parser() -> argparse.ArgumentParser:
         choices=model_choices,
     )
     benchmark.add_argument("--json", action="store_true")
+
+    run_evidence = subparsers.add_parser(
+        "run-evidence",
+        help="run multi-workflow routing evidence matrix and write docs/results artifacts",
+    )
+    run_evidence.add_argument(
+        "--out-dir",
+        type=Path,
+        default=Path("docs/results/scale_quality_evidence"),
+    )
+    run_evidence.add_argument("--tasks-per-arm", type=int, default=30)
+    run_evidence.add_argument("--repeats", type=int, default=3)
+    run_evidence.add_argument("--seed-budget", type=int, default=3)
+    run_evidence.add_argument("--trials", type=int, default=50)
 
     report = subparsers.add_parser("report", help="write a Markdown, JSON, or HTML report")
     report.add_argument("workflow", help="workflow JSON path or built-in workflow name")
@@ -382,6 +398,23 @@ def _optimize(args: argparse.Namespace) -> int:
         print(json.dumps(report_to_dict(report), indent=2, sort_keys=True))
     else:
         _print_report(report)
+    return 0
+
+
+def _run_evidence(args: argparse.Namespace) -> int:
+    from agentprop.evaluation.evidence_harness import (
+        EvidenceHarnessConfig,
+        write_evidence_artifacts,
+    )
+
+    config = EvidenceHarnessConfig(
+        tasks_per_arm=args.tasks_per_arm,
+        repeats=args.repeats,
+        seed_budget=args.seed_budget,
+        trials=args.trials,
+    )
+    results_path = write_evidence_artifacts(config, args.out_dir)
+    print(f"Wrote {results_path}")
     return 0
 
 

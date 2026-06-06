@@ -56,6 +56,21 @@ def test_dynamic_graph_session_tracks_mutations() -> None:
     assert not session.graph.has_edge("a", "b")
 
 
+def test_dynamic_session_conditional_edge() -> None:
+    base = AgentGraph.from_dict(
+        {
+            "nodes": [{"id": "a"}, {"id": "b"}, {"id": "c"}],
+            "edges": [{"source": "a", "target": "b"}],
+        }
+    )
+    session = DynamicGraphSession(base_graph=base)
+    session.add_conditional_edge("a", "c", condition_key="flag", condition_value=True)
+    active = session.active_graph({"flag": True})
+    assert active.has_edge("a", "c")
+    inactive = session.active_graph({"flag": False})
+    assert not inactive.has_edge("a", "c")
+
+
 def test_edge_is_active_without_condition() -> None:
     graph = AgentGraph.from_dict(
         {
