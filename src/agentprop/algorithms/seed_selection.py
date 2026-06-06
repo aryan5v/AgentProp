@@ -339,25 +339,30 @@ def celf_seed_selection(
 
 
 def centrality_scores(graph: AgentGraph) -> dict[str, ScoreMap]:
-    """Return common centrality scores for report generation."""
+    """Return common centrality scores for report generation.
 
+    Now served from the per-graph analysis cache (phase1-centrality-cache)
+    for betweenness / closeness / k-core. This eliminates repeated full
+    to_networkx + centrality runs from CLI reports, MCP analysis, and
+    any code path that calls centrality_scores.
+    """
+
+    betweenness = graph.get_betweenness_centrality()
+    closeness = graph.get_closeness_centrality()
+    cores = graph.get_core_numbers()
+
+    # Degrees are still cheap to get from a light view; we keep one small copy here
     nx_graph = graph.to_networkx()
-    betweenness = nx.betweenness_centrality(nx_graph, weight="weight") if graph.node_count else {}
     degree = dict(nx_graph.degree())
+
     return {
         "degree": {str(node): float(score) for node, score in degree.items()},
         "in_degree": {str(node): float(score) for node, score in nx_graph.in_degree()},
         "out_degree": {str(node): float(score) for node, score in nx_graph.out_degree()},
         "pagerank": _pagerank_scores(graph, reverse=True),
-        "betweenness": {str(node): float(score) for node, score in betweenness.items()},
-        "closeness": {
-            str(node): float(score)
-            for node, score in nx.closeness_centrality(nx_graph.reverse(copy=True)).items()
-        } if graph.node_count else {},
-        "k_core": {
-            str(node): float(score)
-            for node, score in nx.core_number(nx_graph.to_undirected()).items()
-        } if graph.node_count else {},
+        "betweenness": betweenness,
+        "closeness": closeness,
+        "k_core": {k: float(v) for k, v in cores.items()},
     }
 
 
