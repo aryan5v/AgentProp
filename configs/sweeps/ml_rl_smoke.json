@@ -3,7 +3,7 @@
   "description": "Small local ML/RL sweep for dependency-light AgentProp policies.",
   "artifacts": {
     "root": "results/ml_rl_smoke",
-    "private_by_default": true
+    "local_results_by_default": true
   },
   "sweeps": [
     {

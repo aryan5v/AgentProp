@@ -167,9 +167,9 @@ def test_cli_readiness_emits_json(capsys) -> None:  # type: ignore[no-untyped-de
     assert exit_code == 0
     payload = json.loads(capsys.readouterr().out)
     assert payload["overall_score"] >= 0.8
-    assert payload["alpha_ready"] is True
-    assert payload["public_ready"] is False
-    assert "Real routed LLM case-study results" in payload["blockers"]
+    assert payload["target"] == "public alpha"
+    assert "blockers" not in payload
+    assert "items" in payload
 
 
 def test_cli_control_demo_writes_artifacts(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]

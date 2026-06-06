@@ -131,7 +131,7 @@
     {
       "id": "docs_release_alpha",
       "category": "docs",
-      "prompt": "Clarify the private alpha release decision and limitations.",
+      "prompt": "Clarify the public alpha release status and benchmark limitations.",
       "expected": "Release notes mark real LLM validation as pending.",
       "verification_command": "pytest tests/test_reporting.py",
       "min_coverage": 0.65

@@ -10,7 +10,9 @@ controller then decides whether to continue, force an independent verification,
 switch strategy, or finalize. Adapters for LangGraph, AutoGen, CrewAI, OpenAI
 Agents, and LlamaIndex are in [framework integrations](framework_integrations.md).
 
-## Start Here
+## User Guide
+
+Getting started and day-to-day usage:
 
 - [Tutorial walkthrough](tutorial.md)
 - [Workflow JSON schema](workflow_schema.md)
@@ -18,25 +20,39 @@ Agents, and LlamaIndex are in [framework integrations](framework_integrations.md
 - [Verifier semantics](verifier_semantics.md) — the core metric-dimension
   contribution: place verifiers so every distinct failure is uniquely localizable
 - [Quality scoring](quality_scoring.md)
-- [Framework integrations](framework_integrations.md) — wrap an existing
-  LangGraph, AutoGen, CrewAI, OpenAI Agents, or LlamaIndex workflow
+- [Framework integrations](framework_integrations.md)
 - [Coding agent integration](coding_agents.md)
 - [Control layer quickstart](control_layer_quickstart.md)
+- [Trace ingestion](trace_ingestion.md)
 
-## Research and Evaluation
+## Research And Evaluation
 
-- [Reproducible results](research/reproducible_results.md) — the headline
-  verifier-placement and RZF-scaling tables, with the scripts that produce them
+Benchmarks, protocols, and reproducible studies:
+
+- [Reproducible results](research/reproducible_results.md)
 - [Research references](research/references.md)
 - [Literature review](research/literature_review.md)
 - [Real LLM case-study protocol](research/case_study_protocol.md)
-- [Trace ingestion](trace_ingestion.md)
 - [Learned propagation](learned_propagation.md)
 - [Routing baseline evaluation](routing_baseline_evaluation.md)
 - [Reinforcement learning routing](reinforcement_learning.md)
 - [Deep learning guide](deep_learning.md)
+- [Terminal-Bench 2.1 preparation](terminal_bench_21.md)
+- [Public benchmark artifacts](results/ARTIFACTS.md)
 - [v1 benchmark artifacts](results/v1/README.md)
+- [GAIA-style benchmark](results/gaia_benchmark/REPORT.md)
+- [Real routing case study](results/real_routing_case_study/REPORT.md)
 - [Terminal-Bench guided benchmark](results/terminal_bench_guided/README.md)
+
+## Project
+
+- [Contributing](../CONTRIBUTING.md)
+- [Security policy](../SECURITY.md)
+- [Changelog](../CHANGELOG.md)
+- [Agent guide for coding agents](../AGENTS.md)
+
+Working notes (paper drafts, roadmaps, release ops) belong in gitignored
+[`docs/local/`](local/README.example.md), not in the public tree.
 
 ## Common Commands
 
@@ -61,7 +77,7 @@ python experiments/rzf_scaling_study.py
 
 ## What AgentProp Proves
 
-The alpha research goal is to test whether agent workflows can be treated as
+The public alpha research goal is to test whether agent workflows can be treated as
 directed weighted graphs and optimized with:
 
 - metric-dimension-style verifier placement
@@ -70,3 +86,6 @@ directed weighted graphs and optimized with:
 - runtime stop/retry/verify control
 - optional ML/DL/RL policies
 - reproducible benchmark artifacts
+
+Treat live-agent numbers as directional until repeated studies with saved
+artifacts are published under [docs/results/](results/ARTIFACTS.md).

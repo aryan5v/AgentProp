@@ -262,10 +262,14 @@ def _build_parser() -> argparse.ArgumentParser:
 
     readiness = subparsers.add_parser(
         "readiness",
-        help="show evidence-backed v1 rollout readiness",
+        help="show implementation maturity by component area",
     )
     readiness.add_argument("--json", action="store_true", help="emit machine-readable JSON")
-    readiness.add_argument("--out", type=Path, help="write readiness report to a file")
+    readiness.add_argument(
+        "--out",
+        type=Path,
+        help="write maturity report to a file (use docs/local/ for private notes)",
+    )
 
     terminal_bench = subparsers.add_parser(
         "terminal-bench",

@@ -539,8 +539,6 @@ def write_report(
         )
     lines.append(quality_side)
     lines.append("")
-    lines.append("See `docs/research/real_routing_case_study_findings.md` for the failure "
-                 "dissection and a concrete roadmap to make AgentProp better.")
     lines.append("")
     lines.append("### Honest scope and limits (this is a *conservative* test)")
     lines.append("")

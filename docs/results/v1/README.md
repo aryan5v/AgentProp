@@ -1,7 +1,7 @@
 # AgentProp v1 Benchmark Results
 
-This directory contains the first committed AgentProp benchmark artifacts for
-the v1 launch-readiness track.
+This directory contains the first committed AgentProp synthetic workflow
+benchmark artifacts.
 
 ## Command
 

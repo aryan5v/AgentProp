@@ -1,160 +1,79 @@
 ---
 name: agentprop-workflow-optimizer
-description: Use when installing or using AgentProp to analyze, optimize, implement, review, or debug multi-agent workflows. Guides agents to install the AgentProp CLI, generate routing briefs, analyze graph bottlenecks, place verifiers, assess pruning risk, use MCP/control demos, and preserve evidence before changing workflow defaults.
+description: Use when installing or using AgentProp to improve multi-agent workflows. Covers CLI setup, workflow graph analysis, context routing, verifier placement, pruning risk, Codex/Claude Code briefs, FastMCP tools, runtime ControlSession wrapping, and evidence preservation.
 ---
 
 # AgentProp Workflow Optimizer
 
-Use this skill when a task involves a multi-agent workflow, agent handoff graph,
-context-routing policy, verifier layout, framework adapter, coding-agent team,
-or benchmark harness.
+> Canonical source: `skills/agentprop-workflow-optimizer/SKILL.md` in the
+> repository root. This copy exists for the Claude Code install path; keep it
+> aligned with the canonical skill.
 
-AgentProp is not the agent runtime. It is the graph analysis and control layer:
-analyze the workflow, recommend where context and verifiers should go, then use
-those recommendations while implementing or reviewing the workflow.
+Guide the user through AgentProp-powered workflow improvement: install the CLI,
+model or locate the workflow graph, analyze routing and verifier structure, use
+the recommendations while building, and save evidence before claiming success.
 
-## 1. Install Or Locate AgentProp
+AgentProp is a graph analysis and control layer for agent workflows. It is not a
+replacement for Codex, Claude Code, LangGraph, CrewAI, AutoGen, or a custom
+agent runtime; it helps those systems spend context more carefully and verify at
+the right structural points.
 
-First check whether the CLI is available:
+## Source Of Truth
 
-```bash
-agentprop --help
-```
+Prefer current project docs and CLI output over memory:
 
-If missing, install the package:
+- Repository: `https://github.com/aryan5v/AgentProp`
+- Package: `agentprop`
+- CLI help: `agentprop --help`
+- Docs index: `docs/index.md`
+- Coding-agent guide: `docs/coding_agents.md`
+- Control-layer guide: `docs/control_layer_quickstart.md`
 
-```bash
-python -m pip install agentprop
-```
+If a command fails because the package is not installed, install or locate
+AgentProp before continuing.
 
-For a source checkout:
-
-```bash
-python -m pip install -e ".[dev]"
-```
-
-For MCP/editor-agent tools:
-
-```bash
-python -m pip install "agentprop[mcp]"
-agentprop-mcp
-```
-
-If working inside the AgentProp repo without an editable install, prefix commands
-with `PYTHONPATH=src`.
-
-## 2. Identify The Workflow
-
-Use a built-in workflow name when possible:
-
-- `planner_coder_tester_reviewer`
-- `research_writer_verifier`
-- `rag_pipeline`
-- `tool_use_pipeline`
-- `chain`, `tree`, `star`, `dense_graph`, `small_world_graph`, `generic_dag`
-
-Otherwise use a workflow JSON path. If no graph exists yet, sketch one before
-optimizing: nodes should be agents, tools, verifiers, memory stores, or outputs;
-edges should be handoffs, context packets, tool outputs, or verification paths.
-
-## 3. Generate The Agent Brief
-
-For Claude Code:
+## Fast Path
 
 ```bash
-agentprop agent-instructions <workflow> \
+agentprop --help || python -m pip install agentprop
+
+agentprop agent-instructions planner_coder_tester_reviewer \
   --target claude-code \
   --budget 2 \
   --trials 50 \
   --out reports/claude_code_agent_brief.md
-```
 
-For Codex:
-
-```bash
-agentprop agent-instructions <workflow> \
-  --target codex \
-  --budget 2 \
-  --trials 50 \
-  --out reports/codex_agent_brief.md
-```
-
-Read the generated brief before editing. Treat selected seed agents as the first
-full-context recipients. Treat verifier candidates as required check points.
-
-## 4. Analyze And Report
-
-Run structure diagnostics:
-
-```bash
-agentprop analyze <workflow> --json
-```
-
-Optimize context routing:
-
-```bash
-agentprop optimize <workflow> \
-  --budget 2 \
-  --algorithm greedy \
-  --model rzf \
-  --trials 50 \
-  --json
-```
-
-Write a durable report:
-
-```bash
-agentprop report <workflow> \
+agentprop analyze planner_coder_tester_reviewer --json
+agentprop report planner_coder_tester_reviewer \
   --out reports/agentprop_report.html \
   --format html
 ```
 
-Before pruning or summarizing edges, run:
+Read the generated brief before editing. Treat selected seed agents as the first
+full-context recipients and verifier candidates as required check points.
 
-```bash
-agentprop prune <workflow> \
-  --target-token-reduction 0.3 \
-  --model rzf \
-  --trials 50 \
-  --json
-```
+## Reference Map
 
-## 5. Use The Guidance While Building
+Load the smallest relevant reference file from the canonical skill directory:
 
-- Give full context first to seed agents or high-sensitivity roles such as
-  coder, tester, verifier, planner, or domain specialist.
-- Do not starve a high-risk node with summary-only context unless the report
-  says the quality risk is acceptable.
-- Place verifiers downstream of compressed, pruned, or high-error handoffs.
-- If an agent claims a local pass, require an independent verifier before
-  finalizing.
-- If the same error repeats, switch strategy instead of running the same probe
-  again.
-- Save the brief, report, trace, and verification output as evidence.
+Area | Resource | When to use
+--- | --- | ---
+Install and configure | `skills/.../references/install-and-configure.md` | AgentProp CLI is missing, MCP is requested, or the user asks how to set it up
+Workflow analysis | `skills/.../references/workflow-analysis.md` | Need to analyze, optimize, prune, report, or model an agent workflow graph
+Coding agents | `skills/.../references/coding-agents.md` | Codex, Claude Code, Cursor, Copilot, or another coding agent should use AgentProp guidance
+Runtime control | `skills/.../references/runtime-control.md` | Need live wrapping with `ControlSession`, repeated-error control, force-verify, stop, switch, or traces
+Framework builders | `skills/.../references/framework-builders.md` | User is building LangGraph, CrewAI, AutoGen, OpenAI Agents, LlamaIndex, or custom multi-agent systems
+Benchmarks and evidence | `skills/.../references/benchmarks-and-evidence.md` | User wants benchmark setup, claims, reports, or saved evidence
 
-## 6. Optional Runtime Control
+## Core Rules
 
-Use the key-free demos to confirm the control layer is available:
-
-```bash
-agentprop control-demo --demo terminal --out-dir reports/control-demo
-agentprop control-demo --demo multi-agent --out-dir reports/control-demo
-agentprop control-demo --demo framework --out-dir reports/control-demo
-```
-
-For real wrappers, emit `ExecutionEvent` rows from the host agent/runtime into
-`ControlSession`. AgentProp should observe; the host agent executes.
-
-## 7. Final Response Checklist
-
-Before claiming done, state:
-
-- which workflow was analyzed
-- which seed agents received full context
-- which verifier/checker was used
-- what was pruned, summarized, or left untouched
-- where the AgentProp artifacts were saved
-- what verification command or independent check passed
-
-Do not claim a learned ML/RL policy improved performance unless saved artifacts
-compare it against training-free baselines.
+- Always identify the workflow graph or built-in workflow name before running
+  optimization.
+- Do not prune, summarize, or deprioritize verifier/tool-output/user-constraint
+  edges without checking pruning risk.
+- Do not trust an agent's self-reported pass as final; require an independent
+  verifier when possible.
+- Mention the seed agents, verifier/checker, saved artifacts, and verification
+  command in the final response.
+- Keep provider keys, benchmark secrets, Modal credentials, and local machine
+  config out of committed files.

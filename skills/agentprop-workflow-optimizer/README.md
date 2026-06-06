@@ -87,6 +87,13 @@ The agent should read the generated brief before editing and report the seed
 agents, verifier/checker, saved artifacts, and verification result before
 claiming the workflow is improved.
 
+## Canonical Skill Location
+
+This directory is the **source of truth** for the AgentProp agent skill.
+`integrations/claude-code/agentprop-workflow-optimizer/` is a thin Claude Code
+install wrapper with `agents/openai.yaml`; keep its `SKILL.md` aligned with
+this one.
+
 ## Skill Files
 
 - [`SKILL.md`](SKILL.md): entry point loaded by agent skill systems.

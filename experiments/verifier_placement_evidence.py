@@ -1,7 +1,7 @@
 """Verifier-placement evidence: resolving_coverage vs k + failure localization.
 
 This script is deterministic. Running it on the 14 built-in workflow templates
-reproduces the numbers reported in the docs and paper draft. Expected output
+reproduces the numbers reported in the docs. Expected output
 (mean over 14 workflows):
 
     TABLE V1 — resolving_coverage vs k

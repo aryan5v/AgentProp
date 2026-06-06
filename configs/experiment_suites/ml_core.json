@@ -16,7 +16,7 @@
   "artifacts": {
     "root": "results/ml_core",
     "save_traces": true,
-    "private_by_default": true
+    "local_results_by_default": true
   },
   "runs": [
     {
