@@ -1,0 +1,2477 @@
+[
+  {
+    "collision_rate": 0.0,
+    "k": 1,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "node_0"
+    ],
+    "workflow": "chain"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 2,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "node_0"
+    ],
+    "workflow": "chain"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 3,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "node_0"
+    ],
+    "workflow": "chain"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 4,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "node_0"
+    ],
+    "workflow": "chain"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 5,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "node_0"
+    ],
+    "workflow": "chain"
+  },
+  {
+    "collision_rate": 0.6666666666666666,
+    "k": 1,
+    "method": "risk_aware",
+    "resolving_coverage": 0.8666666666666667,
+    "verifiers": [
+      "node_3"
+    ],
+    "workflow": "chain"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 2,
+    "method": "risk_aware",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "node_3",
+      "node_2"
+    ],
+    "workflow": "chain"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 3,
+    "method": "risk_aware",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "node_3",
+      "node_2",
+      "node_1"
+    ],
+    "workflow": "chain"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 4,
+    "method": "risk_aware",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "node_3",
+      "node_2",
+      "node_1",
+      "node_4"
+    ],
+    "workflow": "chain"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 5,
+    "method": "risk_aware",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "node_3",
+      "node_2",
+      "node_1",
+      "node_4",
+      "node_0"
+    ],
+    "workflow": "chain"
+  },
+  {
+    "collision_rate": 0.6666666666666666,
+    "k": 1,
+    "method": "betweenness",
+    "resolving_coverage": 0.8666666666666667,
+    "verifiers": [
+      "node_2"
+    ],
+    "workflow": "chain"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 2,
+    "method": "betweenness",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "node_2",
+      "node_3"
+    ],
+    "workflow": "chain"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 3,
+    "method": "betweenness",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "node_2",
+      "node_3",
+      "node_1"
+    ],
+    "workflow": "chain"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 4,
+    "method": "betweenness",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "node_2",
+      "node_3",
+      "node_1",
+      "node_4"
+    ],
+    "workflow": "chain"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 5,
+    "method": "betweenness",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "node_2",
+      "node_3",
+      "node_1",
+      "node_4",
+      "node_0"
+    ],
+    "workflow": "chain"
+  },
+  {
+    "collision_rate": 0.5,
+    "k": 1,
+    "method": "metric_dim",
+    "resolving_coverage": 0.8,
+    "verifiers": [
+      "final"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "collision_rate": 0.3333333333333333,
+    "k": 2,
+    "method": "metric_dim",
+    "resolving_coverage": 0.9333333333333333,
+    "verifiers": [
+      "final",
+      "agent_a"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 3,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "final",
+      "agent_a",
+      "agent_b"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 4,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "final",
+      "agent_a",
+      "agent_b"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 5,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "final",
+      "agent_a",
+      "agent_b"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "collision_rate": 0.5,
+    "k": 1,
+    "method": "risk_aware",
+    "resolving_coverage": 0.8,
+    "verifiers": [
+      "prompt"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "collision_rate": 0.3333333333333333,
+    "k": 2,
+    "method": "risk_aware",
+    "resolving_coverage": 0.9333333333333333,
+    "verifiers": [
+      "prompt",
+      "agent_a"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 3,
+    "method": "risk_aware",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "prompt",
+      "agent_a",
+      "agent_b"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 4,
+    "method": "risk_aware",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "prompt",
+      "agent_a",
+      "agent_b",
+      "agent_c"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 5,
+    "method": "risk_aware",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "prompt",
+      "agent_a",
+      "agent_b",
+      "agent_c",
+      "judge"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "collision_rate": 0.6666666666666666,
+    "k": 1,
+    "method": "betweenness",
+    "resolving_coverage": 0.6,
+    "verifiers": [
+      "judge"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "collision_rate": 0.5,
+    "k": 2,
+    "method": "betweenness",
+    "resolving_coverage": 0.8,
+    "verifiers": [
+      "judge",
+      "agent_a"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "collision_rate": 0.3333333333333333,
+    "k": 3,
+    "method": "betweenness",
+    "resolving_coverage": 0.9333333333333333,
+    "verifiers": [
+      "judge",
+      "agent_a",
+      "agent_b"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 4,
+    "method": "betweenness",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "judge",
+      "agent_a",
+      "agent_b",
+      "agent_c"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 5,
+    "method": "betweenness",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "judge",
+      "agent_a",
+      "agent_b",
+      "agent_c",
+      "final"
+    ],
+    "workflow": "debate_judge"
+  },
+  {
+    "collision_rate": 0.8571428571428571,
+    "k": 1,
+    "method": "metric_dim",
+    "resolving_coverage": 0.2857142857142857,
+    "verifiers": [
+      "final"
+    ],
+    "workflow": "dense_graph"
+  },
+  {
+    "collision_rate": 0.7142857142857143,
+    "k": 2,
+    "method": "metric_dim",
+    "resolving_coverage": 0.5238095238095238,
+    "verifiers": [
+      "final",
+      "node_0"
+    ],
+    "workflow": "dense_graph"
+  },
+  {
+    "collision_rate": 0.5714285714285714,
+    "k": 3,
+    "method": "metric_dim",
+    "resolving_coverage": 0.7142857142857143,
+    "verifiers": [
+      "final",
+      "node_0",
+      "node_1"
+    ],
+    "workflow": "dense_graph"
+  },
+  {
+    "collision_rate": 0.42857142857142855,
+    "k": 4,
+    "method": "metric_dim",
+    "resolving_coverage": 0.8571428571428571,
+    "verifiers": [
+      "final",
+      "node_0",
+      "node_1",
+      "node_2"
+    ],
+    "workflow": "dense_graph"
+  },
+  {
+    "collision_rate": 0.2857142857142857,
+    "k": 5,
+    "method": "metric_dim",
+    "resolving_coverage": 0.9523809523809523,
+    "verifiers": [
+      "final",
+      "node_0",
+      "node_1",
+      "node_2",
+      "node_3"
+    ],
+    "workflow": "dense_graph"
+  },
+  {
+    "collision_rate": 0.8571428571428571,
+    "k": 1,
+    "method": "risk_aware",
+    "resolving_coverage": 0.2857142857142857,
+    "verifiers": [
+      "node_0"
+    ],
+    "workflow": "dense_graph"
+  },
+  {
+    "collision_rate": 0.7142857142857143,
+    "k": 2,
+    "method": "risk_aware",
+    "resolving_coverage": 0.5238095238095238,
+    "verifiers": [
+      "node_0",
+      "node_1"
+    ],
+    "workflow": "dense_graph"
+  },
+  {
+    "collision_rate": 0.5714285714285714,
+    "k": 3,
+    "method": "risk_aware",
+    "resolving_coverage": 0.7142857142857143,
+    "verifiers": [
+      "node_0",
+      "node_1",
+      "node_2"
+    ],
+    "workflow": "dense_graph"
+  },
+  {
+    "collision_rate": 0.42857142857142855,
+    "k": 4,
+    "method": "risk_aware",
+    "resolving_coverage": 0.8571428571428571,
+    "verifiers": [
+      "node_0",
+      "node_1",
+      "node_2",
+      "node_3"
+    ],
+    "workflow": "dense_graph"
+  },
+  {
+    "collision_rate": 0.2857142857142857,
+    "k": 5,
+    "method": "risk_aware",
+    "resolving_coverage": 0.9523809523809523,
+    "verifiers": [
+      "node_0",
+      "node_1",
+      "node_2",
+      "node_3",
+      "node_4"
+    ],
+    "workflow": "dense_graph"
+  },
+  {
+    "collision_rate": 0.8571428571428571,
+    "k": 1,
+    "method": "betweenness",
+    "resolving_coverage": 0.2857142857142857,
+    "verifiers": [
+      "final"
+    ],
+    "workflow": "dense_graph"
+  },
+  {
+    "collision_rate": 0.7142857142857143,
+    "k": 2,
+    "method": "betweenness",
+    "resolving_coverage": 0.5238095238095238,
+    "verifiers": [
+      "final",
+      "node_0"
+    ],
+    "workflow": "dense_graph"
+  },
+  {
+    "collision_rate": 0.5714285714285714,
+    "k": 3,
+    "method": "betweenness",
+    "resolving_coverage": 0.7142857142857143,
+    "verifiers": [
+      "final",
+      "node_0",
+      "node_1"
+    ],
+    "workflow": "dense_graph"
+  },
+  {
+    "collision_rate": 0.42857142857142855,
+    "k": 4,
+    "method": "betweenness",
+    "resolving_coverage": 0.8571428571428571,
+    "verifiers": [
+      "final",
+      "node_0",
+      "node_1",
+      "node_2"
+    ],
+    "workflow": "dense_graph"
+  },
+  {
+    "collision_rate": 0.2857142857142857,
+    "k": 5,
+    "method": "betweenness",
+    "resolving_coverage": 0.9523809523809523,
+    "verifiers": [
+      "final",
+      "node_0",
+      "node_1",
+      "node_2",
+      "node_3"
+    ],
+    "workflow": "dense_graph"
+  },
+  {
+    "collision_rate": 0.9,
+    "k": 1,
+    "method": "metric_dim",
+    "resolving_coverage": 0.8,
+    "verifiers": [
+      "final"
+    ],
+    "workflow": "generic_dag"
+  },
+  {
+    "collision_rate": 0.8,
+    "k": 2,
+    "method": "metric_dim",
+    "resolving_coverage": 0.8444444444444444,
+    "verifiers": [
+      "final",
+      "layer_0_node_0"
+    ],
+    "workflow": "generic_dag"
+  },
+  {
+    "collision_rate": 0.7,
+    "k": 3,
+    "method": "metric_dim",
+    "resolving_coverage": 0.8888888888888888,
+    "verifiers": [
+      "final",
+      "layer_0_node_0",
+      "layer_1_node_0"
+    ],
+    "workflow": "generic_dag"
+  },
+  {
+    "collision_rate": 0.6,
+    "k": 4,
+    "method": "metric_dim",
+    "resolving_coverage": 0.9333333333333333,
+    "verifiers": [
+      "final",
+      "layer_0_node_0",
+      "layer_1_node_0",
+      "layer_2_node_0"
+    ],
+    "workflow": "generic_dag"
+  },
+  {
+    "collision_rate": 0.4,
+    "k": 5,
+    "method": "metric_dim",
+    "resolving_coverage": 0.9555555555555556,
+    "verifiers": [
+      "final",
+      "layer_0_node_0",
+      "layer_1_node_0",
+      "layer_2_node_0",
+      "layer_0_node_1"
+    ],
+    "workflow": "generic_dag"
+  },
+  {
+    "collision_rate": 0.9,
+    "k": 1,
+    "method": "risk_aware",
+    "resolving_coverage": 0.6,
+    "verifiers": [
+      "layer_1_node_0"
+    ],
+    "workflow": "generic_dag"
+  },
+  {
+    "collision_rate": 0.7,
+    "k": 2,
+    "method": "risk_aware",
+    "resolving_coverage": 0.7555555555555555,
+    "verifiers": [
+      "layer_1_node_0",
+      "layer_0_node_2"
+    ],
+    "workflow": "generic_dag"
+  },
+  {
+    "collision_rate": 0.5,
+    "k": 3,
+    "method": "risk_aware",
+    "resolving_coverage": 0.7777777777777778,
+    "verifiers": [
+      "layer_1_node_0",
+      "layer_0_node_2",
+      "layer_1_node_2"
+    ],
+    "workflow": "generic_dag"
+  },
+  {
+    "collision_rate": 0.4,
+    "k": 4,
+    "method": "risk_aware",
+    "resolving_coverage": 0.8666666666666667,
+    "verifiers": [
+      "layer_1_node_0",
+      "layer_0_node_2",
+      "layer_1_node_2",
+      "layer_0_node_1"
+    ],
+    "workflow": "generic_dag"
+  },
+  {
+    "collision_rate": 0.4,
+    "k": 5,
+    "method": "risk_aware",
+    "resolving_coverage": 0.8666666666666667,
+    "verifiers": [
+      "layer_1_node_0",
+      "layer_0_node_2",
+      "layer_1_node_2",
+      "layer_0_node_1",
+      "layer_1_node_1"
+    ],
+    "workflow": "generic_dag"
+  },
+  {
+    "collision_rate": 0.9,
+    "k": 1,
+    "method": "betweenness",
+    "resolving_coverage": 0.6,
+    "verifiers": [
+      "layer_1_node_0"
+    ],
+    "workflow": "generic_dag"
+  },
+  {
+    "collision_rate": 0.8,
+    "k": 2,
+    "method": "betweenness",
+    "resolving_coverage": 0.6444444444444445,
+    "verifiers": [
+      "layer_1_node_0",
+      "layer_1_node_1"
+    ],
+    "workflow": "generic_dag"
+  },
+  {
+    "collision_rate": 0.6,
+    "k": 3,
+    "method": "betweenness",
+    "resolving_coverage": 0.6666666666666666,
+    "verifiers": [
+      "layer_1_node_0",
+      "layer_1_node_1",
+      "layer_1_node_2"
+    ],
+    "workflow": "generic_dag"
+  },
+  {
+    "collision_rate": 0.5,
+    "k": 4,
+    "method": "betweenness",
+    "resolving_coverage": 0.7777777777777778,
+    "verifiers": [
+      "layer_1_node_0",
+      "layer_1_node_1",
+      "layer_1_node_2",
+      "layer_2_node_0"
+    ],
+    "workflow": "generic_dag"
+  },
+  {
+    "collision_rate": 0.4,
+    "k": 5,
+    "method": "betweenness",
+    "resolving_coverage": 0.8666666666666667,
+    "verifiers": [
+      "layer_1_node_0",
+      "layer_1_node_1",
+      "layer_1_node_2",
+      "layer_2_node_0",
+      "layer_2_node_1"
+    ],
+    "workflow": "generic_dag"
+  },
+  {
+    "collision_rate": 0.5714285714285714,
+    "k": 1,
+    "method": "metric_dim",
+    "resolving_coverage": 0.7142857142857143,
+    "verifiers": [
+      "coder"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "collision_rate": 0.42857142857142855,
+    "k": 2,
+    "method": "metric_dim",
+    "resolving_coverage": 0.8571428571428571,
+    "verifiers": [
+      "coder",
+      "critic"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "collision_rate": 0.2857142857142857,
+    "k": 3,
+    "method": "metric_dim",
+    "resolving_coverage": 0.9523809523809523,
+    "verifiers": [
+      "coder",
+      "critic",
+      "final"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 4,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "coder",
+      "critic",
+      "final",
+      "researcher"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 5,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "coder",
+      "critic",
+      "final",
+      "researcher"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "collision_rate": 0.7142857142857143,
+    "k": 1,
+    "method": "risk_aware",
+    "resolving_coverage": 0.5238095238095238,
+    "verifiers": [
+      "supervisor"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "collision_rate": 0.5714285714285714,
+    "k": 2,
+    "method": "risk_aware",
+    "resolving_coverage": 0.7142857142857143,
+    "verifiers": [
+      "supervisor",
+      "coder"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "collision_rate": 0.42857142857142855,
+    "k": 3,
+    "method": "risk_aware",
+    "resolving_coverage": 0.8571428571428571,
+    "verifiers": [
+      "supervisor",
+      "coder",
+      "critic"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "collision_rate": 0.2857142857142857,
+    "k": 4,
+    "method": "risk_aware",
+    "resolving_coverage": 0.9523809523809523,
+    "verifiers": [
+      "supervisor",
+      "coder",
+      "critic",
+      "researcher"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 5,
+    "method": "risk_aware",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "supervisor",
+      "coder",
+      "critic",
+      "researcher",
+      "summarizer"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "collision_rate": 0.7142857142857143,
+    "k": 1,
+    "method": "betweenness",
+    "resolving_coverage": 0.5238095238095238,
+    "verifiers": [
+      "supervisor"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "collision_rate": 0.5714285714285714,
+    "k": 2,
+    "method": "betweenness",
+    "resolving_coverage": 0.7142857142857143,
+    "verifiers": [
+      "supervisor",
+      "verifier"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "collision_rate": 0.42857142857142855,
+    "k": 3,
+    "method": "betweenness",
+    "resolving_coverage": 0.8571428571428571,
+    "verifiers": [
+      "supervisor",
+      "verifier",
+      "coder"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "collision_rate": 0.2857142857142857,
+    "k": 4,
+    "method": "betweenness",
+    "resolving_coverage": 0.9523809523809523,
+    "verifiers": [
+      "supervisor",
+      "verifier",
+      "coder",
+      "critic"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "collision_rate": 0.2857142857142857,
+    "k": 5,
+    "method": "betweenness",
+    "resolving_coverage": 0.9523809523809523,
+    "verifiers": [
+      "supervisor",
+      "verifier",
+      "coder",
+      "critic",
+      "final"
+    ],
+    "workflow": "hub_and_spoke_supervisor"
+  },
+  {
+    "collision_rate": 0.7142857142857143,
+    "k": 1,
+    "method": "metric_dim",
+    "resolving_coverage": 0.8095238095238095,
+    "verifiers": [
+      "final"
+    ],
+    "workflow": "layered_pipeline"
+  },
+  {
+    "collision_rate": 0.5714285714285714,
+    "k": 2,
+    "method": "metric_dim",
+    "resolving_coverage": 0.9047619047619048,
+    "verifiers": [
+      "final",
+      "worker_a"
+    ],
+    "workflow": "layered_pipeline"
+  },
+  {
+    "collision_rate": 0.2857142857142857,
+    "k": 3,
+    "method": "metric_dim",
+    "resolving_coverage": 0.9523809523809523,
+    "verifiers": [
+      "final",
+      "worker_a",
+      "verifier_a"
+    ],
+    "workflow": "layered_pipeline"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 4,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "final",
+      "worker_a",
+      "verifier_a",
+      "worker_b"
+    ],
+    "workflow": "layered_pipeline"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 5,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "final",
+      "worker_a",
+      "verifier_a",
+      "worker_b"
+    ],
+    "workflow": "layered_pipeline"
+  },
+  {
+    "collision_rate": 0.7142857142857143,
+    "k": 1,
+    "method": "risk_aware",
+    "resolving_coverage": 0.8095238095238095,
+    "verifiers": [
+      "planner"
+    ],
+    "workflow": "layered_pipeline"
+  },
+  {
+    "collision_rate": 0.5714285714285714,
+    "k": 2,
+    "method": "risk_aware",
+    "resolving_coverage": 0.9047619047619048,
+    "verifiers": [
+      "planner",
+      "worker_a"
+    ],
+    "workflow": "layered_pipeline"
+  },
+  {
+    "collision_rate": 0.2857142857142857,
+    "k": 3,
+    "method": "risk_aware",
+    "resolving_coverage": 0.9523809523809523,
+    "verifiers": [
+      "planner",
+      "worker_a",
+      "worker_b"
+    ],
+    "workflow": "layered_pipeline"
+  },
+  {
+    "collision_rate": 0.2857142857142857,
+    "k": 4,
+    "method": "risk_aware",
+    "resolving_coverage": 0.9523809523809523,
+    "verifiers": [
+      "planner",
+      "worker_a",
+      "worker_b",
+      "worker_c"
+    ],
+    "workflow": "layered_pipeline"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 5,
+    "method": "risk_aware",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "planner",
+      "worker_a",
+      "worker_b",
+      "worker_c",
+      "verifier_a"
+    ],
+    "workflow": "layered_pipeline"
+  },
+  {
+    "collision_rate": 0.8571428571428571,
+    "k": 1,
+    "method": "betweenness",
+    "resolving_coverage": 0.6666666666666666,
+    "verifiers": [
+      "verifier_a"
+    ],
+    "workflow": "layered_pipeline"
+  },
+  {
+    "collision_rate": 0.5714285714285714,
+    "k": 2,
+    "method": "betweenness",
+    "resolving_coverage": 0.7142857142857143,
+    "verifiers": [
+      "verifier_a",
+      "verifier_b"
+    ],
+    "workflow": "layered_pipeline"
+  },
+  {
+    "collision_rate": 0.42857142857142855,
+    "k": 3,
+    "method": "betweenness",
+    "resolving_coverage": 0.8571428571428571,
+    "verifiers": [
+      "verifier_a",
+      "verifier_b",
+      "worker_a"
+    ],
+    "workflow": "layered_pipeline"
+  },
+  {
+    "collision_rate": 0.2857142857142857,
+    "k": 4,
+    "method": "betweenness",
+    "resolving_coverage": 0.9523809523809523,
+    "verifiers": [
+      "verifier_a",
+      "verifier_b",
+      "worker_a",
+      "worker_b"
+    ],
+    "workflow": "layered_pipeline"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 5,
+    "method": "betweenness",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "verifier_a",
+      "verifier_b",
+      "worker_a",
+      "worker_b",
+      "worker_c"
+    ],
+    "workflow": "layered_pipeline"
+  },
+  {
+    "collision_rate": 0.4,
+    "k": 1,
+    "method": "metric_dim",
+    "resolving_coverage": 0.9,
+    "verifiers": [
+      "coder"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 2,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "coder",
+      "planner"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 3,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "coder",
+      "planner"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 4,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "coder",
+      "planner"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 5,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "coder",
+      "planner"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "collision_rate": 0.8,
+    "k": 1,
+    "method": "risk_aware",
+    "resolving_coverage": 0.8,
+    "verifiers": [
+      "tester"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "collision_rate": 0.4,
+    "k": 2,
+    "method": "risk_aware",
+    "resolving_coverage": 0.9,
+    "verifiers": [
+      "tester",
+      "planner"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 3,
+    "method": "risk_aware",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "tester",
+      "planner",
+      "coder"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 4,
+    "method": "risk_aware",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "tester",
+      "planner",
+      "coder",
+      "reviewer"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 5,
+    "method": "risk_aware",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "tester",
+      "planner",
+      "coder",
+      "reviewer",
+      "final"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "collision_rate": 0.6,
+    "k": 1,
+    "method": "betweenness",
+    "resolving_coverage": 0.7,
+    "verifiers": [
+      "reviewer"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "collision_rate": 0.4,
+    "k": 2,
+    "method": "betweenness",
+    "resolving_coverage": 0.9,
+    "verifiers": [
+      "reviewer",
+      "tester"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 3,
+    "method": "betweenness",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "reviewer",
+      "tester",
+      "coder"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 4,
+    "method": "betweenness",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "reviewer",
+      "tester",
+      "coder",
+      "final"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 5,
+    "method": "betweenness",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "reviewer",
+      "tester",
+      "coder",
+      "final",
+      "planner"
+    ],
+    "workflow": "planner_coder_tester_reviewer"
+  },
+  {
+    "collision_rate": 0.3333333333333333,
+    "k": 1,
+    "method": "metric_dim",
+    "resolving_coverage": 0.9333333333333333,
+    "verifiers": [
+      "final"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 2,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "final",
+      "query"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 3,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "final",
+      "query"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 4,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "final",
+      "query"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 5,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "final",
+      "query"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "collision_rate": 0.5,
+    "k": 1,
+    "method": "risk_aware",
+    "resolving_coverage": 0.8,
+    "verifiers": [
+      "retriever"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 2,
+    "method": "risk_aware",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "retriever",
+      "reasoner"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 3,
+    "method": "risk_aware",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "retriever",
+      "reasoner",
+      "summarizer"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 4,
+    "method": "risk_aware",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "retriever",
+      "reasoner",
+      "summarizer",
+      "verifier"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 5,
+    "method": "risk_aware",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "retriever",
+      "reasoner",
+      "summarizer",
+      "verifier",
+      "query"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "collision_rate": 0.8333333333333334,
+    "k": 1,
+    "method": "betweenness",
+    "resolving_coverage": 0.7333333333333333,
+    "verifiers": [
+      "reasoner"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 2,
+    "method": "betweenness",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "reasoner",
+      "retriever"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 3,
+    "method": "betweenness",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "reasoner",
+      "retriever",
+      "verifier"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 4,
+    "method": "betweenness",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "reasoner",
+      "retriever",
+      "verifier",
+      "final"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 5,
+    "method": "betweenness",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "reasoner",
+      "retriever",
+      "verifier",
+      "final",
+      "query"
+    ],
+    "workflow": "rag_pipeline"
+  },
+  {
+    "collision_rate": 0.7777777777777778,
+    "k": 1,
+    "method": "metric_dim",
+    "resolving_coverage": 0.8611111111111112,
+    "verifiers": [
+      "node_3"
+    ],
+    "workflow": "random_directed_graph"
+  },
+  {
+    "collision_rate": 0.2222222222222222,
+    "k": 2,
+    "method": "metric_dim",
+    "resolving_coverage": 0.9722222222222222,
+    "verifiers": [
+      "node_3",
+      "node_1"
+    ],
+    "workflow": "random_directed_graph"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 3,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "node_3",
+      "node_1",
+      "node_0"
+    ],
+    "workflow": "random_directed_graph"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 4,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "node_3",
+      "node_1",
+      "node_0"
+    ],
+    "workflow": "random_directed_graph"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 5,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "node_3",
+      "node_1",
+      "node_0"
+    ],
+    "workflow": "random_directed_graph"
+  },
+  {
+    "collision_rate": 0.7777777777777778,
+    "k": 1,
+    "method": "risk_aware",
+    "resolving_coverage": 0.6944444444444444,
+    "verifiers": [
+      "node_6"
+    ],
+    "workflow": "random_directed_graph"
+  },
+  {
+    "collision_rate": 0.5555555555555556,
+    "k": 2,
+    "method": "risk_aware",
+    "resolving_coverage": 0.8888888888888888,
+    "verifiers": [
+      "node_6",
+      "node_5"
+    ],
+    "workflow": "random_directed_graph"
+  },
+  {
+    "collision_rate": 0.2222222222222222,
+    "k": 3,
+    "method": "risk_aware",
+    "resolving_coverage": 0.9722222222222222,
+    "verifiers": [
+      "node_6",
+      "node_5",
+      "node_7"
+    ],
+    "workflow": "random_directed_graph"
+  },
+  {
+    "collision_rate": 0.2222222222222222,
+    "k": 4,
+    "method": "risk_aware",
+    "resolving_coverage": 0.9722222222222222,
+    "verifiers": [
+      "node_6",
+      "node_5",
+      "node_7",
+      "node_3"
+    ],
+    "workflow": "random_directed_graph"
+  },
+  {
+    "collision_rate": 0.2222222222222222,
+    "k": 5,
+    "method": "risk_aware",
+    "resolving_coverage": 0.9722222222222222,
+    "verifiers": [
+      "node_6",
+      "node_5",
+      "node_7",
+      "node_3",
+      "node_2"
+    ],
+    "workflow": "random_directed_graph"
+  },
+  {
+    "collision_rate": 0.7777777777777778,
+    "k": 1,
+    "method": "betweenness",
+    "resolving_coverage": 0.75,
+    "verifiers": [
+      "node_5"
+    ],
+    "workflow": "random_directed_graph"
+  },
+  {
+    "collision_rate": 0.5555555555555556,
+    "k": 2,
+    "method": "betweenness",
+    "resolving_coverage": 0.8888888888888888,
+    "verifiers": [
+      "node_5",
+      "node_6"
+    ],
+    "workflow": "random_directed_graph"
+  },
+  {
+    "collision_rate": 0.2222222222222222,
+    "k": 3,
+    "method": "betweenness",
+    "resolving_coverage": 0.9722222222222222,
+    "verifiers": [
+      "node_5",
+      "node_6",
+      "node_3"
+    ],
+    "workflow": "random_directed_graph"
+  },
+  {
+    "collision_rate": 0.2222222222222222,
+    "k": 4,
+    "method": "betweenness",
+    "resolving_coverage": 0.9722222222222222,
+    "verifiers": [
+      "node_5",
+      "node_6",
+      "node_3",
+      "node_7"
+    ],
+    "workflow": "random_directed_graph"
+  },
+  {
+    "collision_rate": 0.2222222222222222,
+    "k": 5,
+    "method": "betweenness",
+    "resolving_coverage": 0.9722222222222222,
+    "verifiers": [
+      "node_5",
+      "node_6",
+      "node_3",
+      "node_7",
+      "final"
+    ],
+    "workflow": "random_directed_graph"
+  },
+  {
+    "collision_rate": 0.3333333333333333,
+    "k": 1,
+    "method": "metric_dim",
+    "resolving_coverage": 0.9333333333333333,
+    "verifiers": [
+      "final"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 2,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "final",
+      "researcher_a"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 3,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "final",
+      "researcher_a"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 4,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "final",
+      "researcher_a"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 5,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "final",
+      "researcher_a"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "collision_rate": 0.8333333333333334,
+    "k": 1,
+    "method": "risk_aware",
+    "resolving_coverage": 0.7333333333333333,
+    "verifiers": [
+      "writer"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "collision_rate": 0.3333333333333333,
+    "k": 2,
+    "method": "risk_aware",
+    "resolving_coverage": 0.9333333333333333,
+    "verifiers": [
+      "writer",
+      "planner"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 3,
+    "method": "risk_aware",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "writer",
+      "planner",
+      "researcher_a"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 4,
+    "method": "risk_aware",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "writer",
+      "planner",
+      "researcher_a",
+      "researcher_b"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 5,
+    "method": "risk_aware",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "writer",
+      "planner",
+      "researcher_a",
+      "researcher_b",
+      "verifier"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "collision_rate": 0.8333333333333334,
+    "k": 1,
+    "method": "betweenness",
+    "resolving_coverage": 0.7333333333333333,
+    "verifiers": [
+      "writer"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "collision_rate": 0.3333333333333333,
+    "k": 2,
+    "method": "betweenness",
+    "resolving_coverage": 0.9333333333333333,
+    "verifiers": [
+      "writer",
+      "verifier"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 3,
+    "method": "betweenness",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "writer",
+      "verifier",
+      "researcher_a"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 4,
+    "method": "betweenness",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "writer",
+      "verifier",
+      "researcher_a",
+      "researcher_b"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 5,
+    "method": "betweenness",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "writer",
+      "verifier",
+      "researcher_a",
+      "researcher_b",
+      "final"
+    ],
+    "workflow": "research_writer_verifier"
+  },
+  {
+    "collision_rate": 0.8888888888888888,
+    "k": 1,
+    "method": "metric_dim",
+    "resolving_coverage": 0.6666666666666666,
+    "verifiers": [
+      "final"
+    ],
+    "workflow": "small_world_graph"
+  },
+  {
+    "collision_rate": 0.5555555555555556,
+    "k": 2,
+    "method": "metric_dim",
+    "resolving_coverage": 0.8888888888888888,
+    "verifiers": [
+      "final",
+      "node_0"
+    ],
+    "workflow": "small_world_graph"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 3,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "final",
+      "node_0",
+      "node_1"
+    ],
+    "workflow": "small_world_graph"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 4,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "final",
+      "node_0",
+      "node_1"
+    ],
+    "workflow": "small_world_graph"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 5,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "final",
+      "node_0",
+      "node_1"
+    ],
+    "workflow": "small_world_graph"
+  },
+  {
+    "collision_rate": 0.8888888888888888,
+    "k": 1,
+    "method": "risk_aware",
+    "resolving_coverage": 0.5555555555555556,
+    "verifiers": [
+      "node_2"
+    ],
+    "workflow": "small_world_graph"
+  },
+  {
+    "collision_rate": 0.5555555555555556,
+    "k": 2,
+    "method": "risk_aware",
+    "resolving_coverage": 0.7222222222222222,
+    "verifiers": [
+      "node_2",
+      "node_6"
+    ],
+    "workflow": "small_world_graph"
+  },
+  {
+    "collision_rate": 0.3333333333333333,
+    "k": 3,
+    "method": "risk_aware",
+    "resolving_coverage": 0.9166666666666666,
+    "verifiers": [
+      "node_2",
+      "node_6",
+      "node_3"
+    ],
+    "workflow": "small_world_graph"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 4,
+    "method": "risk_aware",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "node_2",
+      "node_6",
+      "node_3",
+      "node_7"
+    ],
+    "workflow": "small_world_graph"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 5,
+    "method": "risk_aware",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "node_2",
+      "node_6",
+      "node_3",
+      "node_7",
+      "node_1"
+    ],
+    "workflow": "small_world_graph"
+  },
+  {
+    "collision_rate": 0.8888888888888888,
+    "k": 1,
+    "method": "betweenness",
+    "resolving_coverage": 0.5555555555555556,
+    "verifiers": [
+      "node_0"
+    ],
+    "workflow": "small_world_graph"
+  },
+  {
+    "collision_rate": 0.5555555555555556,
+    "k": 2,
+    "method": "betweenness",
+    "resolving_coverage": 0.7222222222222222,
+    "verifiers": [
+      "node_0",
+      "node_4"
+    ],
+    "workflow": "small_world_graph"
+  },
+  {
+    "collision_rate": 0.3333333333333333,
+    "k": 3,
+    "method": "betweenness",
+    "resolving_coverage": 0.9166666666666666,
+    "verifiers": [
+      "node_0",
+      "node_4",
+      "node_1"
+    ],
+    "workflow": "small_world_graph"
+  },
+  {
+    "collision_rate": 0.2222222222222222,
+    "k": 4,
+    "method": "betweenness",
+    "resolving_coverage": 0.9722222222222222,
+    "verifiers": [
+      "node_0",
+      "node_4",
+      "node_1",
+      "node_2"
+    ],
+    "workflow": "small_world_graph"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 5,
+    "method": "betweenness",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "node_0",
+      "node_4",
+      "node_1",
+      "node_2",
+      "node_5"
+    ],
+    "workflow": "small_world_graph"
+  },
+  {
+    "collision_rate": 0.8571428571428571,
+    "k": 1,
+    "method": "metric_dim",
+    "resolving_coverage": 0.6666666666666666,
+    "verifiers": [
+      "spoke_0"
+    ],
+    "workflow": "star"
+  },
+  {
+    "collision_rate": 0.7142857142857143,
+    "k": 2,
+    "method": "metric_dim",
+    "resolving_coverage": 0.8095238095238095,
+    "verifiers": [
+      "spoke_0",
+      "spoke_1"
+    ],
+    "workflow": "star"
+  },
+  {
+    "collision_rate": 0.5714285714285714,
+    "k": 3,
+    "method": "metric_dim",
+    "resolving_coverage": 0.9047619047619048,
+    "verifiers": [
+      "spoke_0",
+      "spoke_1",
+      "spoke_2"
+    ],
+    "workflow": "star"
+  },
+  {
+    "collision_rate": 0.2857142857142857,
+    "k": 4,
+    "method": "metric_dim",
+    "resolving_coverage": 0.9523809523809523,
+    "verifiers": [
+      "spoke_0",
+      "spoke_1",
+      "spoke_2",
+      "final"
+    ],
+    "workflow": "star"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 5,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "spoke_0",
+      "spoke_1",
+      "spoke_2",
+      "final",
+      "spoke_3"
+    ],
+    "workflow": "star"
+  },
+  {
+    "collision_rate": 0.7142857142857143,
+    "k": 1,
+    "method": "risk_aware",
+    "resolving_coverage": 0.5238095238095238,
+    "verifiers": [
+      "hub"
+    ],
+    "workflow": "star"
+  },
+  {
+    "collision_rate": 0.5714285714285714,
+    "k": 2,
+    "method": "risk_aware",
+    "resolving_coverage": 0.7142857142857143,
+    "verifiers": [
+      "hub",
+      "spoke_2"
+    ],
+    "workflow": "star"
+  },
+  {
+    "collision_rate": 0.42857142857142855,
+    "k": 3,
+    "method": "risk_aware",
+    "resolving_coverage": 0.8571428571428571,
+    "verifiers": [
+      "hub",
+      "spoke_2",
+      "spoke_1"
+    ],
+    "workflow": "star"
+  },
+  {
+    "collision_rate": 0.2857142857142857,
+    "k": 4,
+    "method": "risk_aware",
+    "resolving_coverage": 0.9523809523809523,
+    "verifiers": [
+      "hub",
+      "spoke_2",
+      "spoke_1",
+      "spoke_0"
+    ],
+    "workflow": "star"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 5,
+    "method": "risk_aware",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "hub",
+      "spoke_2",
+      "spoke_1",
+      "spoke_0",
+      "spoke_4"
+    ],
+    "workflow": "star"
+  },
+  {
+    "collision_rate": 0.8571428571428571,
+    "k": 1,
+    "method": "betweenness",
+    "resolving_coverage": 0.6666666666666666,
+    "verifiers": [
+      "spoke_0"
+    ],
+    "workflow": "star"
+  },
+  {
+    "collision_rate": 0.7142857142857143,
+    "k": 2,
+    "method": "betweenness",
+    "resolving_coverage": 0.8095238095238095,
+    "verifiers": [
+      "spoke_0",
+      "spoke_1"
+    ],
+    "workflow": "star"
+  },
+  {
+    "collision_rate": 0.5714285714285714,
+    "k": 3,
+    "method": "betweenness",
+    "resolving_coverage": 0.9047619047619048,
+    "verifiers": [
+      "spoke_0",
+      "spoke_1",
+      "spoke_2"
+    ],
+    "workflow": "star"
+  },
+  {
+    "collision_rate": 0.2857142857142857,
+    "k": 4,
+    "method": "betweenness",
+    "resolving_coverage": 0.9523809523809523,
+    "verifiers": [
+      "spoke_0",
+      "spoke_1",
+      "spoke_2",
+      "spoke_3"
+    ],
+    "workflow": "star"
+  },
+  {
+    "collision_rate": 0.2857142857142857,
+    "k": 5,
+    "method": "betweenness",
+    "resolving_coverage": 0.9523809523809523,
+    "verifiers": [
+      "spoke_0",
+      "spoke_1",
+      "spoke_2",
+      "spoke_3",
+      "spoke_4"
+    ],
+    "workflow": "star"
+  },
+  {
+    "collision_rate": 0.6666666666666666,
+    "k": 1,
+    "method": "metric_dim",
+    "resolving_coverage": 0.8666666666666667,
+    "verifiers": [
+      "analyst"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 2,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "analyst",
+      "final"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 3,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "analyst",
+      "final"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 4,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "analyst",
+      "final"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 5,
+    "method": "metric_dim",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "analyst",
+      "final"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "collision_rate": 0.6666666666666666,
+    "k": 1,
+    "method": "risk_aware",
+    "resolving_coverage": 0.8666666666666667,
+    "verifiers": [
+      "tester"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 2,
+    "method": "risk_aware",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "tester",
+      "planner"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 3,
+    "method": "risk_aware",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "tester",
+      "planner",
+      "analyst"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 4,
+    "method": "risk_aware",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "tester",
+      "planner",
+      "analyst",
+      "code_tool"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 5,
+    "method": "risk_aware",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "tester",
+      "planner",
+      "analyst",
+      "code_tool",
+      "search_tool"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "collision_rate": 0.6666666666666666,
+    "k": 1,
+    "method": "betweenness",
+    "resolving_coverage": 0.8666666666666667,
+    "verifiers": [
+      "analyst"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "collision_rate": 0.6666666666666666,
+    "k": 2,
+    "method": "betweenness",
+    "resolving_coverage": 0.8666666666666667,
+    "verifiers": [
+      "analyst",
+      "code_tool"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 3,
+    "method": "betweenness",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "analyst",
+      "code_tool",
+      "search_tool"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 4,
+    "method": "betweenness",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "analyst",
+      "code_tool",
+      "search_tool",
+      "tester"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "collision_rate": 0.0,
+    "k": 5,
+    "method": "betweenness",
+    "resolving_coverage": 1.0,
+    "verifiers": [
+      "analyst",
+      "code_tool",
+      "search_tool",
+      "tester",
+      "final"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  {
+    "collision_rate": 0.9375,
+    "k": 1,
+    "method": "metric_dim",
+    "resolving_coverage": 0.8166666666666667,
+    "verifiers": [
+      "root_0"
+    ],
+    "workflow": "tree"
+  },
+  {
+    "collision_rate": 0.75,
+    "k": 2,
+    "method": "metric_dim",
+    "resolving_coverage": 0.9166666666666666,
+    "verifiers": [
+      "root_0",
+      "root_1_0"
+    ],
+    "workflow": "tree"
+  },
+  {
+    "collision_rate": 0.5,
+    "k": 3,
+    "method": "metric_dim",
+    "resolving_coverage": 0.9666666666666667,
+    "verifiers": [
+      "root_0",
+      "root_1_0",
+      "root_0_0"
+    ],
+    "workflow": "tree"
+  },
+  {
+    "collision_rate": 0.375,
+    "k": 4,
+    "method": "metric_dim",
+    "resolving_coverage": 0.975,
+    "verifiers": [
+      "root_0",
+      "root_1_0",
+      "root_0_0",
+      "root_0_0_0"
+    ],
+    "workflow": "tree"
+  },
+  {
+    "collision_rate": 0.25,
+    "k": 5,
+    "method": "metric_dim",
+    "resolving_coverage": 0.9833333333333333,
+    "verifiers": [
+      "root_0",
+      "root_1_0",
+      "root_0_0",
+      "root_0_0_0",
+      "root_0_1_0"
+    ],
+    "workflow": "tree"
+  },
+  {
+    "collision_rate": 0.9375,
+    "k": 1,
+    "method": "risk_aware",
+    "resolving_coverage": 0.7666666666666667,
+    "verifiers": [
+      "root_0_0"
+    ],
+    "workflow": "tree"
+  },
+  {
+    "collision_rate": 0.75,
+    "k": 2,
+    "method": "risk_aware",
+    "resolving_coverage": 0.9166666666666666,
+    "verifiers": [
+      "root_0_0",
+      "root_1"
+    ],
+    "workflow": "tree"
+  },
+  {
+    "collision_rate": 0.5,
+    "k": 3,
+    "method": "risk_aware",
+    "resolving_coverage": 0.9666666666666667,
+    "verifiers": [
+      "root_0_0",
+      "root_1",
+      "root_1_1"
+    ],
+    "workflow": "tree"
+  },
+  {
+    "collision_rate": 0.5,
+    "k": 4,
+    "method": "risk_aware",
+    "resolving_coverage": 0.9666666666666667,
+    "verifiers": [
+      "root_0_0",
+      "root_1",
+      "root_1_1",
+      "root_0"
+    ],
+    "workflow": "tree"
+  },
+  {
+    "collision_rate": 0.5,
+    "k": 5,
+    "method": "risk_aware",
+    "resolving_coverage": 0.9666666666666667,
+    "verifiers": [
+      "root_0_0",
+      "root_1",
+      "root_1_1",
+      "root_0",
+      "root_1_0"
+    ],
+    "workflow": "tree"
+  },
+  {
+    "collision_rate": 0.9375,
+    "k": 1,
+    "method": "betweenness",
+    "resolving_coverage": 0.8166666666666667,
+    "verifiers": [
+      "root_0"
+    ],
+    "workflow": "tree"
+  },
+  {
+    "collision_rate": 0.75,
+    "k": 2,
+    "method": "betweenness",
+    "resolving_coverage": 0.8833333333333333,
+    "verifiers": [
+      "root_0",
+      "root_1"
+    ],
+    "workflow": "tree"
+  },
+  {
+    "collision_rate": 0.625,
+    "k": 3,
+    "method": "betweenness",
+    "resolving_coverage": 0.925,
+    "verifiers": [
+      "root_0",
+      "root_1",
+      "root_0_0"
+    ],
+    "workflow": "tree"
+  },
+  {
+    "collision_rate": 0.625,
+    "k": 4,
+    "method": "betweenness",
+    "resolving_coverage": 0.925,
+    "verifiers": [
+      "root_0",
+      "root_1",
+      "root_0_0",
+      "root_0_1"
+    ],
+    "workflow": "tree"
+  },
+  {
+    "collision_rate": 0.5,
+    "k": 5,
+    "method": "betweenness",
+    "resolving_coverage": 0.9666666666666667,
+    "verifiers": [
+      "root_0",
+      "root_1",
+      "root_0_0",
+      "root_0_1",
+      "root_1_0"
+    ],
+    "workflow": "tree"
+  }
+]

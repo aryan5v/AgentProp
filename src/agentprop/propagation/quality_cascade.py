@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-import networkx as nx
-
 from agentprop.core import AgentGraph, NodeType
 from agentprop.propagation.base import PropagationResult
 
@@ -60,12 +58,10 @@ class QualityCascade:
         seed_set = set(seeds)
         valid_ids = {n.id for n in graph.nodes()}
         qualities: dict[str, float] = {s: 1.0 for s in seed_set if s in valid_ids}
-        nx_graph = graph.to_networkx()
-
-        if nx.is_directed_acyclic_graph(nx_graph):
-            self._propagate_dag(graph, nx_graph, qualities, seed_set)
+        if graph.is_dag():
+            self._propagate_dag(graph, qualities, seed_set)
         else:
-            self._propagate_cyclic(graph, nx_graph, qualities, seed_set)
+            self._propagate_cyclic(graph, qualities, seed_set)
 
         activation_rounds: dict[str, int] = {
             node_id: 0
@@ -83,10 +79,11 @@ class QualityCascade:
             if node.type == NodeType.OUTPUT and node.id in qualities
         ]
         if not output_qualities:
-            terminal_ids = {
-                str(n) for n in nx_graph.nodes()
-                if nx_graph.out_degree(n) == 0 and str(n) in qualities
-            }
+            terminal_ids = [
+                node_id
+                for node_id in graph.node_ids()
+                if graph.out_degree(node_id) == 0 and node_id in qualities
+            ]
             output_qualities = [qualities[nid] for nid in terminal_ids]
         mean_output_quality = sum(output_qualities) / max(len(output_qualities), 1)
 
@@ -106,12 +103,10 @@ class QualityCascade:
     def _propagate_dag(
         self,
         graph: AgentGraph,
-        nx_graph: nx.DiGraph,
         qualities: dict[str, float],
         seed_set: set[str],
     ) -> None:
-        for node_id in nx.topological_sort(nx_graph):
-            node_id = str(node_id)
+        for node_id in graph.topological_order():
             if node_id in seed_set:
                 continue
             quality = self._incoming_quality(graph, node_id, qualities)
@@ -121,15 +116,13 @@ class QualityCascade:
     def _propagate_cyclic(
         self,
         graph: AgentGraph,
-        nx_graph: nx.DiGraph,
         qualities: dict[str, float],
         seed_set: set[str],
     ) -> None:
         max_rounds = graph.node_count
         for _ in range(max_rounds):
             updated = False
-            for node_id in nx_graph.nodes():
-                node_id = str(node_id)
+            for node_id in graph.node_ids():
                 if node_id in seed_set:
                     continue
                 quality = self._incoming_quality(graph, node_id, qualities)

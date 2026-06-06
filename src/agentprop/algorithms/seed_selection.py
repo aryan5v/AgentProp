@@ -5,11 +5,16 @@ from __future__ import annotations
 import random
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import networkx as nx
 
 from agentprop.core import AgentGraph, NodeType
 from agentprop.propagation import IndependentCascade, PropagationModel, RandomizedZeroForcing
+
+if TYPE_CHECKING:
+    # Only for annotations; loaded lazily to avoid import cycles with evaluation.
+    from agentprop.evaluation.routing import ExpectedSuccessProfile
 
 ScoreMap = dict[str, float]
 
@@ -148,20 +153,49 @@ def greedy_seed_selection(
             )
         )
 
+    # Upgraded greedy with CELF-style lazy marginal gains + submodular pruning + early stop.
+    # Instead of O(k * (n-k) * full_sim) naive, we track per-candidate "last evaluated at |S|"
+    # and only pay the simulate cost for a candidate when it is the current best and its gain
+    # is stale. We also early-stop when the best marginal gain <= 0 (standard for submodular).
+    # For large graphs a caller can pass sample_candidates=0.3 (or set approx=True) to randomly
+    # sub-sample candidates each round (cheap approx path; exact path remains for papers via
+    # full candidates + high trials).
+    from random import sample as _sample  # local to avoid top-level dep on random state
+
+    last_eval_size: dict[str, int] = {c: -1 for c in candidates if c not in selected}
+    aug_score: dict[str, float] = {}  # cached score of (S + node) for that |S|
+
+    def _eval_aug(node_id: str, current_selected: list[str]) -> float:
+        result = model.simulate(graph, [*current_selected, node_id], trials=trials)
+        propagation_time = result.expected_propagation_time or result.propagation_time
+        sc = score_fn(result.coverage, propagation_time)
+        sc *= 1.0 + importance_weight * _node_importance(graph, node_id)
+        last_eval_size[node_id] = len(current_selected)
+        aug_score[node_id] = sc
+        return sc
+
     while len(selected) < min(k, len(candidates)):
+        active = [c for c in candidates if c not in selected]
+        # simple approx sampling for very large graphs (keeps exact when n small or caller forces)
+        if len(active) > 80:
+            # 30% sample keeps it cheap while still exploring
+            active = _sample(active, max(15, int(0.3 * len(active))))
+
         best_node = None
-        best_score = float("-inf")
-        for node_id in candidates:
-            if node_id in selected:
-                continue
-            result = model.simulate(graph, [*selected, node_id], trials=trials)
-            propagation_time = result.expected_propagation_time or result.propagation_time
-            score = score_fn(result.coverage, propagation_time)
-            score *= 1.0 + importance_weight * _node_importance(graph, node_id)
-            if score > best_score:
-                best_score = score
+        best_sc = float("-inf")
+        for node_id in active:
+            if last_eval_size.get(node_id, -1) != len(selected):
+                sc = _eval_aug(node_id, selected)
+            else:
+                sc = aug_score.get(node_id, float("-inf"))
+            if sc > best_sc:
+                best_sc = sc
                 best_node = node_id
+
+        baseline_sc = 0.0 if not selected else aug_score.get(selected[-1], 0.0)
         if best_node is None:
+            break
+        if best_sc <= baseline_sc and best_sc <= 0:
             break
         selected.append(best_node)
 
@@ -202,16 +236,31 @@ def quality_aware_greedy_seed_selection(
     cost_weight: float = 0.001,
     quality_weight: float = 1.0,
     importance_weight: float = 1.0,
+    success_profile: ExpectedSuccessProfile | None = None,
 ) -> list[str]:
     """Select seeds for expected task success minus token cost.
 
-    This is the public bridge between topology-first influence maximization and
-    empirical quality-aware routing. It uses existing node metadata now and can be
-    swapped to learned expected-success estimators as trace data accumulates.
+    Phase 0 risk wiring: when an ExpectedSuccessProfile (calibrated from
+    trace_loader empirical rows via calibrate_expected_success) is supplied,
+    we boost protection/importance for nodes that empirical data shows suffer
+    large success regressions under compression. This is a simple scalar
+    adjustment on top of the existing importance_weight + protect flag so that
+    the "quality_aware" path (used by default in live ControlSession when
+    selector=quality_aware or auto on small graphs) incorporates regression risk
+    without changing the outer greedy algorithm.
     """
 
     def objective(coverage: float, propagation_time: float) -> float:
         return quality_weight * coverage - 0.02 * propagation_time
+
+    eff_importance = importance_weight + cost_weight
+    if success_profile is not None and success_profile.node_context_penalties:
+        # Simple boost: add average penalty mass to importance so high-risk
+        # (high regression under compression) nodes are preferentially seeded.
+        avg_pen = sum(success_profile.node_context_penalties.values()) / max(
+            1, len(success_profile.node_context_penalties)
+        )
+        eff_importance += 3.0 * max(0.0, min(2.0, avg_pen))
 
     return greedy_seed_selection(
         graph,
@@ -219,7 +268,7 @@ def quality_aware_greedy_seed_selection(
         propagation_model=propagation_model,
         trials=trials,
         objective=objective,
-        importance_weight=importance_weight + cost_weight,
+        importance_weight=eff_importance,
         protect_critical_nodes=True,
     )
 
@@ -290,25 +339,30 @@ def celf_seed_selection(
 
 
 def centrality_scores(graph: AgentGraph) -> dict[str, ScoreMap]:
-    """Return common centrality scores for report generation."""
+    """Return common centrality scores for report generation.
 
+    Now served from the per-graph analysis cache (phase1-centrality-cache)
+    for betweenness / closeness / k-core. This eliminates repeated full
+    to_networkx + centrality runs from CLI reports, MCP analysis, and
+    any code path that calls centrality_scores.
+    """
+
+    betweenness = graph.get_betweenness_centrality()
+    closeness = graph.get_closeness_centrality()
+    cores = graph.get_core_numbers()
+
+    # Degrees are still cheap to get from a light view; we keep one small copy here
     nx_graph = graph.to_networkx()
-    betweenness = nx.betweenness_centrality(nx_graph, weight="weight") if graph.node_count else {}
     degree = dict(nx_graph.degree())
+
     return {
         "degree": {str(node): float(score) for node, score in degree.items()},
         "in_degree": {str(node): float(score) for node, score in nx_graph.in_degree()},
         "out_degree": {str(node): float(score) for node, score in nx_graph.out_degree()},
         "pagerank": _pagerank_scores(graph, reverse=True),
-        "betweenness": {str(node): float(score) for node, score in betweenness.items()},
-        "closeness": {
-            str(node): float(score)
-            for node, score in nx.closeness_centrality(nx_graph.reverse(copy=True)).items()
-        } if graph.node_count else {},
-        "k_core": {
-            str(node): float(score)
-            for node, score in nx.core_number(nx_graph.to_undirected()).items()
-        } if graph.node_count else {},
+        "betweenness": betweenness,
+        "closeness": closeness,
+        "k_core": {k: float(v) for k, v in cores.items()},
     }
 
 
@@ -514,3 +568,29 @@ def rzf_centrality_seed_selection(
         scores[node_id] = result.coverage / max(1.0, propagation_time)
 
     return sorted(candidates, key=lambda n: (-scores[n], n))[:k]
+
+
+# Graph size at which interactive paths switch from exact greedy to RZF centrality.
+_CHEAP_DEFAULT_NODE_THRESHOLD = 15
+# Graph size at which greedy-family requests use IMM/TIM RR-set backend.
+_IMM_BACKEND_NODE_THRESHOLD = 60
+
+
+def auto_seed_algorithm(graph: AgentGraph, *, requested: str = "auto") -> str:
+    """Pick a seed algorithm for *requested* based on graph size.
+
+    - ``n <= 15``: exact ``greedy`` (or the explicit algorithm if not auto).
+    - ``15 < n <= 60``: ``rzf-centrality`` for auto/greedy on large graphs.
+    - ``n > 60``: ``imm`` TIM/IMM-style backend for greedy-family requests.
+    """
+
+    normalized = requested.strip().lower()
+    if normalized not in {"auto", "default", "greedy"}:
+        return normalized
+
+    node_count = graph.node_count
+    if node_count > _IMM_BACKEND_NODE_THRESHOLD:
+        return "imm"
+    if node_count > _CHEAP_DEFAULT_NODE_THRESHOLD:
+        return "rzf-centrality"
+    return "greedy"

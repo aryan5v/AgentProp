@@ -19,6 +19,7 @@ from agentprop.algorithms import (
     rzf_centrality_seed_selection,
 )
 from agentprop.core import AgentGraph
+from agentprop.evaluation.constants import normalize_propagation_model
 from agentprop.evaluation.metrics import compare_routing, coverage_constrained_cost
 from agentprop.propagation import (
     BootstrapPercolation,
@@ -116,19 +117,20 @@ def run_benchmark(
 def make_propagation_model(name: str) -> PropagationModel:
     """Create a propagation model by CLI/API name."""
 
-    if name in {"independent-cascade", "ic"}:
+    name = normalize_propagation_model(name)
+    if name == "independent-cascade":
         return IndependentCascade(seed=0)
-    if name in {"linear-threshold", "lt"}:
+    if name == "linear-threshold":
         return LinearThreshold()
-    if name in {"bootstrap", "bootstrap-percolation"}:
+    if name == "bootstrap":
         return BootstrapPercolation()
     if name in {"rzf", "randomized-zero-forcing"}:
         return RandomizedZeroForcing(seed=0)
-    if name in {"zero-forcing", "zf"}:
+    if name == "zero-forcing":
         return ZeroForcing()
-    if name in {"learned", "trace-learned"}:
+    if name == "learned":
         return LearnedPropagation(seed=0)
-    if name in {"quality-cascade", "qc"}:
+    if name == "quality-cascade":
         return QualityCascade()
     raise ValueError(f"Unknown propagation model: {name}")
 
@@ -185,4 +187,12 @@ def select_seeds(
         )
     if algorithm == "rzf-centrality":
         return rzf_centrality_seed_selection(graph, budget, trials=trials, seed=0)
+    if algorithm in {"imm", "tim"}:
+        from agentprop.algorithms.influence_maximization import (
+            imm_greedy_seed_selection,
+            tim_seed_selection,
+        )
+
+        selector = tim_seed_selection if algorithm == "tim" else imm_greedy_seed_selection
+        return selector(graph, budget, propagation_model=model, trials=trials)
     raise ValueError(f"Unknown seed algorithm: {algorithm}")

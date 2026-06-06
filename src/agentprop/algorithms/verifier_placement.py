@@ -8,6 +8,66 @@ from agentprop.algorithms.seed_selection import centrality_scores
 from agentprop.core import AgentGraph
 
 
+class _ResolvingTracker:
+    """Incremental tracker for node-pair resolution state during verifier placement.
+
+    Maintains the list of still-unresolved (u, v) pairs and allows O(remaining)
+    filtering when a verifier is added, plus fast per-candidate gain computation.
+    This avoids O(n^2) full rescans on every greedy step or coverage query,
+    providing the "pair-resolution state" memoization for metric dimension.
+    """
+
+    def __init__(self, node_ids: list[str], distances: dict[str, dict[str, int]]) -> None:
+        self.node_ids = node_ids
+        self.distances = distances
+        self.unresolved: list[tuple[str, str]] = [
+            (u, v) for i, u in enumerate(node_ids) for v in node_ids[i + 1 :]
+        ]
+
+    def add_verifier(self, w: str) -> None:
+        """Remove all pairs now resolved by w (i.e. have different dist to w)."""
+        self.unresolved = [
+            (u, v)
+            for (u, v) in self.unresolved
+            if self.distances.get(u, {}).get(w) == self.distances.get(v, {}).get(w)
+        ]
+
+    def is_fully_resolved(self) -> bool:
+        return len(self.unresolved) == 0
+
+    def coverage(self) -> float:
+        total = len(self.node_ids) * (len(self.node_ids) - 1) // 2
+        resolved = total - len(self.unresolved)
+        return resolved / max(total, 1)
+
+    def compute_gain(self, candidate: str) -> int:
+        """Number of currently unresolved pairs that this candidate would resolve."""
+        if not self.unresolved:
+            return 0
+        return sum(
+            1
+            for u, v in self.unresolved
+            if self.distances.get(u, {}).get(candidate) != self.distances.get(v, {}).get(candidate)
+        )
+
+    def singly_covered_pairs(self, current_verifiers: list[str]) -> list[tuple[str, str]]:
+        """Return *all* node pairs resolved by exactly one of the current_verifiers.
+
+        Scans full pair space (acceptable for FT checks with small k).
+        """
+        singly: list[tuple[str, str]] = []
+        for i, u in enumerate(self.node_ids):
+            for v in self.node_ids[i + 1 :]:
+                count = sum(
+                    1
+                    for w in current_verifiers
+                    if self.distances.get(u, {}).get(w) != self.distances.get(v, {}).get(w)
+                )
+                if count == 1:
+                    singly.append((u, v))
+        return singly
+
+
 def risk_aware_verifier_placement(graph: AgentGraph, k: int) -> list[str]:
     """Rank nodes by error risk, graph centrality, and downstream influence."""
 
@@ -147,12 +207,31 @@ def metric_dimension_verifier_placement(
     if graph.node_count == 0:
         return []
 
-    nx_ug = graph.to_networkx().to_undirected()
-    node_ids = sorted(str(n) for n in nx_ug.nodes())
-    distances = dict(nx.all_pairs_shortest_path_length(nx_ug))
+    node_ids, distances = graph.get_undirected_distances()
 
     verifiers: list[str] = []
-    _extend_to_resolving(verifiers, node_ids, distances, k)
+    # Use incremental pair-resolution tracker for the main greedy selection
+    # to avoid full O(n^2) pair rescans on every marginal gain computation.
+    tracker = _ResolvingTracker(node_ids, distances)
+    while len(verifiers) < k:
+        if tracker.is_fully_resolved():
+            break
+        candidates = [n for n in node_ids if n not in verifiers]
+        if not candidates:
+            break
+        # Pick best by gain on *currently* unresolved pairs (tracker state)
+        best = max(
+            candidates,
+            key=tracker.compute_gain,
+        )
+        if tracker.compute_gain(best) <= 0:
+            break
+        verifiers.append(best)
+        tracker.add_verifier(best)
+
+    # Fall back to legacy extender only if tracker stopped early (shouldn't for valid k)
+    if len(verifiers) < k:
+        _extend_to_resolving(verifiers, node_ids, distances, k)
 
     if fault_tolerant:
         budget_remaining = k - len(verifiers)
@@ -162,10 +241,12 @@ def metric_dimension_verifier_placement(
             candidates = [n for n in node_ids if n not in verifiers]
             if not candidates:
                 break
-            best = _best_fault_tolerant_candidate(verifiers, candidates, node_ids, distances)
-            if best is None:
+            ft_candidate = _best_fault_tolerant_candidate(
+                verifiers, candidates, node_ids, distances
+            )
+            if ft_candidate is None:
                 break
-            verifiers.append(best)
+            verifiers.append(ft_candidate)
             budget_remaining -= 1
 
     return verifiers
@@ -181,20 +262,14 @@ def resolving_coverage(graph: AgentGraph, verifiers: list[str]) -> float:
 
     if graph.node_count < 2:
         return 1.0
-    nx_ug = graph.to_networkx().to_undirected()
-    node_ids = sorted(str(n) for n in nx_ug.nodes())
-    distances = dict(nx.all_pairs_shortest_path_length(nx_ug))
-    verifier_set = [v for v in verifiers if v in nx_ug]
+    node_ids, distances = graph.get_undirected_distances()
+    verifier_set = [v for v in verifiers if v in set(node_ids)]
 
-    resolved = 0
-    total = 0
-    for i, u in enumerate(node_ids):
-        for v in node_ids[i + 1 :]:
-            total += 1
-            if _is_resolved(u, v, verifier_set, distances):
-                resolved += 1
-
-    return resolved / max(total, 1)
+    # Use tracker for O(1) effective coverage after adding the verifiers (incremental filter).
+    tracker = _ResolvingTracker(node_ids, distances)
+    for w in verifier_set:
+        tracker.add_verifier(w)
+    return tracker.coverage()
 
 
 def fault_tolerant_resolving_coverage(graph: AgentGraph, verifiers: list[str]) -> float:

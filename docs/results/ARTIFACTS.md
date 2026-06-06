@@ -25,7 +25,7 @@ Never commit these under `docs/results/` or anywhere else in the repo:
   regression postmortems, launch runbooks)
 
 See [CONTRIBUTING.md](../../CONTRIBUTING.md#data-secrets-and-benchmark-artifacts) for the full policy.
-Working notes use the gitignored [`docs/local/`](../local/README.example.md) layout.
+Working notes use the gitignored `docs/local/` layout.
 
 ## Current public artifacts
 
@@ -35,6 +35,10 @@ Working notes use the gitignored [`docs/local/`](../local/README.example.md) lay
 | [gaia_benchmark/](gaia_benchmark/REPORT.md) | Final | GAIA-style QA routing study |
 | [real_routing_case_study/](real_routing_case_study/REPORT.md) | Final | Code-generation routing study |
 | [terminal_bench_guided/](terminal_bench_guided/README.md) | Final | Directional Terminal-Bench snapshot |
+| [failure_localization/](failure_localization/results.json) | Final | Synthetic collision-rate study |
+| [quality_cascade_vs_ic/](quality_cascade_vs_ic/results.json) | Final | QC vs IC routing comparison |
+| [terminal_bench_multi/](terminal_bench_multi/README.md) | Protocol | Multi-task A0 vs A2 comparison guide |
+| [scale_quality_evidence/](scale_quality_evidence/README.md) | Directional | Synthetic multi-workflow routing matrix (IMM/RZF/greedy arms) |
 
 Before adding a new directory, confirm the report labels limitations clearly and
 that `outputs.jsonl` contains no secrets or private prompts.

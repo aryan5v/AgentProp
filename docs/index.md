@@ -14,6 +14,8 @@ Agents, and LlamaIndex are in [framework integrations](framework_integrations.md
 
 Getting started and day-to-day usage:
 
+- [Architecture overview](ARCHITECTURE.md)
+- [Environment setup](environment.md)
 - [Tutorial walkthrough](tutorial.md)
 - [Workflow JSON schema](workflow_schema.md)
 - [Quality-aware routing](routing_quality.md)
@@ -27,12 +29,8 @@ Getting started and day-to-day usage:
 
 ## Research And Evaluation
 
-Benchmarks, protocols, and reproducible studies:
+Benchmarks, reproducible scripts, and public evidence:
 
-- [Reproducible results](research/reproducible_results.md)
-- [Research references](research/references.md)
-- [Literature review](research/literature_review.md)
-- [Real LLM case-study protocol](research/case_study_protocol.md)
 - [Learned propagation](learned_propagation.md)
 - [Routing baseline evaluation](routing_baseline_evaluation.md)
 - [Reinforcement learning routing](reinforcement_learning.md)
@@ -52,11 +50,13 @@ Benchmarks, protocols, and reproducible studies:
 - [Agent guide for coding agents](../AGENTS.md)
 
 Working notes (paper drafts, roadmaps, release ops) belong in gitignored
-[`docs/local/`](local/README.example.md), not in the public tree.
+`docs/local/`, not in the public tree.
 
 ## Common Commands
 
 ```bash
+agentprop doctor --tier graph
+agentprop workflows list
 agentprop optimize benchmarks/workflows/planner_coder_tester_reviewer.json --budget 2
 agentprop simulate chain --seeds node_0 --model zero-forcing
 agentprop simulate chain --seeds node_0 --model quality-cascade
@@ -65,6 +65,7 @@ agentprop benchmark planner_coder_tester_reviewer --budget 2 --trials 50
 agentprop report planner_coder_tester_reviewer --out reports/demo.html --format html
 agentprop agent-instructions planner_coder_tester_reviewer --target codex --out reports/codex_agent_brief.md
 agentprop control-demo --demo terminal --out-dir reports/control-demo
+agentprop readiness --json
 agentprop viz planner_coder_tester_reviewer --out reports/workflow.dot
 ```
 
@@ -73,6 +74,8 @@ Reproduce the verifier-placement and seeding scaling studies:
 ```bash
 python experiments/verifier_placement_evidence.py
 python experiments/rzf_scaling_study.py
+python experiments/failure_localization_study.py
+python experiments/quality_cascade_vs_ic.py
 ```
 
 ## What AgentProp Proves

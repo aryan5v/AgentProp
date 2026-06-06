@@ -6,8 +6,6 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Literal, Protocol
 
-import networkx as nx
-
 from agentprop.algorithms import (
     greedy_seed_selection,
     quality_aware_greedy_seed_selection,
@@ -16,8 +14,9 @@ from agentprop.algorithms import (
 from agentprop.core import AgentGraph, AgentNode, NodeType
 from agentprop.evaluation import graded_context_allocations, routing_risks
 from agentprop.propagation import IndependentCascade
+from agentprop.runtime.critical_facts import CriticalFactStore, build_context_slice
 
-SeedSelectorName = Literal["quality_aware", "greedy", "rzf"]
+SeedSelectorName = Literal["quality_aware", "greedy", "rzf", "auto"]
 ActivationMode = Literal["all", "propagated"]
 
 
@@ -41,9 +40,10 @@ class RuntimeControllerConfig:
 
     seed_budget: int = 2
     trials: int = 50
-    seed_selector: SeedSelectorName = "quality_aware"
+    seed_selector: SeedSelectorName = "auto"
     seed: int = 0
     force_verifier_full_context: bool = True
+    use_critical_facts: bool = True
     compressed_context_ratio: float = 0.35
     full_context_threshold: float = 0.95
     fixed_seeds: tuple[str, ...] = ()
@@ -106,6 +106,7 @@ class AgentPropRuntimeController:
         self.graph = graph
         self.config = config or RuntimeControllerConfig()
         self.compressor = compressor
+        self.fact_store = CriticalFactStore()
 
     def run(
         self,
@@ -117,37 +118,39 @@ class AgentPropRuntimeController:
     ) -> RuntimeRunResult:
         """Run every executable graph node with controller-managed context."""
 
-        selected_seeds = tuple(self._select_seeds())
+        run_metadata = dict(metadata or {})
+        execution_graph = self._execution_graph(run_metadata)
+        selected_seeds = tuple(self._select_seeds(execution_graph))
         propagation = IndependentCascade(seed=self.config.seed).simulate(
-            self.graph,
+            execution_graph,
             list(selected_seeds),
             trials=self.config.trials,
         )
         if self.config.activation_mode == "propagated":
             activated_nodes = set(propagation.activated_nodes)
         else:
-            activated_nodes = {node.id for node in self.graph.nodes()}
+            activated_nodes = {node.id for node in execution_graph.nodes()}
         context_ratios = graded_context_allocations(
-            self.graph,
+            execution_graph,
             seeds=list(selected_seeds),
             activated_nodes=activated_nodes,
             min_ratio=self.config.compressed_context_ratio,
         )
         if self.config.force_verifier_full_context:
-            for node in self.graph.nodes():
+            for node in execution_graph.nodes():
                 if node.type == NodeType.VERIFIER:
                     context_ratios[node.id] = 1.0
 
         risks = tuple(
-            risk.to_dict() for risk in routing_risks(self.graph, context_ratios=context_ratios)
+            risk.to_dict()
+            for risk in routing_risks(execution_graph, context_ratios=context_ratios)
         )
-        compressed_context_cache: dict[float, str] = {}
+        compressed_context_cache: dict[tuple[float, str], str] = {}  # keyed by (ratio, node_id)
         outputs: dict[str, str] = {}
         results: list[RuntimeNodeResult] = []
         trace_events: list[dict[str, object]] = []
-        run_metadata = dict(metadata or {})
 
-        for node in self._execution_order():
+        for node in self._execution_order(execution_graph):
             ratio = context_ratios.get(node.id, 0.0)
             full_context = ratio >= self.config.full_context_threshold
             visible_context = self._visible_context(
@@ -156,10 +159,11 @@ class AgentPropRuntimeController:
                 ratio=ratio,
                 full_context=full_context,
                 cache=compressed_context_cache,
+                node=node,
             )
             upstream = {
                 source: outputs[source]
-                for source in self.graph.predecessors(node.id)
+                for source in execution_graph.predecessors(node.id)
                 if source in outputs
             }
             request = RuntimeNodeRequest(
@@ -177,8 +181,6 @@ class AgentPropRuntimeController:
             result = executor(request)
             if result is None:
                 raise RuntimeError(f"Executor returned None for node {node.id!r}")
-            if result is None:
-                raise ValueError(f"Executor returned None for node {node.id!r}")
             if result.node_id != node.id:
                 raise ValueError(f"Executor returned {result.node_id!r} for node {node.id!r}")
             results.append(result)
@@ -210,42 +212,65 @@ class AgentPropRuntimeController:
             trace_events=tuple(trace_events),
         )
 
-    def _select_seeds(self) -> list[str]:
+    def _execution_graph(self, metadata: Mapping[str, object]) -> AgentGraph:
+        routing_context = metadata.get("routing_context")
+        if isinstance(routing_context, Mapping):
+            return self.graph.filter_active_edges(routing_context)
+        return self.graph
+
+    def _select_seeds(self, graph: AgentGraph | None = None) -> list[str]:
+        """Choose seeds for the control propagation simulation.
+
+        Phase 0 cheap-defaults: when seed_selector="auto" (the new default for
+        ControlSession / runtime analysis), pick the cheap rzf-centrality for
+        node_count > 15 and keep the previous quality_aware (greedy-based) for
+        small graphs. This keeps interactive ControlSession starts fast while
+        preserving exact behavior on tiny workflows.
+        """
+        execution_graph = graph or self.graph
         if self.config.fixed_seeds:
             return list(self.config.fixed_seeds[: self.config.seed_budget])
+
+        effective = self.config.seed_selector
+        if effective == "auto":
+            effective = "rzf" if execution_graph.node_count > 15 else "quality_aware"
+
         model = IndependentCascade(seed=self.config.seed)
-        if self.config.seed_selector == "greedy":
+        if effective == "greedy":
             return greedy_seed_selection(
-                self.graph,
+                execution_graph,
                 self.config.seed_budget,
                 propagation_model=model,
                 trials=self.config.trials,
             )
-        if self.config.seed_selector == "rzf":
+        if effective == "rzf":
             return rzf_centrality_seed_selection(
-                self.graph,
+                execution_graph,
                 self.config.seed_budget,
                 trials=self.config.trials,
                 seed=self.config.seed,
             )
+        # quality_aware or fallback
         return quality_aware_greedy_seed_selection(
-            self.graph,
+            execution_graph,
             self.config.seed_budget,
             propagation_model=model,
             trials=self.config.trials,
         )
 
-    def _execution_order(self) -> list[AgentNode]:
-        nx_graph = self.graph.to_networkx()
-        if nx.is_directed_acyclic_graph(nx_graph):
-            node_ids = list(nx.topological_sort(nx_graph))
-            return [self.graph.node(str(node_id)) for node_id in node_ids]
+    def _execution_order(self, graph: AgentGraph | None = None) -> list[AgentNode]:
+        execution_graph = graph or self.graph
+        if execution_graph.is_dag():
+            return [
+                execution_graph.node(node_id)
+                for node_id in execution_graph.topological_order()
+            ]
         if not self.config.allow_cycles:
             raise ValueError(
                 "The workflow graph contains cycles, which is not supported "
                 "for single-pass execution."
             )
-        return self.graph.nodes()
+        return execution_graph.nodes()
 
     def _visible_context(
         self,
@@ -254,23 +279,33 @@ class AgentPropRuntimeController:
         shared_context: str,
         ratio: float,
         full_context: bool,
-        cache: dict[float, str],
+        cache: dict[tuple[float, str], str],
+        node: AgentNode | None = None,
     ) -> str:
         if full_context:
             return shared_context
         if ratio <= 0.0:
             return ""
         rounded_ratio = round(ratio, 2)
-        if rounded_ratio not in cache:
+        cache_key = (rounded_ratio, node.id if node is not None else "")
+        if cache_key not in cache:
             if self.compressor is not None:
-                cache[rounded_ratio] = self.compressor(
+                cache[cache_key] = self.compressor(
                     shared_context,
                     task=task,
                     target_ratio=rounded_ratio,
                 )
+            elif self.config.use_critical_facts:
+                cache[cache_key] = build_context_slice(
+                    shared_context,
+                    task=task,
+                    ratio=rounded_ratio,
+                    node=node,
+                    fact_store=self.fact_store,
+                )
             else:
-                cache[rounded_ratio] = _truncate_context(shared_context, rounded_ratio)
-        return cache[rounded_ratio]
+                cache[cache_key] = _truncate_context(shared_context, rounded_ratio)
+        return cache[cache_key]
 
 
 def _truncate_context(context: str, ratio: float) -> str:

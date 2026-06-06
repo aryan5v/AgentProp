@@ -88,14 +88,75 @@ class StoppingControllerConfig:
 
 @dataclass(slots=True)
 class ExecutionStateTracker:
-    """Accumulate real execution events and expose controller features."""
+    """Accumulate real execution events and expose controller features.
+
+    Now incremental: observe() maintains running totals, last_* step markers,
+    and trailing repeat counts so that features() is O(1) per call instead of
+    O(#events) rescans/sums. The events list is still kept (for transcripts and
+    replay), but the expensive per-step rescans in _steps_since / _trailing / sums
+    are eliminated.
+    """
 
     events: list[ExecutionEvent] = field(default_factory=list)
+    # Incremental aggregates (maintained in observe)
+    total_tokens: int = 0
+    elapsed_s: float = 0.0
+    current_step: int = 0
+    last_verifier_step: int = 0
+    last_progress_step: int = 0
+    verifier_failed_count: int = 0
+    has_trusted_pass: bool = False
+    has_claimed_pass: bool = False
+    has_final_answer: bool = False
+    last_exit_code: int | None = None
+    last_error_signature: str | None = None
+    repeated_error_count: int = 0
+    _trailing_sig: str | None = None  # for incremental repeated_error tracking
+
+    def __post_init__(self) -> None:
+        if self.events:
+            initial_events = list(self.events)
+            self.events = []
+            for event in initial_events:
+                self.observe(event)
 
     def observe(self, event: ExecutionEvent) -> ExecutionStateFeatures:
-        """Record one event and return updated features."""
+        """Record one event (incremental) and return updated features."""
 
         self.events.append(event)
+        self.total_tokens += event.tokens_used or 0
+        self.elapsed_s += event.elapsed_s or 0.0
+        self.current_step = max(self.current_step, event.step)
+
+        if event.verifier_run:
+            self.last_verifier_step = event.step
+            if event.verifier_passed is False:
+                self.verifier_failed_count += 1
+        if event.progress_made:
+            self.last_progress_step = event.step
+        # Mirror "latest = events[-1]" semantics exactly for these fields
+        self.last_exit_code = event.exit_code
+        self.last_error_signature = event.error_signature
+
+        if event.final_answer_written:
+            self.has_final_answer = True
+        if event.verifier_passed is True:
+            self.has_claimed_pass = True
+            if event.trusted:
+                self.has_trusted_pass = True
+
+        # Incremental trailing repeated errors (over events, matching old _trailing_repeated_errors)
+        new_sig = event.error_signature
+        if new_sig is None:
+            self.repeated_error_count = 0
+            self._trailing_sig = None
+        else:
+            if new_sig == self._trailing_sig:
+                self.repeated_error_count += 1
+            else:
+                self.repeated_error_count = 1
+            self._trailing_sig = new_sig
+
         return self.features()
 
     def features(
@@ -104,7 +165,7 @@ class ExecutionStateTracker:
         token_budget: int | None = None,
         wall_time_budget_s: float | None = None,
     ) -> ExecutionStateFeatures:
-        """Extract controller features from observed events."""
+        """Extract controller features from observed events (now O(1))."""
 
         if not self.events:
             return ExecutionStateFeatures(
@@ -123,30 +184,25 @@ class ExecutionStateTracker:
                 unconfirmed_pass=False,
             )
 
-        latest = self.events[-1]
-        total_tokens = sum(event.tokens_used for event in self.events)
-        elapsed_s = sum(event.elapsed_s for event in self.events)
-        trusted_pass = any(
-            event.verifier_passed is True and event.trusted for event in self.events
-        )
-        claimed_pass = any(event.verifier_passed is True for event in self.events)
+        # All heavy work (sums, any-scans, step rescans) is maintained incrementally in observe().
+        steps_since_verifier = max(0, self.current_step - self.last_verifier_step)
+        steps_since_progress = max(0, self.current_step - self.last_progress_step)
+
         return ExecutionStateFeatures(
             step_count=len(self.events),
-            total_tokens=total_tokens,
-            elapsed_s=elapsed_s,
-            steps_since_verifier=_steps_since(self.events, lambda event: event.verifier_run),
-            steps_since_progress=_steps_since(self.events, lambda event: event.progress_made),
-            repeated_error_count=_trailing_repeated_errors(self.events),
-            verifier_failed_count=sum(
-                1 for event in self.events if event.verifier_run and event.verifier_passed is False
-            ),
-            last_exit_code=latest.exit_code,
-            evaluator_passed=trusted_pass,
-            final_answer_written=any(event.final_answer_written for event in self.events),
-            last_error_signature=latest.error_signature,
-            token_budget_fraction=_budget_fraction(total_tokens, token_budget),
-            wall_time_budget_fraction=_budget_fraction(elapsed_s, wall_time_budget_s),
-            unconfirmed_pass=claimed_pass and not trusted_pass,
+            total_tokens=self.total_tokens,
+            elapsed_s=self.elapsed_s,
+            steps_since_verifier=steps_since_verifier,
+            steps_since_progress=steps_since_progress,
+            repeated_error_count=self.repeated_error_count,
+            verifier_failed_count=self.verifier_failed_count,
+            last_exit_code=self.last_exit_code,
+            evaluator_passed=self.has_trusted_pass,
+            final_answer_written=self.has_final_answer,
+            last_error_signature=self.last_error_signature,
+            token_budget_fraction=_budget_fraction(self.total_tokens, token_budget),
+            wall_time_budget_fraction=_budget_fraction(self.elapsed_s, wall_time_budget_s),
+            unconfirmed_pass=self.has_claimed_pass and not self.has_trusted_pass,
         )
 
 
@@ -216,8 +272,11 @@ class RuntimeRewardLogger:
         features: ExecutionStateFeatures | None = None,
         action: str | None = None,
         outcome: Mapping[str, object] | None = None,
+        regression_risk: float = 0.0,
+        timeout_risk: float = 0.0,
+        quality_loss: float | None = None,
     ) -> dict[str, object]:
-        """Record one real task outcome and update the bandit arm."""
+        """Record one real task outcome and update the shaped bandit reward."""
 
         self.bandit.update(
             category,
@@ -225,6 +284,9 @@ class RuntimeRewardLogger:
             passed=passed,
             token_savings=token_savings,
             quality_score=quality_score,
+            regression_risk=regression_risk,
+            timeout_risk=timeout_risk,
+            quality_loss=quality_loss,
         )
         row: dict[str, object] = {
             "task_id": task_id,
@@ -234,10 +296,16 @@ class RuntimeRewardLogger:
             "passed": passed,
             "token_savings": token_savings,
             "quality_score": quality_score,
+            "regression_risk": regression_risk,
+            "timeout_risk": timeout_risk,
+            "quality_loss": quality_loss,
             "outcome": {
                 "passed": passed,
                 "token_savings": token_savings,
                 "quality_score": quality_score,
+                "regression_risk": regression_risk,
+                "timeout_risk": timeout_risk,
+                "quality_loss": quality_loss,
                 **dict(outcome or {}),
             },
             "bandit_values": self.bandit.values(category),

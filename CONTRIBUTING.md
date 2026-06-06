@@ -8,8 +8,11 @@ AgentProp is early, but the contribution standard is intentionally high: every f
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -e ".[dev]"
-pytest
+make test   # or: pytest
 ```
+
+With an editable install, `experiments/` and `examples/` run without
+`PYTHONPATH=src`. See [docs/environment.md](docs/environment.md).
 
 ## Data, Secrets, And Benchmark Artifacts
 
@@ -39,8 +42,7 @@ intentional public artifacts. CI runs a secret scan on every pull request.
 
 - Paper outlines, research backlogs, release/publishing runbooks, extended
   postmortems, and "what we should do next" roadmaps belong under `docs/local/`
-  (gitignored). Copy [docs/local/README.example.md](docs/local/README.example.md)
-  as a starting point.
+  (gitignored).
 - If a doc has blockers, remaining work, or reads like notes to the team, it does
   not belong in the public `docs/` tree.
 

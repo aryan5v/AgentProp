@@ -33,6 +33,9 @@ class CategoryBanditRoutingPolicy:
     from regressing baseline tasks it has learned nothing about. Defaults to the
     first arm when unset."""
     cost_weight: float = 0.10
+    quality_loss_weight: float = 0.55
+    timeout_risk_weight: float = 0.25
+    regression_risk_weight: float = 0.50
     stats: dict[str, dict[str, BanditArmStats]] = field(default_factory=dict)
     _rng: random.Random = field(init=False, repr=False)
 
@@ -77,21 +80,28 @@ class CategoryBanditRoutingPolicy:
         passed: bool,
         token_savings: float,
         quality_score: float | None = None,
+        regression_risk: float = 0.0,
+        timeout_risk: float = 0.0,
+        quality_loss: float | None = None,
     ) -> None:
-        """Update an arm using real success and cost feedback.
-
-        Correctness dominates: a failure is penalized regardless of how cheap it
-        was, and the token-savings bonus is credited only when the task passed, so
-        the policy never trades a pass for a cheaper failure."""
+        """Update an arm using shaped reward: savings − quality_loss − timeout − regression."""
 
         if arm not in self.arms:
             raise ValueError(f"unknown arm: {arm}")
         quality = quality_score if quality_score is not None else (1.0 if passed else 0.0)
-        # Bound the cost term so an extremely token-hungry *pass* can never score
-        # below a failure's reward (quality - 1.0): the savings bonus stays within
-        # [-cost_weight, +cost_weight].
         bounded_savings = max(-1.0, min(1.0, token_savings))
-        reward = quality + self.cost_weight * bounded_savings if passed else quality - 1.0
+        loss = quality_loss if quality_loss is not None else max(0.0, 1.0 - quality)
+        timeout_pen = max(0.0, min(1.0, timeout_risk))
+        risk_pen = max(0.0, min(1.0, regression_risk))
+        reward = (
+            quality
+            + self.cost_weight * bounded_savings
+            - self.quality_loss_weight * loss
+            - self.timeout_risk_weight * timeout_pen
+            - self.regression_risk_weight * risk_pen
+        )
+        if not passed:
+            reward *= 0.5
         self._category_stats(category)[arm].update(reward)
 
     def values(self, category: str) -> dict[str, float]:

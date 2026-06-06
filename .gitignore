@@ -5,6 +5,9 @@
 .coverage
 htmlcov/
 
+.local_pkgs/
+.agentprop_sessions/
+
 .venv/
 venv/
 __pycache__/
@@ -17,18 +20,18 @@ build/
 results/
 reports/
 benchmark-results/
+jobs/
 *.csv
 *.jsonl
+
+# Internal working notes (paper drafts, roadmaps, release ops, launch runbooks)
+docs/local/
+
+!docs/results/
+!docs/results/**
+!docs/results/**/*.csv
 
 # In-progress benchmark artifacts (never commit, even under docs/results/)
 **/PARTIAL_REPORT.md
 **/results_partial.json
 **/checkpoint.json
-
-# Internal working notes (paper drafts, roadmaps, release ops, launch runbooks)
-docs/local/*
-!docs/local/README.example.md
-
-!docs/results/
-!docs/results/**
-!docs/results/**/*.csv

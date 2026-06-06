@@ -40,6 +40,24 @@ The research wedge is simple:
 - **Runtime control** turns those ideas into actions: verify, retry, stop, switch
   strategy, or send more context.
 
+## Performance at Scale (v0.1.0a3+)
+
+Recent library work removes the main computational ceilings for interactive use:
+
+| Path | Before | After (typical) |
+| --- | --- | --- |
+| Verifier placement / resolving sets | Repeated all-pairs recompute | Memoized distances + incremental resolving tracker (`n≈100` usable) |
+| Greedy / CELF seed selection | `O(k·n)` full MC re-sims | Lazy CELF re-evaluation + candidate sampling on large graphs |
+| Default CLI/MCP optimize | Always greedy MC | `auto` → greedy / RZF / IMM by graph size (15, 60 thresholds) |
+| IC / RZF propagation | `to_networkx()` copy per trial | Integer-indexed adjacency + optional `simulate_batch` |
+| Runtime control features | `O(steps)` rescans | Incremental `ExecutionStateTracker` (`O(1)` per step) |
+| Context compression | Blind ratio truncation | Structured **critical-fact** slices for convention-sensitive tasks |
+
+Microbenchmarks (`benchmarks/perf_micro.py`, gated in CI via `tests/test_perf_micro.py`)
+track verifier placement, greedy seeds, RZF trials, and long-trace tracker latency on
+`synthetic n=10/30/60` chains. MCP sessions are now file-backed (`~/.agentprop/sessions`)
+with shared graph-analysis cache and `agentprop_what_if_k` uncertainty curves.
+
 AgentProp is not another agent orchestrator. It wraps a workflow you already
 have: each step your agent proposes work, the controller inspects the accumulated
 `ExecutionEvent` history, and decides what happens next.
@@ -114,16 +132,29 @@ python -m pip install agentprop
 For development:
 
 ```bash
+python -m venv .venv && source .venv/bin/activate
 python -m pip install -e ".[dev]"
+agentprop doctor --tier dev
 python -m pytest
 ```
+
+Editable install removes the need for `PYTHONPATH=src` when running
+`experiments/` or `examples/` from the venv. See [docs/environment.md](docs/environment.md).
 
 Optional extras:
 
 ```bash
+python -m pip install -e ".[ml]"  # numpy-backed ML scorers
 python -m pip install -e ".[dl]"  # torch-backed graph models
 python -m pip install -e ".[rl]"  # Gymnasium-compatible RL experiments
 python -m pip install -e ".[mcp]" # FastMCP server for editor-agent tools
+```
+
+Quick health check:
+
+```bash
+agentprop doctor --tier graph
+agentprop readiness --json
 ```
 
 ## Quick Start
@@ -169,8 +200,8 @@ PYTHONPATH=src:. python experiments/rzf_scaling_study.py
 Both scripts are deterministic and print an expected-output block at the top of
 the source so you can confirm you reproduced the published numbers (metric
 dimension reaching a resolving set at lower budget `k`, and RZF leading on large
-graphs). The headline figures are summarized in
-[reproducible results](docs/research/reproducible_results.md).
+graphs). Public benchmark artifacts live under
+[docs/results](docs/results/ARTIFACTS.md).
 
 Run a key-free control-layer demo:
 
@@ -269,9 +300,7 @@ Key inspirations:
   [AgentPrune](https://arxiv.org/abs/2410.02506):
   agent workflows as optimizable, sparse, task-adaptive communication graphs.
 
-See [the documentation index](docs/index.md),
-[research references](docs/research/references.md), and the
-[literature review](docs/research/literature_review.md) for more detail.
+See [the documentation index](docs/index.md) for the public guide and artifact map.
 
 ## Status
 
