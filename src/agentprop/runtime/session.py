@@ -9,6 +9,7 @@ from pathlib import Path
 
 from agentprop.algorithms import bottleneck_nodes, low_weight_edges, risk_aware_verifier_placement
 from agentprop.core import AgentGraph
+from agentprop.ml.risk_predictors import TimeoutRiskPredictor
 from agentprop.rl import CategoryBanditRoutingPolicy
 from agentprop.runtime.control_loop import (
     ControlDecision,
@@ -189,6 +190,7 @@ class ControlSession:
         quality_score: float | None = None,
         metadata: dict[str, object] | None = None,
         regression_risk: float = 0.0,
+        timeout_risk: float | None = None,
     ) -> dict[str, object]:
         """Record the final outcome and update the session's reward row.
 
@@ -199,6 +201,14 @@ class ControlSession:
         """
 
         features = self._features()
+        if timeout_risk is None:
+            timeout_risk = TimeoutRiskPredictor().predict(
+                self.graph,
+                activated_nodes={node.id for node in self.graph.nodes()},
+                wall_time_budget_s=self.config.wall_time_budget_s,
+                observed_elapsed_s=features.elapsed_s,
+            )
+        quality_loss = None if quality_score is None else max(0.0, 1.0 - quality_score)
         reward_row = self._reward_logger.record(
             task_id=self.config.task_id,
             category=self.config.category,
@@ -213,6 +223,8 @@ class ControlSession:
             action=self.decisions[-1].action if self.decisions else None,
             outcome=metadata,
             regression_risk=regression_risk,
+            timeout_risk=timeout_risk,
+            quality_loss=quality_loss,
         )
         self.outcome = reward_row
         self._record("outcome", reward_row)

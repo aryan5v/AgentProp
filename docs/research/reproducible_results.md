@@ -5,6 +5,26 @@ Every number on this page is produced by a deterministic script in
 numbers match, you have reproduced the published figures. All graph experiments
 are CPU-only and require no model credentials.
 
+## Library performance microbenchmarks
+
+```bash
+PYTHONPATH=src:. python benchmarks/perf_micro.py
+# or via pytest gate:
+pytest tests/test_perf_micro.py -q
+```
+
+Targets after Phase 0–1 (synthetic `chain` workflows, dev laptop class hardware):
+
+| Benchmark | n | Budget |
+| --- | ---: | ---: |
+| `verifier_placement_n60` | 60 | < 5 s |
+| `greedy_seeds_n60` (20 trials) | 60 | < 8 s |
+| `rzf_trials_n60` (50 trials) | 60 | < 3 s |
+| `tracker_long_trace` (200 steps) | — | < 0.25 s |
+
+Fast vs exact paths: interactive CLI/MCP defaults to `rzf-centrality` when
+`node_count > 15`; pass `--algorithm greedy` for paper-grade exact greedy/CELF.
+
 ## Verifier placement (core contribution)
 
 ```bash

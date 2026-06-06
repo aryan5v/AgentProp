@@ -5,8 +5,6 @@ from __future__ import annotations
 import json
 import sys
 from typing import Any, cast
-from uuid import uuid4
-
 from agentprop.algorithms import bottleneck_nodes, low_weight_edges, risk_aware_verifier_placement
 from agentprop.cli import _build_recommendation_report, _load_workflow
 from agentprop.core import AgentGraph
@@ -16,10 +14,20 @@ from agentprop.integrations.agent_instructions import (
     CodingAgentTarget,
     render_coding_agent_instructions,
 )
-from agentprop.runtime import ControlSession, ControlSessionConfig, ExecutionEvent
+from agentprop.evaluation.metrics import build_what_if_k_curve
+from agentprop.evaluation.runner import make_propagation_model
+from agentprop.integrations.session_store import SessionStore, warm_shared_analysis_cache
+from agentprop.runtime import ControlSession, ExecutionEvent
 
 SERVER_INFO = {"name": "agentprop", "version": "0.1.0a3"}
-_CONTROL_SESSIONS: dict[str, ControlSession] = {}
+_SESSION_STORE: SessionStore | None = None
+
+
+def _get_session_store() -> SessionStore:
+    global _SESSION_STORE
+    if _SESSION_STORE is None:
+        _SESSION_STORE = SessionStore()
+    return _SESSION_STORE
 
 
 def main() -> int:
@@ -178,6 +186,20 @@ def _tool_specs() -> list[dict[str, Any]]:
             },
         },
         {
+            "name": "agentprop_what_if_k",
+            "description": "Return coverage/cost uncertainty curve for seed budgets k=1..max_k.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "workflow": {"type": "string"},
+                    "max_k": {"type": "integer", "default": 3},
+                    "model": {"type": "string", "default": "independent-cascade"},
+                    "trials": {"type": "integer", "default": 50},
+                },
+                "required": ["workflow"],
+            },
+        },
+        {
             "name": "agentprop_control_finish",
             "description": "Record the final outcome and close a control session.",
             "inputSchema": {
@@ -213,6 +235,8 @@ def _call_tool(name: str, arguments: Any) -> dict[str, Any]:
         return _json_text_result(_control_decide(arguments))
     if name == "agentprop_control_finish":
         return _json_text_result(_control_finish(arguments))
+    if name == "agentprop_what_if_k":
+        return _json_text_result(_what_if_k(arguments))
     raise ValueError(f"unknown tool: {name}")
 
 
@@ -379,6 +403,7 @@ def create_fastmcp_app() -> Any:
 
 def _analyze(arguments: dict[str, Any]) -> dict[str, Any]:
     workflow_name, graph = _load_workflow(_required_workflow(arguments))
+    warm_shared_analysis_cache(graph)
     return {
         "workflow": workflow_name,
         "nodes": graph.node_count,
@@ -392,18 +417,14 @@ def _analyze(arguments: dict[str, Any]) -> dict[str, Any]:
 def _control_start(arguments: dict[str, Any]) -> dict[str, Any]:
     workflow = _required_workflow(arguments)
     task_id = _required_string(arguments, "task_id")
-    session_id = uuid4().hex
-    session = ControlSession(
-        ControlSessionConfig(
-            workflow=workflow,
-            task_id=task_id,
-            category=str(arguments.get("category") or "general"),
-            token_budget=_optional_int(arguments, "token_budget"),
-            wall_time_budget_s=_optional_float(arguments, "wall_time_budget_s"),
-            baseline_tokens=_optional_int(arguments, "baseline_tokens"),
-        )
+    session_id, session = _get_session_store().start_session(
+        workflow=workflow,
+        task_id=task_id,
+        category=str(arguments.get("category") or "general"),
+        token_budget=_optional_int(arguments, "token_budget"),
+        wall_time_budget_s=_optional_float(arguments, "wall_time_budget_s"),
+        baseline_tokens=_optional_int(arguments, "baseline_tokens"),
     )
-    _CONTROL_SESSIONS[session_id] = session
     return {"session_id": session_id, "summary": session.summary()}
 
 
@@ -451,14 +472,14 @@ def _control_decide(arguments: dict[str, Any]) -> dict[str, Any]:
 
 def _control_finish(arguments: dict[str, Any]) -> dict[str, Any]:
     session_id = _required_string(arguments, "session_id")
-    session = _CONTROL_SESSIONS.pop(session_id, None)
-    if session is None:
-        raise ValueError(f"unknown control session: {session_id}")
-    outcome = session.record_outcome(
+    outcome = _get_session_store().finish_session(
+        session_id,
         passed=bool(arguments.get("passed", False)),
         strategy=str(arguments.get("strategy") or "agentprop_controller"),
         quality_score=_optional_float(arguments, "quality_score"),
+        regression_risk=float(arguments.get("regression_risk", 0.0) or 0.0),
     )
+    session = _get_session_store().get_session(session_id)
     return {"session_id": session_id, "outcome": outcome, "summary": session.summary()}
 
 
@@ -547,10 +568,37 @@ def _optional_bool(arguments: dict[str, Any], key: str) -> bool | None:
 
 def _session(arguments: dict[str, Any]) -> ControlSession:
     session_id = _required_string(arguments, "session_id")
-    session = _CONTROL_SESSIONS.get(session_id)
-    if session is None:
-        raise ValueError(f"unknown control session: {session_id}")
-    return session
+    return _get_session_store().get_session(session_id)
+
+
+def _what_if_k(arguments: dict[str, Any]) -> dict[str, Any]:
+    _, graph = _load_workflow(_required_workflow(arguments))
+    warm_shared_analysis_cache(graph)
+    model = make_propagation_model(str(arguments.get("model", "independent-cascade")))
+    max_k = int(arguments.get("max_k", arguments.get("budget", 3)))
+    trials = int(arguments.get("trials", 50))
+    entries = build_what_if_k_curve(
+        graph,
+        model=model,
+        candidate_seeds=[node.id for node in graph.nodes()],
+        max_k=min(max_k, graph.node_count),
+        trials=trials,
+    )
+    return {
+        "workflow_nodes": graph.node_count,
+        "trials": trials,
+        "curve": [
+            {
+                "k": entry.k,
+                "seeds": entry.seeds,
+                "coverage": entry.coverage,
+                "coverage_uncertainty": entry.coverage_std,
+                "estimated_savings": entry.estimated_savings,
+                "quality_objective_score": entry.quality_objective_score,
+            }
+            for entry in entries
+        ],
+    }
 
 
 def _text_result(text: str) -> dict[str, Any]:

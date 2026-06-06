@@ -834,7 +834,7 @@ def _build_recommendation_report(
         propagation_model=make_propagation_model(model_name),
         trials=trials,
     )
-    return compare_routing(
+    report = compare_routing(
         graph,
         seeds,
         model.name,
@@ -847,6 +847,17 @@ def _build_recommendation_report(
             target_cost_reduction=pruning_target_token_reduction,
         ),
     )
+    from agentprop.evaluation.metrics import build_what_if_k_curve
+
+    graph.warm_analysis_cache()
+    report.what_if_k = build_what_if_k_curve(
+        graph,
+        model=model,
+        candidate_seeds=[node.id for node in graph.nodes()],
+        max_k=min(budget + 2, graph.node_count),
+        trials=max(20, trials // 2),
+    )
+    return report
 
 
 def _rank_pruning_edges(graph: AgentGraph, strategy: str) -> list[tuple[str, str]]:
