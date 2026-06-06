@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
 import networkx as nx
@@ -158,6 +159,53 @@ class AgentGraph:
         self._graph.add_edge(source, target, **edge.to_dict())
         self._clear_analysis_cache()
         return edge
+
+    def add_conditional_edge(
+        self,
+        source: str,
+        target: str,
+        *,
+        condition_key: str,
+        condition_value: object,
+        **metadata: Any,
+    ) -> AgentEdge:
+        """Add an edge active only when ``context[condition_key] == condition_value``."""
+
+        return self.add_edge(
+            source,
+            target,
+            condition_key=condition_key,
+            condition_value=condition_value,
+            **metadata,
+        )
+
+    def remove_node(self, node_id: str) -> None:
+        """Remove a node and all incident edges."""
+
+        if node_id not in self._graph:
+            raise KeyError(node_id)
+        self._graph.remove_node(node_id)
+        self._clear_analysis_cache()
+
+    def remove_edge(self, source: str, target: str) -> None:
+        """Remove a directed edge."""
+
+        if not self._graph.has_edge(source, target):
+            raise KeyError((source, target))
+        self._graph.remove_edge(source, target)
+        self._clear_analysis_cache()
+
+    def filter_active_edges(self, context: Mapping[str, Any]) -> AgentGraph:
+        """Return a copy keeping only edges whose conditional metadata matches *context*."""
+
+        from agentprop.core.dynamic_graph import edge_is_active
+
+        filtered = AgentGraph.from_dict(self.to_dict())
+        for edge in self.edges():
+            if not edge_is_active(edge, context):
+                if filtered.has_edge(edge.source, edge.target):
+                    filtered.remove_edge(edge.source, edge.target)
+        return filtered
 
     def node(self, node_id: str) -> AgentNode:
         """Return typed node metadata."""

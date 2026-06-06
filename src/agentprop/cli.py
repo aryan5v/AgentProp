@@ -133,7 +133,8 @@ def _build_parser() -> argparse.ArgumentParser:
         choices=algorithm_choices,
         default="auto",
         help=(
-            "Seed algorithm. 'auto' uses rzf-centrality for graphs with >15 nodes "
+            "Seed algorithm. 'auto' uses greedy (n≤15), rzf-centrality (15<n≤60), "
+            "or imm (n>60). "
             "and greedy for small graphs."
         ),
     )
@@ -174,7 +175,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "--algorithm",
         choices=algorithm_choices,
         default="auto",
-        help="Seed algorithm. 'auto' uses rzf-centrality for graphs with >15 nodes.",
+        help="Seed algorithm. 'auto' picks greedy/rzf-centrality/imm by graph size.",
     )
     report.add_argument(
         "--model",
@@ -243,7 +244,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "--algorithm",
         choices=algorithm_choices,
         default="auto",
-        help="Seed algorithm. 'auto' uses rzf-centrality for graphs with >15 nodes.",
+        help="Seed algorithm. 'auto' picks greedy/rzf-centrality/imm by graph size.",
     )
     instructions.add_argument(
         "--model",
@@ -815,8 +816,12 @@ def _build_recommendation_report(
     # when the workflow is larger than ~15 nodes. This makes interactive use and
     # MCP tools scale; exact greedy/CELF remain available (and are still the default
     # for tiny graphs and for paper-grade exact results).
-    if algorithm in {"auto", "default"} or (algorithm == "greedy" and graph.node_count > 15):
-        algorithm = "rzf-centrality" if graph.node_count > 15 else "greedy"
+    from agentprop.algorithms.seed_selection import auto_seed_algorithm
+
+    if algorithm in {"auto", "default"} or (
+        algorithm == "greedy" and graph.node_count > 15
+    ):
+        algorithm = auto_seed_algorithm(graph, requested=algorithm)
 
     model = make_propagation_model(model_name)
     seeds = select_seeds(graph, algorithm, budget, model, trials)

@@ -22,8 +22,23 @@ Targets after Phase 0–1 (synthetic `chain` workflows, dev laptop class hardwar
 | `rzf_trials_n60` (50 trials) | 60 | < 3 s |
 | `tracker_long_trace` (200 steps) | — | < 0.25 s |
 
-Fast vs exact paths: interactive CLI/MCP defaults to `rzf-centrality` when
-`node_count > 15`; pass `--algorithm greedy` for paper-grade exact greedy/CELF.
+Fast vs exact paths: interactive CLI/MCP `auto` picks `greedy` (n≤15),
+`rzf-centrality` (15<n≤60), or `imm`/`tim` RR-set backend (n>60). Pass
+`--algorithm greedy` or `--algorithm celf` for paper-grade exact selection on
+small graphs.
+
+## Scale / quality evidence matrix
+
+```bash
+PYTHONPATH=src:. python experiments/run_evidence_harness.py
+# quick smoke artifact:
+PYTHONPATH=src:. python experiments/run_evidence_harness.py --tasks-per-arm 5 --repeats 2
+```
+
+Artifacts: [docs/results/scale_quality_evidence/](../results/scale_quality_evidence/README.md).
+Compares broadcast, greedy, quality-aware-greedy, RZF, IMM, and degree baselines
+across `fan_out_parallel`, `feedback_loop`, `shared_memory`, and core templates.
+Label as **directional** until live N=30–50/arm LLM runs are added.
 
 ## Verifier placement (core contribution)
 

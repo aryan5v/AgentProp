@@ -14,7 +14,14 @@ from agentprop.algorithms.observability import (
     verifier_observability_placement,
 )
 from agentprop.algorithms.pruning import high_cost_low_relevance_edges, low_weight_edges
+from agentprop.algorithms.influence_maximization import (
+    IMMConfig,
+    estimate_imm_influence,
+    imm_greedy_seed_selection,
+    tim_seed_selection,
+)
 from agentprop.algorithms.seed_selection import (
+    auto_seed_algorithm,
     betweenness_seed_selection,
     celf_seed_selection,
     closeness_seed_selection,
@@ -42,7 +49,9 @@ from agentprop.algorithms.verifier_placement import (
 )
 
 __all__ = [
+    "IMMConfig",
     "articulation_bottlenecks",
+    "auto_seed_algorithm",
     "betweenness_seed_selection",
     "betweenness_verifier_placement",
     "bottleneck_nodes",
@@ -57,7 +66,9 @@ __all__ = [
     "error_propagation_verifier_placement",
     "failure_sensitive_nodes",
     "fault_tolerant_resolving_coverage",
+    "estimate_imm_influence",
     "greedy_seed_selection",
+    "imm_greedy_seed_selection",
     "greedy_correction_coverage_placement",
     "k_core_seed_selection",
     "high_cost_low_relevance_edges",
@@ -74,5 +85,6 @@ __all__ = [
     "resolving_coverage",
     "risk_aware_verifier_placement",
     "rzf_centrality_seed_selection",
+    "tim_seed_selection",
     "verifier_observability_placement",
 ]

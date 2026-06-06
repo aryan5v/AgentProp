@@ -18,6 +18,8 @@ SEED_ALGORITHM_CHOICES: tuple[str, ...] = (
     "cost-aware-greedy",
     "quality-aware-greedy",
     "rzf-centrality",
+    "imm",
+    "tim",
 )
 
 # Canonical propagation model names exposed on the CLI.

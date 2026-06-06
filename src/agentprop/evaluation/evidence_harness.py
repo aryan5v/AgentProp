@@ -15,6 +15,7 @@ DEFAULT_EVIDENCE_ARMS = (
     "greedy",
     "rzf-centrality",
     "quality-aware-greedy",
+    "imm",
     "degree",
 )
 
