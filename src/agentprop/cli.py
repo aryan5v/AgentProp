@@ -958,7 +958,7 @@ def _sessions(args: argparse.Namespace) -> int:
 
     if args.out is not None:
         args.out.parent.mkdir(parents=True, exist_ok=True)
-        args.out.write_text(content)
+        args.out.write_text(content, encoding="utf-8")
         print(f"Wrote {args.out}")
     else:
         print(content, end="")

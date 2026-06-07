@@ -66,6 +66,23 @@ def test_aggregate_missing_dir_returns_empty(tmp_path: Path) -> None:
     assert report.to_dict()["pass_rate"] == 0.0
 
 
+def test_aggregate_tolerates_null_and_malformed_fields(tmp_path: Path) -> None:
+    sess_dir = tmp_path / "sessions"
+    sess_dir.mkdir()
+    # decision_counts explicitly null, summary not a dict, outcome null.
+    (sess_dir / "a.json").write_text(
+        json.dumps({"session_id": "a", "category": "x", "summary": {"decision_counts": None}}),
+        encoding="utf-8",
+    )
+    (sess_dir / "b.json").write_text(
+        json.dumps({"session_id": "b", "summary": "not-a-dict", "outcome": None}),
+        encoding="utf-8",
+    )
+    report = aggregate_session_stats(sess_dir)
+    assert report.session_count == 2
+    assert report.total_decisions == 0
+
+
 def test_render_markdown_includes_decision_mix(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -219,7 +219,10 @@ class SessionStore:
 
     def _persist_record(self, record: PersistedSessionRecord) -> None:
         path = self.root / f"{record.session_id}.json"
-        path.write_text(json.dumps(record.to_dict(), indent=2, sort_keys=True) + "\n")
+        path.write_text(
+            json.dumps(record.to_dict(), indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
 
     def _bandit_state_dict(self) -> dict[str, Any]:
         return {
@@ -238,7 +241,8 @@ class SessionStore:
     def _persist_learned_state(self) -> None:
         bandit_path = self.root / "bandit.json"
         bandit_path.write_text(
-            json.dumps(self._bandit_state_dict(), indent=2, sort_keys=True) + "\n"
+            json.dumps(self._bandit_state_dict(), indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
         )
         self._risk_state.save(self.root / "risk_state.json")
         self._persist_global_learned_state()
@@ -257,7 +261,8 @@ class SessionStore:
             "risk_state": self._risk_state.to_dict(),
         }
         self.global_state_path.write_text(
-            json.dumps(payload, indent=2, sort_keys=True) + "\n"
+            json.dumps(payload, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
         )
 
     def _load_bandit_from_dict(self, data: dict[str, Any]) -> None:
@@ -268,8 +273,12 @@ class SessionStore:
             epsilon=float(data.get("epsilon", self._bandit.epsilon)),
             default_arm=data.get("default_arm", self._bandit.default_arm),
         )
-        for category, arms in dict(data.get("stats", {})).items():
+        for category, arms in (data.get("stats") or {}).items():
+            if not isinstance(arms, dict):
+                continue
             for arm, stats in arms.items():
+                if not isinstance(stats, dict):
+                    continue
                 self._bandit.stats.setdefault(category, {})[arm] = BanditArmStats(
                     count=int(stats.get("count", 0)),
                     value=float(stats.get("value", 0.0)),
@@ -289,7 +298,7 @@ class SessionStore:
 
         bandit_path = self.root / "bandit.json"
         if bandit_path.exists():
-            self._load_bandit_from_dict(json.loads(bandit_path.read_text()))
+            self._load_bandit_from_dict(json.loads(bandit_path.read_text(encoding="utf-8")))
         elif isinstance(global_state.get("bandit"), dict):
             self._load_bandit_from_dict(global_state["bandit"])
 

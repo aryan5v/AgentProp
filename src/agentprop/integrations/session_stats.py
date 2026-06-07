@@ -96,10 +96,13 @@ def aggregate_session_stats(root: str | Path) -> SessionStatsReport:
             continue
 
         report.session_count += 1
-        summary = payload.get("summary") or {}
-        if isinstance(summary, dict):
-            report.total_events += int(summary.get("event_count", 0) or 0)
-            for action, count in dict(summary.get("decision_counts", {})).items():
+        summary = payload.get("summary")
+        if not isinstance(summary, dict):
+            summary = {}
+        report.total_events += int(summary.get("event_count", 0) or 0)
+        decision_counts = summary.get("decision_counts")
+        if isinstance(decision_counts, dict):
+            for action, count in decision_counts.items():
                 decisions[str(action)] += int(count or 0)
 
         category = str(payload.get("category", "general"))
