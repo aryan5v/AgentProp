@@ -106,6 +106,8 @@ def _dispatch(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
         return _doctor(args)
     if args.command == "ingest-trace":
         return _ingest_trace(args)
+    if args.command == "trace-replay":
+        return _trace_replay(args)
 
     parser.print_help()
     return 1
@@ -380,6 +382,18 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     ingest.add_argument("--trials", type=int, default=50)
     ingest.add_argument("--json", action="store_true")
+
+    trace_replay = subparsers.add_parser(
+        "trace-replay",
+        help="replay a saved trace.jsonl and compare A0 vs A2 token usage",
+    )
+    trace_replay.add_argument("trace_file", type=Path, help="path to a trace.jsonl file")
+    trace_replay.add_argument(
+        "--no-control",
+        action="store_true",
+        help="treat all A0 decisions as CONTINUE (pure baseline replay)",
+    )
+    trace_replay.add_argument("--json", action="store_true", help="emit JSON instead of Markdown")
 
     return parser
 
@@ -778,6 +792,44 @@ def _ingest_trace(args: argparse.Namespace) -> int:
         print(f"Wrote brief {args.out_brief}")
         print(f"Seeds: {', '.join(report.seeds)}")
         print(f"Estimated savings: {report.estimated_savings:.1%}")
+    return 0
+
+
+def _trace_replay(args: argparse.Namespace) -> int:
+    from agentprop.runtime.trace_replay import format_replay_table, replay_trace
+
+    trace_path = Path(args.trace_file)
+    if not trace_path.exists():
+        print(f"error: trace file not found: {trace_path}", file=sys.stderr)
+        return 1
+    result = replay_trace(trace_path, no_control=args.no_control)
+    if args.json:
+        print(
+            json.dumps(
+                {
+                    "task_id": result.task_id,
+                    "workflow": result.workflow,
+                    "total_tokens_no_control": result.total_tokens_no_control,
+                    "total_tokens_with_control": result.total_tokens_with_control,
+                    "token_delta": result.token_delta,
+                    "reduction_pct": result.reduction_pct,
+                    "rows": [
+                        {
+                            "step": r.step,
+                            "command": r.command,
+                            "tokens_used": r.tokens_used,
+                            "decision_no_control": r.decision_no_control,
+                            "decision_with_control": r.decision_with_control,
+                        }
+                        for r in result.rows
+                    ],
+                },
+                indent=2,
+                sort_keys=True,
+            )
+        )
+    else:
+        print(format_replay_table(result))
     return 0
 
 

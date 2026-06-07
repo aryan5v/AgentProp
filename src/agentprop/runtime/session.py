@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
@@ -425,6 +426,126 @@ class ControlSession:
     def _record(self, row_type: str, payload: dict[str, object]) -> None:
         row = {"type": row_type, **payload}
         self.trace_rows.append(row)
+
+
+class AsyncControlSession:
+    """Async wrapper around :class:`ControlSession` for use in async agent loops.
+
+    All public methods mirror the sync API but are awaitable.  The underlying
+    state machine remains synchronous; each call is dispatched via
+    :func:`asyncio.to_thread` so the event loop is never blocked and no nested
+    ``asyncio.run()`` calls are needed.
+
+    Usage::
+
+        session = await AsyncControlSession.start(
+            "planner_coder_tester_reviewer",
+            task_id="my-task",
+        )
+        decision = await session.observe(event)
+    """
+
+    def __init__(self, inner: ControlSession) -> None:
+        self._inner = inner
+
+    # ------------------------------------------------------------------
+    # Factory
+    # ------------------------------------------------------------------
+
+    @classmethod
+    async def start(
+        cls,
+        workflow: str | AgentGraph,
+        *,
+        task_id: str,
+        category: str = "general",
+        token_budget: int | None = None,
+        wall_time_budget_s: float | None = None,
+        baseline_tokens: int | None = None,
+        trace_path: str | Path | None = None,
+    ) -> AsyncControlSession:
+        """Async constructor — mirrors :meth:`ControlSession.start`."""
+        inner = await asyncio.to_thread(
+            ControlSession.start,
+            workflow,
+            task_id=task_id,
+            category=category,
+            token_budget=token_budget,
+            wall_time_budget_s=wall_time_budget_s,
+            baseline_tokens=baseline_tokens,
+            trace_path=trace_path,
+        )
+        return cls(inner)
+
+    # ------------------------------------------------------------------
+    # Core async interface
+    # ------------------------------------------------------------------
+
+    async def observe(self, event: ExecutionEvent) -> ControlDecision:
+        """Async version of :meth:`ControlSession.observe`."""
+        return await asyncio.to_thread(self._inner.observe, event)
+
+    async def decide(self) -> ControlDecision:
+        """Async version of :meth:`ControlSession.decide`."""
+        return await asyncio.to_thread(self._inner.decide)
+
+    async def record_outcome(
+        self,
+        *,
+        passed: bool,
+        strategy: str = "agentprop_controller",
+        quality_score: float | None = None,
+        metadata: dict[str, object] | None = None,
+        regression_risk: float = 0.0,
+        timeout_risk: float | None = None,
+    ) -> dict[str, object]:
+        """Async version of :meth:`ControlSession.record_outcome`."""
+        return await asyncio.to_thread(
+            self._inner.record_outcome,
+            passed=passed,
+            strategy=strategy,
+            quality_score=quality_score,
+            metadata=metadata,
+            regression_risk=regression_risk,
+            timeout_risk=timeout_risk,
+        )
+
+    async def write_artifacts(self, out_dir: str | Path) -> dict[str, Path]:
+        """Async version of :meth:`ControlSession.write_artifacts`."""
+        return await asyncio.to_thread(self._inner.write_artifacts, out_dir)
+
+    async def save_trace(self, path: str | Path | None = None) -> Path:
+        """Async version of :meth:`ControlSession.save_trace`."""
+        return await asyncio.to_thread(self._inner.save_trace, path)
+
+    # ------------------------------------------------------------------
+    # Pass-through properties / sync helpers
+    # ------------------------------------------------------------------
+
+    @property
+    def config(self) -> ControlSessionConfig:
+        return self._inner.config
+
+    @property
+    def analysis(self) -> ControlAnalysis:
+        return self._inner.analysis
+
+    @property
+    def decisions(self) -> list[ControlDecision]:
+        return self._inner.decisions
+
+    def summary(self) -> dict[str, object]:
+        return self._inner.summary()
+
+    def render_report(self) -> str:
+        return self._inner.render_report()
+
+    def enable_dynamic_graph(self) -> Any:
+        return self._inner.enable_dynamic_graph()
+
+    @property
+    def dynamic(self) -> Any:
+        return self._inner.dynamic
 
 
 def _load_session_workflow(workflow: str | AgentGraph) -> tuple[str, AgentGraph]:
