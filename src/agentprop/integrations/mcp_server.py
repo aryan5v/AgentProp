@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import sys
 from collections.abc import Callable
+from importlib import metadata
 from typing import Any, TypeVar, cast
 
 from agentprop.algorithms import bottleneck_nodes, low_weight_edges, risk_aware_verifier_placement
@@ -20,7 +21,12 @@ from agentprop.integrations.agent_instructions import (
 from agentprop.integrations.session_store import SessionStore, warm_shared_analysis_cache
 from agentprop.runtime import ControlSession, ExecutionEvent
 
-SERVER_INFO = {"name": "agentprop", "version": "0.1.0a3"}
+try:
+    _PACKAGE_VERSION = metadata.version("agentprop")
+except metadata.PackageNotFoundError:  # pragma: no cover - source checkout fallback
+    _PACKAGE_VERSION = "0.0.0+local"
+
+SERVER_INFO = {"name": "agentprop", "version": _PACKAGE_VERSION}
 _SESSION_STORE: SessionStore | None = None
 _ToolFn = TypeVar("_ToolFn", bound=Callable[..., Any])
 

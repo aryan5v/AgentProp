@@ -1,47 +1,56 @@
-# AgentProp 0.1.0-alpha.3 Release Notes
+# AgentProp 0.1.0-alpha.4 Release Notes
 
-Release date: 2026-06-05
+Release date: 2026-06-06
 
-AgentProp `0.1.0-alpha.3` adds the first beta-ready control-layer surface: a
-small Python SDK facade, key-free demos, MCP tools, and an installable agent
-skill package.
+AgentProp `0.1.0-alpha.4` turns the control-layer work into a more complete
+coding-agent beta path for Codex CLI, Claude Code, MCP-capable hosts, and
+multi-agent framework builders.
 
 ## Highlights
 
-- `ControlSession` facade for analysis-backed runtime wrapping:
-  - starts with graph analysis,
-  - observes `ExecutionEvent` rows,
-  - returns `CONTINUE`, `FORCE_VERIFY`, `SWITCH_STRATEGY`, or `FINALIZE`,
-  - writes `trace.jsonl`, `summary.json`, and `report.md`.
-- New CLI demos:
-  - `agentprop control-demo --demo terminal`
-  - `agentprop control-demo --demo multi-agent`
-  - `agentprop control-demo --demo framework`
-- FastMCP-backed MCP server with optional extra:
-  - `python -m pip install "agentprop[mcp]"`
-  - `agentprop-mcp`
-- MCP tools for analysis, optimization, reports, coding-agent briefs, and live
-  control sessions.
-- Installable skills.sh-style package:
-  - `skills/agentprop-workflow-optimizer/SKILL.md`
-  - task-specific references for install/config, workflow analysis, coding
-    agents, runtime control, framework builders, and evidence.
-- README badges and docs now surface PyPI, skills.sh, and MCP usage.
+- Full-suite coding-agent wrapper example:
+  - graph analysis and routing recommendations,
+  - metric-dimension verifier placement,
+  - context-risk advice for high-sensitivity roles,
+  - `ControlSession` runtime decisions,
+  - saved `trace.jsonl`, `summary.json`, and `report.md` artifacts.
+- New beta quickstart:
+  - Codex CLI normal `codex login` flow,
+  - Claude Code skill setup,
+  - `agentprop-mcp` registration,
+  - evidence-to-save checklist,
+  - troubleshooting for missing CLI/MCP/plugin artifacts.
+- Same-repo Codex plugin beta bundle:
+  - `plugins/agentprop/.codex-plugin/plugin.json`,
+  - `plugins/agentprop/.mcp.json`,
+  - packaged `agentprop-workflow-optimizer` skill,
+  - repo marketplace metadata under `.agents/plugins/marketplace.json`.
+- Plugin distribution plan for a future dedicated Vanta-style plugin repo once
+  the PyPI artifact and clean-install smoke are stable.
+- Better first-run UX:
+  - `examples/coding_agent_full_suite.py --out-dir ...`,
+  - optional Graphviz now displays as `[warn] graphviz_dot` in
+    `agentprop doctor --tier graph`.
 
 ## Validation Scope
 
-This release improves the user-facing control-layer experience. The demos are
-deterministic and key-free; they are onboarding evidence, not benchmark claims.
-Live benchmark claims still require repeated matched runs with saved traces,
-tokens, cost, elapsed time, and verifier outcomes.
+This release is still public alpha/beta-path software. The source checkout has
+been smoke-tested from a fresh temp venv with `agentprop[mcp]`, control demos,
+the full-suite coding-agent example, coding-agent brief generation, and Codex
+marketplace registration under a temporary `HOME`.
+
+The next release gate is a published-artifact smoke from PyPI/TestPyPI.
 
 ## Suggested Checks Before Tagging
 
 ```bash
-python -m ruff check .
-python -m mypy src
-python -m pytest
-PYTHONPATH=src python -m agentprop.cli control-demo --demo terminal --out-dir /tmp/agentprop-control-demo
+ruff check .
+mypy src
+pytest
 python -m build
 twine check dist/*
+python -m pip install "dist/agentprop-0.1.0a4-py3-none-any.whl[mcp]"
+agentprop doctor --tier graph
+agentprop control-demo --demo terminal --out-dir /tmp/agentprop-control-demo
+python examples/coding_agent_full_suite.py --out-dir /tmp/agentprop-full-suite
 ```
