@@ -1,6 +1,7 @@
 """Built-in workflow templates."""
 
 from agentprop.workflows.export import export_builtin_workflows
+from agentprop.workflows.scaffolder import TOPOLOGIES, scaffold_workflow
 from agentprop.workflows.templates import (
     WORKFLOW_DESCRIPTIONS,
     WORKFLOW_TEMPLATES,
@@ -22,6 +23,7 @@ from agentprop.workflows.templates import (
 )
 
 __all__ = [
+    "TOPOLOGIES",
     "WORKFLOW_DESCRIPTIONS",
     "WORKFLOW_TEMPLATES",
     "chain_workflow",
@@ -35,6 +37,7 @@ __all__ = [
     "rag_pipeline",
     "random_directed_workflow",
     "research_writer_verifier",
+    "scaffold_workflow",
     "small_world_workflow",
     "star_workflow",
     "tree_workflow",

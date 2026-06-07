@@ -23,6 +23,11 @@ from agentprop.integrations.framework_adapters import (
     to_native_framework,
     to_openai_agents_dict,
 )
+from agentprop.integrations.session_stats import (
+    SessionStatsReport,
+    aggregate_session_stats,
+    render_session_stats_markdown,
+)
 from agentprop.integrations.trace_loader import (
     TraceEmpiricalRowsResult,
     TraceGraphCalibrationResult,
@@ -40,9 +45,11 @@ __all__ = [
     "NativeFrameworkStatus",
     "NativeFrameworkUnavailable",
     "SUPPORTED_FRAMEWORKS",
+    "SessionStatsReport",
     "TraceEmpiricalRowsResult",
     "TraceGraphCalibrationResult",
     "TraceLoadResult",
+    "aggregate_session_stats",
     "calibrate_graph_from_trace",
     "calibrate_graph_from_trace_dict",
     "empirical_row_from_trace_dict",
@@ -57,6 +64,7 @@ __all__ = [
     "graph_from_trace_dict",
     "native_framework_status",
     "render_coding_agent_instructions",
+    "render_session_stats_markdown",
     "to_autogen_dict",
     "to_crewai_dict",
     "to_framework_dict",
