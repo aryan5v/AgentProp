@@ -393,6 +393,15 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="treat all A0 decisions as CONTINUE (pure baseline replay)",
     )
+    trace_replay.add_argument(
+        "--baseline-tokens",
+        type=int,
+        default=None,
+        help=(
+            "baseline/A0 token total for savings math; if omitted, trace metadata "
+            "is used when available, otherwise observed tokens are reused"
+        ),
+    )
     trace_replay.add_argument("--json", action="store_true", help="emit JSON instead of Markdown")
 
     return parser
@@ -802,17 +811,23 @@ def _trace_replay(args: argparse.Namespace) -> int:
     if not trace_path.exists():
         print(f"error: trace file not found: {trace_path}", file=sys.stderr)
         return 1
-    result = replay_trace(trace_path, no_control=args.no_control)
+    result = replay_trace(
+        trace_path,
+        no_control=args.no_control,
+        baseline_tokens=args.baseline_tokens,
+    )
     if args.json:
         print(
             json.dumps(
                 {
                     "task_id": result.task_id,
                     "workflow": result.workflow,
+                    "baseline_tokens": result.baseline_tokens,
                     "total_tokens_no_control": result.total_tokens_no_control,
                     "total_tokens_with_control": result.total_tokens_with_control,
                     "token_delta": result.token_delta,
                     "reduction_pct": result.reduction_pct,
+                    "replay_warning": result.replay_warning,
                     "rows": [
                         {
                             "step": r.step,

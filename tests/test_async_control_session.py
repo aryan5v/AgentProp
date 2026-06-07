@@ -140,3 +140,20 @@ def test_decide_without_events():
 
     decision = asyncio.run(scenario())
     assert isinstance(decision, ControlDecision)
+
+
+def test_async_dynamic_graph_methods_match_sync_surface():
+    async def scenario() -> tuple[int, int]:
+        session = await AsyncControlSession.start("chain", task_id="dynamic")
+        before = session.effective_graph().node_count
+        await session.mutate_add_node("async_verifier", node_type="verifier")
+        await session.mutate_add_edge("node_3", "async_verifier")
+        after_add = session.effective_graph().node_count
+        await session.mutate_remove_edge("node_3", "async_verifier")
+        await session.mutate_remove_node("async_verifier")
+        after_remove = session.effective_graph().node_count
+        return after_add - before, after_remove
+
+    delta, final_count = asyncio.run(scenario())
+    assert delta == 1
+    assert final_count > 0

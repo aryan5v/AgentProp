@@ -26,16 +26,19 @@ class ReplayResult:
     task_id: str
     workflow: str
     rows: list[ReplayRow]
+    baseline_tokens: int | None
     total_tokens_with_control: int
     total_tokens_no_control: int
     token_delta: int
     reduction_pct: float
+    replay_warning: str | None = None
 
 
 def replay_trace(
     trace_path: Path,
     *,
     no_control: bool = False,
+    baseline_tokens: int | None = None,
 ) -> ReplayResult:
     """Read a trace.jsonl and replay events, returning a side-by-side comparison.
 
@@ -47,13 +50,17 @@ def replay_trace(
 
     task_id = "unknown"
     workflow = "unknown"
+    trace_baseline_tokens: int | None = None
     for row in rows_raw:
         if row.get("type") == "analysis":
             task_id = str(row.get("task_id", "unknown"))
+            trace_baseline_tokens = _optional_int(row.get("baseline_tokens"))
             analysis = row.get("analysis") or {}
             if isinstance(analysis, dict):
                 workflow = str(analysis.get("workflow", "unknown"))
             break
+    if baseline_tokens is None:
+        baseline_tokens = trace_baseline_tokens
 
     event_rows = [r for r in rows_raw if r.get("type") == "event"]
     if not event_rows:
@@ -61,19 +68,31 @@ def replay_trace(
             task_id=task_id,
             workflow=workflow,
             rows=[],
+            baseline_tokens=baseline_tokens,
             total_tokens_with_control=0,
-            total_tokens_no_control=0,
+            total_tokens_no_control=baseline_tokens or 0,
             token_delta=0,
             reduction_pct=0.0,
         )
 
-    # Build a replay session for the A2 (with-control) path
-    config = ControlSessionConfig(workflow=workflow, task_id=task_id)
-    session_a2 = ControlSession(config)
+    # Build a replay session for the A2 (with-control) path when the workflow
+    # is available locally. Custom traces may not carry enough graph data to
+    # recreate the controller, so fall back to recorded decisions in that case.
+    session_a2: ControlSession | None
+    replay_warning: str | None = None
+    try:
+        config = ControlSessionConfig(workflow=workflow, task_id=task_id)
+        session_a2 = ControlSession(config)
+    except (FileNotFoundError, ValueError):
+        session_a2 = None
+        replay_warning = (
+            "Workflow could not be reloaded locally; using recorded decisions for A2."
+        )
 
     replay_rows: list[ReplayRow] = []
     total_a2 = 0
     total_a0 = 0
+    a2_active = True
 
     for raw in event_rows:
         event_dict = raw.get("event") or {}
@@ -83,15 +102,20 @@ def replay_trace(
         tokens = int(event.tokens_used or 0)
         total_a0 += tokens
 
-        decision_a2: ControlDecision = session_a2.observe(event)
-        decision_a2_str = decision_a2.action
-
-        if no_control:
-            decision_a0_str = "CONTINUE"
+        recorded_decision = str((raw.get("decision") or {}).get("action", "CONTINUE"))
+        if not a2_active:
+            decision_a2_str = "STOPPED"
+        elif session_a2 is not None:
+            decision_a2: ControlDecision = session_a2.observe(event)
+            decision_a2_str = str(decision_a2.action)
+            total_a2 += tokens
         else:
-            decision_a0_str = str((raw.get("decision") or {}).get("action", "CONTINUE"))
+            decision_a2_str = recorded_decision
+            total_a2 += tokens
+        if decision_a2_str == "FINALIZE":
+            a2_active = False
 
-        total_a2 += tokens
+        decision_a0_str = "CONTINUE" if no_control else recorded_decision
 
         replay_rows.append(
             ReplayRow(
@@ -104,6 +128,9 @@ def replay_trace(
             )
         )
 
+    if baseline_tokens is not None and baseline_tokens >= 0:
+        total_a0 = baseline_tokens
+
     token_delta = total_a0 - total_a2
     reduction_pct = (token_delta / total_a0 * 100) if total_a0 > 0 else 0.0
 
@@ -111,23 +138,31 @@ def replay_trace(
         task_id=task_id,
         workflow=workflow,
         rows=replay_rows,
+        baseline_tokens=baseline_tokens,
         total_tokens_with_control=total_a2,
         total_tokens_no_control=total_a0,
         token_delta=token_delta,
         reduction_pct=reduction_pct,
+        replay_warning=replay_warning,
     )
 
 
 def format_replay_table(result: ReplayResult) -> str:
     """Render a ReplayResult as a human-readable Markdown table."""
+    baseline_display = (
+        result.baseline_tokens if result.baseline_tokens is not None else "not provided"
+    )
     lines = [
         f"# Trace Replay: `{result.task_id}`",
         f"- Workflow: `{result.workflow}`",
         f"- Steps: `{len(result.rows)}`",
+        f"- Baseline tokens: `{baseline_display}`",
         "",
         "| Step | Command | Tokens | A0 (no-control) | A2 (with-control) |",
         "| ---: | --- | ---: | --- | --- |",
     ]
+    if result.replay_warning:
+        lines.extend([f"> {result.replay_warning}", ""])
     for row in result.rows:
         cmd = (row.command or "")[:40].replace("|", "\\|")
         lines.append(
@@ -156,6 +191,15 @@ def _load_trace(path: Path) -> list[dict[str, Any]]:
         if line:
             rows.append(json.loads(line))
     return rows
+
+
+def _optional_int(value: Any) -> int | None:
+    if value is None:
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
 
 
 def _dict_to_event(d: dict[str, Any]) -> ExecutionEvent:

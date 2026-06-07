@@ -125,6 +125,9 @@ class ControlSession:
             {
                 "task_id": self.config.task_id,
                 "category": self.config.category,
+                "baseline_tokens": self.config.baseline_tokens,
+                "token_budget": self.config.token_budget,
+                "wall_time_budget_s": self.config.wall_time_budget_s,
                 "analysis": self.analysis.to_dict(),
             },
         )
@@ -546,6 +549,39 @@ class AsyncControlSession:
     @property
     def dynamic(self) -> Any:
         return self._inner.dynamic
+
+    def effective_graph(self, context: Mapping[str, Any] | None = None) -> AgentGraph:
+        return self._inner.effective_graph(context)
+
+    async def mutate_add_node(self, node_id: str, **metadata: Any) -> None:
+        await asyncio.to_thread(self._inner.mutate_add_node, node_id, **metadata)
+
+    async def mutate_remove_node(self, node_id: str) -> None:
+        await asyncio.to_thread(self._inner.mutate_remove_node, node_id)
+
+    async def mutate_add_edge(self, source: str, target: str, **metadata: Any) -> None:
+        await asyncio.to_thread(self._inner.mutate_add_edge, source, target, **metadata)
+
+    async def mutate_add_conditional_edge(
+        self,
+        source: str,
+        target: str,
+        *,
+        condition_key: str,
+        condition_value: object,
+        **metadata: Any,
+    ) -> None:
+        await asyncio.to_thread(
+            self._inner.mutate_add_conditional_edge,
+            source,
+            target,
+            condition_key=condition_key,
+            condition_value=condition_value,
+            **metadata,
+        )
+
+    async def mutate_remove_edge(self, source: str, target: str) -> None:
+        await asyncio.to_thread(self._inner.mutate_remove_edge, source, target)
 
 
 def _load_session_workflow(workflow: str | AgentGraph) -> tuple[str, AgentGraph]:
