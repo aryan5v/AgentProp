@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.1.0-alpha.4 - 2026-06-06
+
+Coding-agent beta distribution refresh:
+
+- Added a full-suite coding-agent wrapper example that combines graph analysis,
+  seed selection, metric-dimension verifier placement, context-risk advice,
+  `ControlSession`, runtime decisions, and saved trace/report artifacts.
+- Added `docs/beta_quickstart.md` for Codex CLI, Claude Code, MCP setup,
+  runtime wrapping, evidence preservation, and troubleshooting.
+- Added a same-repo Codex plugin bundle at `plugins/agentprop/` with packaged
+  AgentProp skill content and `agentprop-mcp` stdio configuration.
+- Added repo marketplace metadata at `.agents/plugins/marketplace.json` and
+  documented the future Vanta-style dedicated plugin repo path in
+  `docs/plugin_distribution.md`.
+- Added tests for plugin manifest/marketplace integrity and example artifact
+  generation.
+- Added `--out-dir` support to `examples/coding_agent_full_suite.py` so smoke
+  tests and users can keep generated artifacts outside the repository.
+- Clarified `agentprop doctor --tier graph` output by marking optional Graphviz
+  as a warning instead of a failed install check.
+- Updated MCP server metadata to derive its version from installed package
+  metadata instead of a hardcoded string.
+
 ## 0.1.0-alpha.3 - 2026-06-05
 
 Beta-control-layer and skill distribution refresh:
