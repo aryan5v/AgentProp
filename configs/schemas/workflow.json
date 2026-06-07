@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/aryan5v/AgentProp/schemas/workflow.json",
+  "$id": "https://github.com/aryan5v/AgentProp/configs/schemas/workflow.json",
   "title": "AgentProp Workflow",
   "description": "Directed weighted graph for multi-agent workflow analysis.",
   "type": "object",

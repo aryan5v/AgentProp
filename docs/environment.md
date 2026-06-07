@@ -39,7 +39,7 @@ evaluation helpers.
 | `TOKEN_ROUTER_MODEL` | Token-router harness | Model slug for router |
 | `GEMINI_API_KEY` | GAIA-style benchmark | `experiments/run_gaia_style_benchmark.py` |
 
-Copy [.env.example](../.env.example) to `.env` locally (never commit `.env`).
+Copy [configs/env.example](../configs/env.example) to `.env` locally (never commit `.env`).
 
 ## Tier 4: Terminal-Bench / Harbor
 

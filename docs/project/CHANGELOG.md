@@ -100,4 +100,6 @@ Initial AgentProp foundation:
 
 ## Unreleased
 
+- Documentation reorganization: `docs/overview.md`, repository/experiment/example
+  catalogs, slimmer README, completed artifact README/REPORT pairs.
 - Continue repeated Terminal-Bench and SWE-style control evaluations.

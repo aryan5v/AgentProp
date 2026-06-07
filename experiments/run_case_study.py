@@ -98,7 +98,7 @@ def main(argv: list[str] | None = None) -> int:
         help="write a readiness manifest without executing any task arms",
     )
     parser.add_argument("--target-task-count", type=int, default=20)
-    parser.add_argument("--out-dir", type=Path, default=Path("docs/results/case_study_offline"))
+    parser.add_argument("--out-dir", type=Path, default=Path("results/case_study_offline"))
     args = parser.parse_args(argv)
     execution_mode = _resolve_execution_mode(args.execution_mode)
 

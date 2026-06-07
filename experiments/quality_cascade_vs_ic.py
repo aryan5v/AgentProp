@@ -3,8 +3,9 @@
 Deterministic benchmark comparing quality-aware seeds + quality-cascade propagation
 against PageRank + IC on token savings and coverage.
 
-Run:
-    PYTHONPATH=src python experiments/quality_cascade_vs_ic.py
+Run (after `pip install -e ".[dev]"`):
+
+    python experiments/quality_cascade_vs_ic.py
 """
 
 from __future__ import annotations
