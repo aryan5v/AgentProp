@@ -83,7 +83,7 @@ def test_run_experiment_suite_writes_dry_run_manifest(tmp_path: Path) -> None:
     exit_code = run_experiment_suite.main(
         [
             "--config",
-            "configs/experiment_suites/ml_core.json",
+            "dev/configs/experiment_suites/ml_core.json",
             "--artifact-root",
             str(artifact_root),
             "--only",
@@ -110,7 +110,7 @@ def test_run_ml_rl_sweep_writes_manifest_registry_and_metrics(tmp_path: Path) ->
     exit_code = run_ml_rl_sweep.main(
         [
             "--config",
-            "configs/sweeps/ml_rl_smoke.json",
+            "dev/configs/sweeps/ml_rl_smoke.json",
             "--artifact-root",
             str(artifact_root),
             "--only",
@@ -208,7 +208,7 @@ def test_run_ml_rl_sweep_dry_run_expands_grid(tmp_path: Path) -> None:
     exit_code = run_ml_rl_sweep.main(
         [
             "--config",
-            "configs/sweeps/ml_rl_smoke.json",
+            "dev/configs/sweeps/ml_rl_smoke.json",
             "--artifact-root",
             str(tmp_path / "dry_artifacts"),
             "--only",
@@ -304,7 +304,7 @@ def test_run_case_study_preflight_writes_readiness_manifest(tmp_path: Path) -> N
             "llm",
             "--preflight",
             "--tasks",
-            "benchmarks/case_study_tasks.json",
+            "dev/benchmarks/case_study_tasks.json",
             "--trials",
             "2",
             "--episodes",

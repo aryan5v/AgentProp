@@ -7,7 +7,7 @@ localize injected faults under different placement methods.
 
 ```bash
 pip install -e ".[dev]"
-python experiments/failure_localization_study.py
+python dev/experiments/failure_localization_study.py
 ```
 
 No API keys required. Writes `results.json` in this directory.

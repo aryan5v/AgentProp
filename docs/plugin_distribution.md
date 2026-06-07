@@ -2,11 +2,11 @@
 
 AgentProp has three install surfaces:
 
-- **Main repo beta bundle:** this repository contains `plugins/agentprop/` with
+- **Main repo beta bundle:** this repository contains `distribution/plugins/agentprop/` with
   Codex and Claude Code plugin manifests, the packaged skill, and `.mcp.json`.
   The repo also contains `.agents/plugins/marketplace.json` for Codex and
   `.claude-plugin/marketplace.json` for Claude Code.
-- **Portable skill:** `skills/agentprop-workflow-optimizer/` can be installed
+- **Portable skill:** `distribution/skills/agentprop-workflow-optimizer/` can be installed
   through skills.sh for Codex, Claude Code, or other skill-aware agents.
 - **Future dedicated plugin repo:** before broader beta distribution, create a
   smaller repo focused only on coding-agent installation and daily use.
@@ -30,8 +30,8 @@ agentprop-plugin/
   .claude-plugin/
   .codex-plugin/plugin.json
   .agents/plugins/marketplace.json
-  plugins/agentprop/
-  skills/agentprop-workflow-optimizer/
+  distribution/plugins/agentprop/
+  distribution/skills/agentprop-workflow-optimizer/
 ```
 
 The README should be installer-first:
@@ -54,4 +54,4 @@ Create the dedicated repo when all of these are true:
 - The skill and plugin docs no longer need daily changes from benchmark work.
 
 Until then, keep the same-repo plugin bundle as the beta distribution path and
-sync any major skill changes into `plugins/agentprop/skills/`.
+sync any major skill changes into `distribution/plugins/agentprop/skills/`.

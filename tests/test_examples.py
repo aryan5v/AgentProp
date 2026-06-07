@@ -33,7 +33,7 @@ def test_coding_agent_full_suite_cli_respects_out_dir(tmp_path: Path) -> None:
     result = subprocess.run(
         [
             sys.executable,
-            "examples/coding_agent_full_suite.py",
+            "dev/examples/coding_agent_full_suite.py",
             "--out-dir",
             str(out_dir),
         ],

@@ -9,14 +9,14 @@ Coding-agent beta distribution refresh:
   `ControlSession`, runtime decisions, and saved trace/report artifacts.
 - Added `docs/beta_quickstart.md` for Codex CLI, Claude Code, MCP setup,
   runtime wrapping, evidence preservation, and troubleshooting.
-- Added a same-repo Codex plugin bundle at `plugins/agentprop/` with packaged
+- Added a same-repo Codex plugin bundle at `distribution/plugins/agentprop/` with packaged
   AgentProp skill content and `agentprop-mcp` stdio configuration.
 - Added repo marketplace metadata at `.agents/plugins/marketplace.json` and
   documented the future Vanta-style dedicated plugin repo path in
   `docs/plugin_distribution.md`.
 - Added tests for plugin manifest/marketplace integrity and example artifact
   generation.
-- Added `--out-dir` support to `examples/coding_agent_full_suite.py` so smoke
+- Added `--out-dir` support to `dev/examples/coding_agent_full_suite.py` so smoke
   tests and users can keep generated artifacts outside the repository.
 - Clarified `agentprop doctor --tier graph` output by marking optional Graphviz
   as a warning instead of a failed install check.

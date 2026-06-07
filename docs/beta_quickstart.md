@@ -56,7 +56,7 @@ Or install the same-repo Codex plugin bundle, which packages the AgentProp
 skill and MCP configuration:
 
 ```bash
-codex plugin marketplace add aryan5v/AgentProp --sparse .agents --sparse plugins
+codex plugin marketplace add aryan5v/AgentProp --sparse .agents --sparse distribution/plugins
 codex plugin add agentprop@agentprop
 ```
 
@@ -76,7 +76,7 @@ Use Claude Code's normal authentication path. Install the AgentProp plugin,
 which packages the AgentProp skill and MCP configuration:
 
 ```bash
-claude plugin marketplace add aryan5v/AgentProp --sparse .claude-plugin plugins
+claude plugin marketplace add aryan5v/AgentProp --sparse .claude-plugin distribution/plugins
 claude plugin install agentprop
 ```
 
@@ -117,7 +117,7 @@ tool call, test, verifier, or review step.
 Run the key-free reference example:
 
 ```bash
-python examples/coding_agent_full_suite.py
+python dev/examples/coding_agent_full_suite.py
 ```
 
 The example shows the full beta shape:

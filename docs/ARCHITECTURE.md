@@ -54,8 +54,8 @@ Most integrations should start with `ControlSession`. See
 | `src/agentprop/runtime/` | Control loop, `ControlSession`, critical facts, hierarchical context |
 | `src/agentprop/integrations/` | Traces, adapters, MCP, `session_store`, coding-agent briefs |
 | `src/agentprop/workflows/` | Built-in template graphs (incl. dynamic/conditional) |
-| `experiments/` | Reproducible scripts — [experiments/README.md](../experiments/README.md) |
-| `examples/` | Minimal integrations — [examples/README.md](../examples/README.md) |
+| `dev/experiments/` | Reproducible scripts — [dev/experiments/README.md](../dev/experiments/README.md) |
+| `dev/examples/` | Minimal integrations — [dev/examples/README.md](../dev/examples/README.md) |
 | `docs/results/` | Sanitized public artifacts — [ARTIFACTS.md](results/ARTIFACTS.md) |
 
 ## What's real today
@@ -71,7 +71,7 @@ require credentials documented in [environment.md](environment.md).
 | --- | --- |
 | Influence maximization (IMM) for large graphs | `algorithm=auto` or `imm` in benchmark/optimize |
 | Dynamic graph mutations at runtime | `ControlSession.enable_dynamic_graph()` |
-| Scale/quality evidence matrix | `agentprop run-evidence` or `experiments/run_evidence_harness.py` |
+| Scale/quality evidence matrix | `agentprop run-evidence` or `dev/experiments/run_evidence_harness.py` |
 | MCP session persistence | `SessionStore` under `~/.agentprop/sessions` (see coding agents doc) |
 | Critical-fact routing hints | `runtime/critical_facts.py`, `integrations/context_advisor.py` |
 

@@ -186,7 +186,7 @@ def write_terminal_bench_launch_bundle(
         "budget_policies": [policy.to_dict() for policy in DEFAULT_BUDGET_POLICIES],
         "report_after_run": [
             "python",
-            "experiments/summarize_harbor_results.py",
+            "dev/experiments/summarize_harbor_results.py",
             "--results-root",
             config.output_root,
             "--out-dir",
@@ -409,7 +409,7 @@ def _render_runbook(
 ) -> str:
     command = " ".join(config.harbor_command())
     watchdog_command = (
-        "python experiments/run_with_watchdog.py "
+        "python dev/experiments/run_with_watchdog.py "
         f"--timeout {config.watchdog.timeout_s} "
         f"--idle-timeout {config.watchdog.idle_timeout_s} "
         f"--poll-interval {config.watchdog.poll_interval_s:g} "
@@ -448,7 +448,7 @@ benchmark by itself.
 ## After The Run
 
 ```bash
-python experiments/summarize_harbor_results.py \\
+python dev/experiments/summarize_harbor_results.py \\
   --results-root {config.output_root} \\
   --out-dir {config.output_root}/report
 ```
@@ -463,7 +463,7 @@ def _render_run_script(config: TerminalBenchLaunchConfig) -> str:
 set -euo pipefail
 
 mkdir -p "{config.output_root}"
-python experiments/run_with_watchdog.py \\
+python dev/experiments/run_with_watchdog.py \\
   --timeout {config.watchdog.timeout_s} \\
   --idle-timeout {config.watchdog.idle_timeout_s} \\
   --poll-interval {config.watchdog.poll_interval_s:g} \\

@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "agentprop",
-      "source": "./plugins/agentprop",
+      "source": "./distribution/plugins/agentprop",
       "description": "Graph control for coding-agent and multi-agent workflows."
     }
   ]

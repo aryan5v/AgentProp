@@ -6,7 +6,7 @@ benchmark artifacts.
 ## Command
 
 ```bash
-PYTHONPATH=src:. python experiments/run_benchmark.py --budget 2 --trials 20 --out-dir docs/results/v1
+PYTHONPATH=src:. python dev/experiments/run_benchmark.py --budget 2 --trials 20 --out-dir docs/results/v1
 ```
 
 ## Artifacts

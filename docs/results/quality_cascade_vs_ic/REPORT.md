@@ -35,7 +35,7 @@ for this study.
 ## Reproduce
 
 ```bash
-python experiments/quality_cascade_vs_ic.py
+python dev/experiments/quality_cascade_vs_ic.py
 ```
 
 See [README.md](README.md) and [quality scoring](../../quality_scoring.md).

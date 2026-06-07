@@ -10,22 +10,28 @@ Where things live, what belongs in git, and which copies are intentional.
 | `pyproject.toml` | Package metadata and tool config |
 | `LICENSE` | Apache 2.0 |
 | `uv.lock` | Locked dependency graph for `uv` |
-| `Makefile` | Thin wrapper → [scripts/Makefile](../scripts/Makefile) |
+| `Makefile` | Thin wrapper → [dev/scripts/Makefile](../dev/scripts/Makefile) |
 | `CONTRIBUTING.md` | Pointer → [docs/project/CONTRIBUTING.md](project/CONTRIBUTING.md) |
 | `SECURITY.md` | GitHub security policy |
 | `AGENTS.md` | Pointer → [docs/project/AGENTS.md](project/AGENTS.md) |
+| `src/` | Installable Python package |
+| `tests/` | Pytest suite |
+| `docs/` | Documentation hub |
+| [`dev/`](../dev/README.md) | Benchmarks, configs, experiments, examples, dev scripts |
+| [`distribution/`](../distribution/README.md) | Editor-agent plugins, skills, and wrappers |
+| `.agents/`, `.claude-plugin/` | Marketplace metadata (required at repo root) |
 
 ## Library and CLI
 
 | Path | Purpose |
 | --- | --- |
 | `src/agentprop/` | Python package — graph core, algorithms, runtime, CLI |
-| `configs/schemas/workflow.json` | Machine-readable workflow contract |
-| `configs/.env.example` | Example environment variables |
-| `benchmarks/` | Workflow fixtures, task packs, perf microbenchmarks |
-| `configs/experiment_suites/` | Experiment suite definitions |
-| `configs/sweeps/` | ML/RL sweep configs |
-| `scripts/Makefile` | `make test`, `make lint`, and other dev targets |
+| `dev/configs/schemas/workflow.json` | Machine-readable workflow contract |
+| `dev/configs/.env.example` | Example environment variables |
+| `dev/benchmarks/` | Workflow fixtures, task packs, perf microbenchmarks |
+| `dev/configs/experiment_suites/` | Experiment suite definitions |
+| `dev/configs/sweeps/` | ML/RL sweep configs |
+| `dev/scripts/Makefile` | `make test`, `make lint`, and other dev targets |
 
 ## Documentation
 
@@ -40,8 +46,8 @@ Where things live, what belongs in git, and which copies are intentional.
 
 | Path | Purpose |
 | --- | --- |
-| `examples/` | Integration templates — [README](../examples/README.md) |
-| `experiments/` | Repro scripts — [README](../experiments/README.md) |
+| `dev/examples/` | Integration templates — [README](../dev/examples/README.md) |
+| `dev/experiments/` | Repro scripts — [README](../dev/experiments/README.md) |
 
 Local output (gitignored): `results/`, `reports/`, `benchmark-results/`.
 
@@ -59,13 +65,13 @@ Three surfaces, one canonical skill source:
 
 | Path | Role |
 | --- | --- |
-| `skills/agentprop-workflow-optimizer/` | **Canonical** skill for skills.sh — edit here first |
-| `plugins/agentprop/` | Same-repo Codex + Claude plugin bundle (synced copy of skill + MCP config) |
-| `integrations/claude-code/` | Thin wrapper for legacy Claude paths — points to canonical skill |
-| `integrations/codex/` | Codex agent brief template |
+| `distribution/skills/agentprop-workflow-optimizer/` | **Canonical** skill for skills.sh — edit here first |
+| `distribution/plugins/agentprop/` | Same-repo Codex + Claude plugin bundle (synced copy of skill + MCP config) |
+| `distribution/wrappers/claude-code/` | Thin wrapper for legacy Claude paths — points to canonical skill |
+| `distribution/wrappers/codex/` | Codex agent brief template |
 
-When changing skill content, update `skills/` then sync into
-`plugins/agentprop/skills/`. See [plugin distribution](plugin_distribution.md).
+When changing skill content, update `distribution/skills/` then sync into
+`distribution/plugins/agentprop/skills/`. See [plugin distribution](plugin_distribution.md).
 
 ## Local-only (gitignored)
 

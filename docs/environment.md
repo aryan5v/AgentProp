@@ -21,12 +21,12 @@ agentprop doctor --tier dev
 pytest
 ```
 
-Editable install makes `PYTHONPATH=src` unnecessary for `experiments/` and
-`examples/` when the package is installed in the venv.
+Editable install makes `PYTHONPATH=src` unnecessary for `dev/experiments/` and
+`dev/examples/` when the package is installed in the venv.
 
 ## Tier 3: LLM validation
 
-Required for `experiments/run_real_routing_case_study.py` and OpenAI-compatible
+Required for `dev/experiments/run_real_routing_case_study.py` and OpenAI-compatible
 evaluation helpers.
 
 | Variable | Required for | Notes |
@@ -37,9 +37,9 @@ evaluation helpers.
 | `TOKEN_ROUTER_API_KEY` | Token-router harness | Alternative to `OPENAI_API_KEY` |
 | `TOKEN_ROUTER_BASE_URL` | Token-router harness | OpenAI-compatible base URL |
 | `TOKEN_ROUTER_MODEL` | Token-router harness | Model slug for router |
-| `GEMINI_API_KEY` | GAIA-style benchmark | `experiments/run_gaia_style_benchmark.py` |
+| `GEMINI_API_KEY` | GAIA-style benchmark | `dev/experiments/run_gaia_style_benchmark.py` |
 
-Copy [configs/.env.example](../configs/.env.example) to `.env` locally (never commit `.env`).
+Copy [dev/configs/.env.example](../dev/configs/.env.example) to `.env` locally (never commit `.env`).
 
 ## Tier 4: Terminal-Bench / Harbor
 
@@ -47,7 +47,7 @@ Copy [configs/.env.example](../configs/.env.example) to `.env` locally (never co
 | --- | --- | --- |
 | Harbor CLI | External benchmark runs | `agentprop terminal-bench prepare` |
 | `MODAL_TOKEN_ID` | Optional Modal GPU | Only for large DL sweeps |
-| `MODAL_TOKEN_SECRET` | Optional Modal GPU | See `configs/experiment_suites/ml_core.json` |
+| `MODAL_TOKEN_SECRET` | Optional Modal GPU | See `dev/configs/experiment_suites/ml_core.json` |
 | Graphviz `dot` | Rendering `.dot` exports | `brew install graphviz` or system package |
 
 ## Optional Python extras

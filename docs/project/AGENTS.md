@@ -31,8 +31,8 @@ No API keys required for the steps above.
 - [Documentation index](../index.md) — full doc map
 - [Environment setup](../environment.md) — env vars and tiers
 - [CONTRIBUTING.md](CONTRIBUTING.md) — quality gates and data policy
-- [examples/README.md](../../examples/README.md) — integration learning path
-- [experiments/README.md](../../experiments/README.md) — repro script catalog
+- [dev/examples/README.md](../../dev/examples/README.md) — integration learning path
+- [dev/experiments/README.md](../../dev/experiments/README.md) — repro script catalog
 - [Repository layout](../repository_layout.md) — where artifacts belong
 
 ## Common commands
@@ -75,13 +75,13 @@ Sanitized finalized benchmarks belong only under `docs/results/` per
 | Path | Role |
 | --- | --- |
 | `src/agentprop/` | Library and CLI |
-| `benchmarks/workflows/` | JSON workflow fixtures |
-| `experiments/` | Reproducible research scripts |
+| `dev/benchmarks/workflows/` | JSON workflow fixtures |
+| `dev/experiments/` | Reproducible research scripts |
 | `docs/` | Public documentation |
 | `docs/local/` | Gitignored working notes; never commit local research or ops notes |
-| `skills/agentprop-workflow-optimizer/` | Canonical skill — edit here first |
-| `plugins/agentprop/` | Codex/Claude plugin bundle (sync skill from `skills/`) |
-| `integrations/claude-code/` | Thin legacy wrapper — do not fork skill content here |
+| `distribution/skills/agentprop-workflow-optimizer/` | Canonical skill — edit here first |
+| `distribution/plugins/agentprop/` | Codex/Claude plugin bundle (sync skill from `distribution/skills/`) |
+| `distribution/wrappers/claude-code/` | Thin legacy wrapper — do not fork skill content here |
 
 ## Public claims
 

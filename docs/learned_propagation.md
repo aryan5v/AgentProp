@@ -28,7 +28,7 @@ The model consumes the same trace events as trace ingestion:
 ## Training
 
 ```bash
-PYTHONPATH=src:. python experiments/train_learned_propagation.py \
+PYTHONPATH=src:. python dev/experiments/train_learned_propagation.py \
   --trace traces/workflow_run.json \
   --seed-node planner \
   --out results/propagation/learned.json

@@ -103,7 +103,7 @@ For a complete key-free reference that combines graph analysis, context advice,
 verifier placement, runtime decisions, budgets, and trace output, run:
 
 ```bash
-python examples/coding_agent_full_suite.py
+python dev/examples/coding_agent_full_suite.py
 ```
 
 Use that example as the template for a Codex or Claude Code harness: the host

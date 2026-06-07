@@ -6,7 +6,7 @@ from agentprop.cli import main
 
 
 def test_cli_optimize_emits_json(capsys) -> None:  # type: ignore[no-untyped-def]
-    workflow = Path("benchmarks/workflows/planner_coder_tester_reviewer.json")
+    workflow = Path("dev/benchmarks/workflows/planner_coder_tester_reviewer.json")
 
     exit_code = main(["optimize", str(workflow), "--budget", "2", "--trials", "10", "--json"])
 
@@ -256,7 +256,7 @@ def test_cli_invalid_workflow_returns_validation_error(tmp_path: Path, capsys) -
 
 
 DOC_INDEX_COMMANDS = [
-    ["optimize", "benchmarks/workflows/planner_coder_tester_reviewer.json", "--budget", "2"],
+    ["optimize", "dev/benchmarks/workflows/planner_coder_tester_reviewer.json", "--budget", "2"],
     ["simulate", "chain", "--seeds", "node_0", "--model", "zero-forcing"],
     ["simulate", "chain", "--seeds", "node_0", "--model", "quality-cascade"],
     ["prune", "planner_coder_tester_reviewer", "--target-token-reduction", "0.3"],

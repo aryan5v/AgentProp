@@ -55,7 +55,7 @@ Any harness that can emit `ExecutionEvent` rows can integrate. See
 | Runtime tracker | Incremental `ExecutionStateTracker` (O(1) per step) |
 | Context compression | Critical-fact slices for convention-sensitive tasks |
 
-Microbenchmarks live in `benchmarks/perf_micro.py` (CI-gated via
+Microbenchmarks live in `dev/benchmarks/perf_micro.py` (CI-gated via
 `tests/test_perf_micro.py`). MCP sessions persist under `~/.agentprop/sessions`
 with a shared graph-analysis cache.
 

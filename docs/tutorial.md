@@ -13,7 +13,7 @@ agentprop doctor --tier dev
 ## 2. Optimize Context Seeding
 
 ```bash
-agentprop optimize benchmarks/workflows/planner_coder_tester_reviewer.json --budget 2 --trials 20
+agentprop optimize dev/benchmarks/workflows/planner_coder_tester_reviewer.json --budget 2 --trials 20
 ```
 
 Expected shape:
@@ -89,7 +89,7 @@ dot -Tpng reports/tutorial.dot -o reports/tutorial.png
 Basic benchmark across algorithms and propagation models:
 
 ```bash
-python experiments/run_benchmark.py --trials 20 --out-dir results/tutorial_benchmark
+python dev/experiments/run_benchmark.py --trials 20 --out-dir results/tutorial_benchmark
 ```
 
 Add the `--decay` flag to inject heterogeneous edge reliability into the
@@ -98,7 +98,7 @@ model non-trivial and produces meaningful `mean_output_quality` values in the
 results:
 
 ```bash
-python experiments/run_benchmark.py \
+python dev/experiments/run_benchmark.py \
   --workflows chain planner_coder_tester_reviewer research_writer_verifier \
   --algorithms rzf-centrality greedy betweenness pagerank random \
   --models quality-cascade independent-cascade \
@@ -110,20 +110,20 @@ Run the verifier-placement study (resolving coverage vs budget across all
 workflow templates):
 
 ```bash
-python experiments/verifier_placement_evidence.py
+python dev/experiments/verifier_placement_evidence.py
 ```
 
 Run the RZF seeding scaling study on larger workflow graphs:
 
 ```bash
-python experiments/rzf_scaling_study.py
+python dev/experiments/rzf_scaling_study.py
 ```
 
 Other reproducible artifacts:
 
 ```bash
-python experiments/train_seed_scorer.py --trials 10 --epochs 20 --out results/tutorial_ml/model.json
-python experiments/run_rl_routing.py --trials 10 --out results/tutorial_rl/trajectory.json
+python dev/experiments/train_seed_scorer.py --trials 10 --epochs 20 --out results/tutorial_ml/model.json
+python dev/experiments/run_rl_routing.py --trials 10 --out results/tutorial_rl/trajectory.json
 ```
 
 These produce saved artifacts that can be used for research tables and plots.

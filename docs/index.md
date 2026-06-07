@@ -33,8 +33,8 @@ Contracts, algorithms, and repo structure:
 - [Quality-aware routing](routing_quality.md)
 - [Visualization](visualization.md)
 - [Repository layout](repository_layout.md)
-- [Examples catalog](../examples/README.md)
-- [Experiments catalog](../experiments/README.md)
+- [Examples catalog](../dev/examples/README.md)
+- [Experiments catalog](../dev/experiments/README.md)
 
 ## Research and evaluation
 
@@ -82,9 +82,9 @@ agentprop readiness --json
 Reproduce key studies (no API keys):
 
 ```bash
-python experiments/failure_localization_study.py
-python experiments/quality_cascade_vs_ic.py
+python dev/experiments/failure_localization_study.py
+python dev/experiments/quality_cascade_vs_ic.py
 agentprop run-evidence --out-dir docs/results/scale_quality_evidence
 ```
 
-Full script list: [experiments/README.md](../experiments/README.md).
+Full script list: [dev/experiments/README.md](../dev/experiments/README.md).

@@ -37,7 +37,7 @@ This writes:
 Long external benchmark runs should be launched through the watchdog wrapper:
 
 ```bash
-python experiments/run_with_watchdog.py \
+python dev/experiments/run_with_watchdog.py \
   --timeout 21600 \
   --idle-timeout 1800 \
   --log benchmark-results/terminal-bench-2.1/terminus-2-agentprop/launcher.log \

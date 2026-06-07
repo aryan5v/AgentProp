@@ -34,9 +34,9 @@ Run it with:
 
 ```bash
 pip install "agentprop[dl]"
-PYTHONPATH=src:. python experiments/train_torch_gnn.py --architecture graphsage --epochs 100
-PYTHONPATH=src:. python experiments/train_torch_gnn.py --architecture graph_transformer --epochs 100
-PYTHONPATH=src:. python experiments/train_torch_gnn.py --architecture edge_conditioned --epochs 100
+PYTHONPATH=src:. python dev/experiments/train_torch_gnn.py --architecture graphsage --epochs 100
+PYTHONPATH=src:. python dev/experiments/train_torch_gnn.py --architecture graph_transformer --epochs 100
+PYTHONPATH=src:. python dev/experiments/train_torch_gnn.py --architecture edge_conditioned --epochs 100
 ```
 
 The base training loop imitates greedy influence-maximization labels and scores
@@ -52,13 +52,13 @@ against real task success, pass empirical routed rows with task outcomes,
 selected seeds, and context allocations:
 
 ```bash
-PYTHONPATH=src:. python experiments/train_seed_scorer.py \
+PYTHONPATH=src:. python dev/experiments/train_seed_scorer.py \
   --model linear \
   --empirical-results results/case_study/results.json \
   --workflow planner_coder_tester_reviewer \
   --out results/ml/empirical_seed_scorer.json
 
-PYTHONPATH=src:. python experiments/train_torch_gnn.py \
+PYTHONPATH=src:. python dev/experiments/train_torch_gnn.py \
   --architecture edge_conditioned \
   --empirical-results results/case_study/results.json \
   --workflow planner_coder_tester_reviewer \
@@ -75,7 +75,7 @@ observed `activated_verifiers`, `verifier_nodes`, or `verifier_placements`.
 Successful verifier activations become positive examples; failed activations
 become negative examples. Rows without observed verifier decisions are skipped.
 This applies to both dependency-light node scorers and optional torch GNN
-training via `experiments/train_torch_gnn.py --task verifier --empirical-results ...`.
+training via `dev/experiments/train_torch_gnn.py --task verifier --empirical-results ...`.
 
 Edge-pruning scorers can use the same empirical row format when rows include
 `pruned_edges`. Successful pruned edges become positive examples; failed pruned
@@ -95,22 +95,22 @@ Dependency-light ML baselines include:
 Run them with:
 
 ```bash
-PYTHONPATH=src:. python experiments/train_seed_scorer.py --model mlp --task seed
-PYTHONPATH=src:. python experiments/train_seed_scorer.py --model pairwise --task seed
-PYTHONPATH=src:. python experiments/train_seed_scorer.py --model regression --task seed
-PYTHONPATH=src:. python experiments/train_seed_scorer.py --model mlp --task verifier
-PYTHONPATH=src:. python experiments/train_seed_scorer.py --task verifier --empirical-results results/case_study/results.json
-PYTHONPATH=src:. python experiments/train_edge_pruning_scorer.py
-PYTHONPATH=src:. python experiments/train_edge_pruning_scorer.py --empirical-results results/case_study/results.json
-PYTHONPATH=src:. python experiments/evaluate_ml_generalization.py --model mlp
+PYTHONPATH=src:. python dev/experiments/train_seed_scorer.py --model mlp --task seed
+PYTHONPATH=src:. python dev/experiments/train_seed_scorer.py --model pairwise --task seed
+PYTHONPATH=src:. python dev/experiments/train_seed_scorer.py --model regression --task seed
+PYTHONPATH=src:. python dev/experiments/train_seed_scorer.py --model mlp --task verifier
+PYTHONPATH=src:. python dev/experiments/train_seed_scorer.py --task verifier --empirical-results results/case_study/results.json
+PYTHONPATH=src:. python dev/experiments/train_edge_pruning_scorer.py
+PYTHONPATH=src:. python dev/experiments/train_edge_pruning_scorer.py --empirical-results results/case_study/results.json
+PYTHONPATH=src:. python dev/experiments/evaluate_ml_generalization.py --model mlp
 ```
 
 Use `--l2-penalty` on lightweight ML training scripts to reduce memorization on
 small workflow collections:
 
 ```bash
-PYTHONPATH=src:. python experiments/train_seed_scorer.py --model mlp --l2-penalty 0.001
-PYTHONPATH=src:. python experiments/train_edge_pruning_scorer.py --l2-penalty 0.001
+PYTHONPATH=src:. python dev/experiments/train_seed_scorer.py --model mlp --l2-penalty 0.001
+PYTHONPATH=src:. python dev/experiments/train_edge_pruning_scorer.py --l2-penalty 0.001
 ```
 
 Dependency-light ML scorers can be saved as JSON checkpoints:
@@ -126,12 +126,12 @@ scorer = checkpoint.model
 Experiment runs can also register checkpoints and metrics into a model registry:
 
 ```bash
-PYTHONPATH=src:. python experiments/train_seed_scorer.py \
+PYTHONPATH=src:. python dev/experiments/train_seed_scorer.py \
   --model mlp \
   --registry-root results/ml_core/model_registry \
   --run-id mlp_seed_scorer
 
-PYTHONPATH=src:. python experiments/run_rl_routing.py \
+PYTHONPATH=src:. python dev/experiments/run_rl_routing.py \
   --policy feature-policy \
   --registry-root results/ml_core/model_registry \
   --run-id feature_policy_routing
@@ -163,8 +163,8 @@ expectations explicit.
 Dry-run the suite:
 
 ```bash
-PYTHONPATH=src:. python experiments/run_experiment_suite.py \
-  --config configs/experiment_suites/ml_core.json \
+PYTHONPATH=src:. python dev/experiments/run_experiment_suite.py \
+  --config dev/configs/experiment_suites/ml_core.json \
   --artifact-root results/ml_core \
   --dry-run
 ```
@@ -172,8 +172,8 @@ PYTHONPATH=src:. python experiments/run_experiment_suite.py \
 Run a small local sweep:
 
 ```bash
-PYTHONPATH=src:. python experiments/run_ml_rl_sweep.py \
-  --config configs/sweeps/ml_rl_smoke.json \
+PYTHONPATH=src:. python dev/experiments/run_ml_rl_sweep.py \
+  --config dev/configs/sweeps/ml_rl_smoke.json \
   --artifact-root results/ml_rl_smoke
 ```
 
@@ -184,7 +184,7 @@ registry hooks in training scripts for checkpoints.
 Run one recipe:
 
 ```bash
-PYTHONPATH=src:. python experiments/run_experiment_suite.py \
+PYTHONPATH=src:. python dev/experiments/run_experiment_suite.py \
   --only ml_generalization_mlp \
   --artifact-root results/ml_core
 ```

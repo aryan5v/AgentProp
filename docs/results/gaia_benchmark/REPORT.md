@@ -1,7 +1,7 @@
 # AgentProp GAIA-Style Benchmark — First Results
 
 **Model:** `gemini-3.5-flash`
-**Benchmark:** 50-question multi-hop QA (`benchmarks/gaia_style_qa.json`)
+**Benchmark:** 50-question multi-hop QA (`dev/benchmarks/gaia_style_qa.json`)
 **Workflow:** `research_writer_verifier` — planner -> researcher_a + researcher_b -> writer -> verifier
 **Seeds (budget=3):** `planner, writer, verifier`
 

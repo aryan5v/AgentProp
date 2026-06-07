@@ -68,14 +68,14 @@ replication is documented in
 
 ## Coding-agent integration
 
-AgentProp ships a same-repo plugin bundle at [`plugins/agentprop`](plugins/agentprop)
+AgentProp ships a same-repo plugin bundle at [`distribution/plugins/agentprop`](distribution/plugins/agentprop)
 (Codex + Claude Code manifests, packaged skill, MCP config). Install the Python
 package, then register the plugin:
 
 ```bash
 python -m pip install "agentprop[mcp]"
 
-codex plugin marketplace add aryan5v/AgentProp --sparse .agents --sparse plugins
+codex plugin marketplace add aryan5v/AgentProp --sparse .agents --sparse distribution/plugins
 codex plugin add agentprop@agentprop
 ```
 
@@ -91,11 +91,11 @@ Full setup, MCP registration, and troubleshooting:
 ## Examples
 
 ```bash
-python examples/coding_agent_full_suite.py --out-dir reports/full-suite
-python examples/minimal_control_loop.py
+python dev/examples/coding_agent_full_suite.py --out-dir reports/full-suite
+python dev/examples/minimal_control_loop.py
 ```
 
-More: [examples/README.md](examples/README.md).
+More: [dev/examples/README.md](dev/examples/README.md).
 
 ## Repository map
 
@@ -103,10 +103,9 @@ More: [examples/README.md](examples/README.md).
 | --- | --- |
 | `src/agentprop/` | Library and CLI |
 | `docs/` | Guides, reference, and [public artifacts](docs/results/ARTIFACTS.md) |
-| `experiments/` | Repro scripts — [catalog](experiments/README.md) |
-| `examples/` | Integration templates |
-| `plugins/agentprop/` | Editor-agent plugin bundle |
-| `skills/` | Canonical skills.sh skill source |
+| [`dev/`](dev/README.md) | Benchmarks, configs, [experiments](dev/experiments/README.md), [examples](dev/examples/README.md) |
+| [`distribution/`](distribution/README.md) | [Plugin bundle](distribution/plugins/agentprop/), [canonical skill](distribution/skills/agentprop-workflow-optimizer/) |
+| `tests/` | Test suite |
 
 Details: [repository layout](docs/repository_layout.md).
 

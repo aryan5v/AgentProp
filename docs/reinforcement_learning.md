@@ -21,25 +21,25 @@ AgentProp includes a small sequential routing environment and four policies:
 Run the trainable policy:
 
 ```bash
-PYTHONPATH=src:. python experiments/run_rl_routing.py --policy q-learning --episodes 100 --out results/rl/routing_policy.json
+PYTHONPATH=src:. python dev/experiments/run_rl_routing.py --policy q-learning --episodes 100 --out results/rl/routing_policy.json
 ```
 
 Run the policy-gradient baseline:
 
 ```bash
-PYTHONPATH=src:. python experiments/run_rl_routing.py --policy reinforce --episodes 100 --out results/rl/reinforce_policy.json
+PYTHONPATH=src:. python dev/experiments/run_rl_routing.py --policy reinforce --episodes 100 --out results/rl/reinforce_policy.json
 ```
 
 Run the clipped policy-gradient baseline:
 
 ```bash
-PYTHONPATH=src:. python experiments/run_rl_routing.py --policy ppo --episodes 100 --out results/rl/ppo_policy.json
+PYTHONPATH=src:. python dev/experiments/run_rl_routing.py --policy ppo --episodes 100 --out results/rl/ppo_policy.json
 ```
 
 Run the graph-feature-conditioned policy:
 
 ```bash
-PYTHONPATH=src:. python experiments/run_rl_routing.py --policy feature-policy --episodes 100 --out results/rl/feature_policy.json
+PYTHONPATH=src:. python dev/experiments/run_rl_routing.py --policy feature-policy --episodes 100 --out results/rl/feature_policy.json
 ```
 
 The Q-learning, REINFORCE, PPO, and graph-feature policy loops optimize over
@@ -60,7 +60,7 @@ for tabular policies supports:
 Run expanded-action training:
 
 ```bash
-PYTHONPATH=src:. python experiments/run_rl_routing.py --policy ppo --expanded-actions --episodes 100
+PYTHONPATH=src:. python dev/experiments/run_rl_routing.py --policy ppo --expanded-actions --episodes 100
 ```
 
 Trained dependency-light RL policies can be saved as JSON checkpoints:
@@ -80,7 +80,7 @@ Compare RL with broadcast, classical graph algorithms, and ML/GNN-style
 baselines:
 
 ```bash
-PYTHONPATH=src:. python experiments/evaluate_routing_baselines.py --workflows chain,star,tree --episodes 40
+PYTHONPATH=src:. python dev/experiments/evaluate_routing_baselines.py --workflows chain,star,tree --episodes 40
 ```
 
 The comparison report now includes both seed-only policies (`q_learning`,
@@ -103,7 +103,7 @@ real routed tasks, calibrate cost and latency penalties from empirical rows that
 include pass/fail or quality labels:
 
 ```bash
-PYTHONPATH=src:. python experiments/run_rl_routing.py \
+PYTHONPATH=src:. python dev/experiments/run_rl_routing.py \
   --policy ppo \
   --reward-calibration-rows results/case_study/results.json \
   --out results/rl/ppo_empirical_reward.json
@@ -119,7 +119,7 @@ When empirical rows also include routing context, such as `context_allocations`,
 the quality term in the RL reward instead of raw propagation coverage:
 
 ```bash
-PYTHONPATH=src:. python experiments/run_rl_routing.py \
+PYTHONPATH=src:. python dev/experiments/run_rl_routing.py \
   --policy feature-policy \
   --reward-calibration-rows results/case_study/results.json \
   --out results/rl/feature_policy_expected_success.json
@@ -133,7 +133,7 @@ nodes received full or compressed context.
 Replay an exported trajectory with a deterministic propagation seed:
 
 ```bash
-PYTHONPATH=src:. python experiments/replay_rl_trajectory.py \
+PYTHONPATH=src:. python dev/experiments/replay_rl_trajectory.py \
   --trajectory results/rl/routing_policy.json \
   --workflow planner_coder_tester_reviewer \
   --policy ppo \

@@ -6,7 +6,7 @@ dependency-light ML scorers, and RL policies on the same workflow templates.
 Run a quick comparison:
 
 ```bash
-PYTHONPATH=src:. python experiments/evaluate_routing_baselines.py \
+PYTHONPATH=src:. python dev/experiments/evaluate_routing_baselines.py \
   --workflows chain,star,tree,generic_dag \
   --budget 2 \
   --trials 20 \
@@ -49,11 +49,11 @@ Heuristic ML examples are behavior-cloning baselines. They are useful for
 checking whether small scorers can approximate classical graph policies, but
 they are not evidence that learned routing beats the teacher. For that, train
 with empirical outcome rows from routed case studies or benchmark artifacts via
-`experiments/train_seed_scorer.py --empirical-results ...`. The same script
+`dev/experiments/train_seed_scorer.py --empirical-results ...`. The same script
 supports empirical verifier placement with `--task verifier` when rows include
 observed verifier activations. Edge-pruning scorers can likewise train from
 empirical `pruned_edges` rows with
-`experiments/train_edge_pruning_scorer.py --empirical-results ...`, which
+`dev/experiments/train_edge_pruning_scorer.py --empirical-results ...`, which
 separates low-cost edges from edges actually removed without hurting task
 success.
 

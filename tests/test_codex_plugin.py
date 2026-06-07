@@ -7,7 +7,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_codex_plugin_manifest_points_to_packaged_skill_and_mcp() -> None:
-    plugin_root = REPO_ROOT / "plugins" / "agentprop"
+    plugin_root = REPO_ROOT / "distribution" / "plugins" / "agentprop"
     manifest = json.loads(
         (plugin_root / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8")
     )
@@ -24,7 +24,7 @@ def test_codex_plugin_manifest_points_to_packaged_skill_and_mcp() -> None:
 
 
 def test_claude_plugin_manifest_points_to_same_bundle() -> None:
-    plugin_root = REPO_ROOT / "plugins" / "agentprop"
+    plugin_root = REPO_ROOT / "distribution" / "plugins" / "agentprop"
     manifest = json.loads(
         (plugin_root / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8")
     )
@@ -47,7 +47,7 @@ def test_claude_marketplace_exposes_agentprop_plugin() -> None:
     )
 
     entries = {entry["name"]: entry for entry in marketplace["plugins"]}
-    assert entries["agentprop"]["source"] == "./plugins/agentprop"
+    assert entries["agentprop"]["source"] == "./distribution/plugins/agentprop"
 
 
 def test_repo_marketplace_exposes_agentprop_plugin() -> None:
@@ -58,5 +58,5 @@ def test_repo_marketplace_exposes_agentprop_plugin() -> None:
     )
 
     entries = {entry["name"]: entry for entry in marketplace["plugins"]}
-    assert entries["agentprop"]["source"]["path"] == "./plugins/agentprop"
+    assert entries["agentprop"]["source"]["path"] == "./distribution/plugins/agentprop"
     assert entries["agentprop"]["policy"]["installation"] == "AVAILABLE"

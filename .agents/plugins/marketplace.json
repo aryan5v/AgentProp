@@ -8,7 +8,7 @@
       "name": "agentprop",
       "source": {
         "source": "local",
-        "path": "./plugins/agentprop"
+        "path": "./distribution/plugins/agentprop"
       },
       "policy": {
         "installation": "AVAILABLE",

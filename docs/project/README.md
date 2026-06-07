@@ -11,7 +11,7 @@ Governance, history, and contributor docs.
 Related:
 
 - [Security policy](../../SECURITY.md) — GitHub security policy
-- [Environment template](../../configs/.env.example) — copy to `.env` locally
+- [Environment template](../../dev/configs/.env.example) — copy to `.env` locally
 
 ## Root files (tooling requirements)
 
@@ -20,6 +20,6 @@ Related:
 | `README.md` | GitHub and PyPI entry point |
 | `pyproject.toml` / `uv.lock` | Python packaging (`uv` expects the lockfile here) |
 | `LICENSE` | License discovery |
-| `Makefile` | Thin wrapper → [scripts/Makefile](../../scripts/Makefile) |
+| `Makefile` | Thin wrapper → [dev/scripts/Makefile](../../dev/scripts/Makefile) |
 | `CONTRIBUTING.md` | Short pointer for GitHub’s contributing link |
 | `AGENTS.md` | Short pointer for coding-agent tools |

@@ -33,7 +33,7 @@ often at low `k` before converging as `k` increases.
 ## Reproduce
 
 ```bash
-python experiments/failure_localization_study.py
+python dev/experiments/failure_localization_study.py
 ```
 
 See [README.md](README.md) and [verifier semantics](../../verifier_semantics.md).

@@ -11,7 +11,7 @@ python -m pip install -e ".[dev]"
 make test   # or: pytest
 ```
 
-With an editable install, `experiments/` and `examples/` run without
+With an editable install, `dev/experiments/` and `dev/examples/` run without
 `PYTHONPATH=src`. See [environment setup](../environment.md).
 
 ## Data, Secrets, And Benchmark Artifacts
@@ -88,7 +88,7 @@ When adding a new algorithm:
 
 ## Adding Workflow Fixtures
 
-Workflow fixtures live in `benchmarks/workflows/`.
+Workflow fixtures live in `dev/benchmarks/workflows/`.
 
 Each fixture should:
 
@@ -96,7 +96,7 @@ Each fixture should:
 - Use supported `NodeType` values.
 - Include non-negative token/message costs.
 - Include reliability and error-rate assumptions when meaningful.
-- Be summarized in `benchmarks/manifest.md`.
+- Be summarized in `dev/benchmarks/manifest.md`.
 
 ## Research Contributions
 

@@ -8,7 +8,7 @@ independent-cascade propagation.
 
 ```bash
 pip install -e ".[dev]"
-python experiments/quality_cascade_vs_ic.py
+python dev/experiments/quality_cascade_vs_ic.py
 ```
 
 No API keys required. Writes `results.json` in this directory.

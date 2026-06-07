@@ -8,7 +8,7 @@ framework packages at core install time.
 
 | Framework | Dict interchange | Native builder | Round-trip tested | Notes |
 | --- | --- | --- | --- | --- |
-| `langgraph` | Yes | Yes (placeholder nodes) | Yes | Best E2E path; see `examples/langgraph_e2e.py` |
+| `langgraph` | Yes | Yes (placeholder nodes) | Yes | Best E2E path; see `dev/examples/langgraph_e2e.py` |
 | `crewai` | Yes | Yes when installed | Partial | Requires `crewai` package |
 | `openai-agents` | Yes | Yes when installed | Partial | Requires OpenAI Agents SDK |
 | `autogen` | Yes | No | Dict only | Native builder raises `NativeFrameworkUnavailable` |
