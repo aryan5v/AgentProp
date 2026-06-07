@@ -17,6 +17,24 @@ from agentprop.runtime import ControlSession
 _SHARED_ANALYSIS_CACHE: dict[str, GraphAnalysisCache] = {}
 
 
+def _resolve_global_state_path(path: str | Path | None) -> Path:
+    """Resolve the path to the cross-session learned-state file.
+
+    Precedence: explicit ``path`` argument, then ``AGENTPROP_GLOBAL_STATE`` env
+    var, then ``~/.agentprop/learned_state.json``. The parent directory is
+    created on demand. This file aggregates bandit and risk state across every
+    session root so learning survives a change of ``--dir``.
+    """
+
+    if path is not None:
+        resolved = Path(path)
+    else:
+        env = os.environ.get("AGENTPROP_GLOBAL_STATE")
+        resolved = Path(env) if env else Path.home() / ".agentprop" / "learned_state.json"
+    resolved.parent.mkdir(parents=True, exist_ok=True)
+    return resolved
+
+
 def _resolve_store_root(root: str | Path | None) -> Path:
     if root is not None:
         path = Path(root)
@@ -86,8 +104,14 @@ class PersistedSessionRecord:
 class SessionStore:
     """File-backed store for control sessions and learned routing state."""
 
-    def __init__(self, root: str | Path | None = None) -> None:
+    def __init__(
+        self,
+        root: str | Path | None = None,
+        *,
+        global_state_path: str | Path | None = None,
+    ) -> None:
         self.root = _resolve_store_root(root)
+        self.global_state_path = _resolve_global_state_path(global_state_path)
         self._live_sessions: dict[str, ControlSession] = {}
         self._records: dict[str, PersistedSessionRecord] = {}
         self._bandit = CategoryBanditRoutingPolicy(
@@ -197,49 +221,83 @@ class SessionStore:
         path = self.root / f"{record.session_id}.json"
         path.write_text(json.dumps(record.to_dict(), indent=2, sort_keys=True) + "\n")
 
+    def _bandit_state_dict(self) -> dict[str, Any]:
+        return {
+            "arms": self._bandit.arms,
+            "epsilon": self._bandit.epsilon,
+            "default_arm": self._bandit.default_arm,
+            "stats": {
+                category: {
+                    arm: {"count": stats.count, "value": stats.value}
+                    for arm, stats in arms.items()
+                }
+                for category, arms in self._bandit.stats.items()
+            },
+        }
+
     def _persist_learned_state(self) -> None:
         bandit_path = self.root / "bandit.json"
         bandit_path.write_text(
-            json.dumps(
-                {
-                    "arms": self._bandit.arms,
-                    "epsilon": self._bandit.epsilon,
-                    "default_arm": self._bandit.default_arm,
-                    "stats": {
-                        category: {
-                            arm: {"count": stats.count, "value": stats.value}
-                            for arm, stats in arms.items()
-                        }
-                        for category, arms in self._bandit.stats.items()
-                    },
-                },
-                indent=2,
-                sort_keys=True,
-            )
-            + "\n"
+            json.dumps(self._bandit_state_dict(), indent=2, sort_keys=True) + "\n"
         )
         self._risk_state.save(self.root / "risk_state.json")
+        self._persist_global_learned_state()
+
+    def _persist_global_learned_state(self) -> None:
+        """Write the combined bandit + risk state to the global learned-state file.
+
+        Unlike the per-root ``bandit.json``/``risk_state.json`` files, this single
+        document is keyed to the user (not a session directory), so learned
+        routing priors carry over even when a new ``--dir`` is used.
+        """
+
+        payload = {
+            "version": 1,
+            "bandit": self._bandit_state_dict(),
+            "risk_state": self._risk_state.to_dict(),
+        }
+        self.global_state_path.write_text(
+            json.dumps(payload, indent=2, sort_keys=True) + "\n"
+        )
+
+    def _load_bandit_from_dict(self, data: dict[str, Any]) -> None:
+        from agentprop.rl.bandit import BanditArmStats
+
+        self._bandit = CategoryBanditRoutingPolicy(
+            arms=tuple(data.get("arms", self._bandit.arms)),
+            epsilon=float(data.get("epsilon", self._bandit.epsilon)),
+            default_arm=data.get("default_arm", self._bandit.default_arm),
+        )
+        for category, arms in dict(data.get("stats", {})).items():
+            for arm, stats in arms.items():
+                self._bandit.stats.setdefault(category, {})[arm] = BanditArmStats(
+                    count=int(stats.get("count", 0)),
+                    value=float(stats.get("value", 0.0)),
+                )
 
     def _load_state(self) -> None:
+        # Prefer per-root state; fall back to the global learned-state file so a
+        # fresh session directory still inherits previously-learned priors.
+        global_state: dict[str, Any] = {}
+        if self.global_state_path.exists():
+            try:
+                loaded = json.loads(self.global_state_path.read_text(encoding="utf-8"))
+                if isinstance(loaded, dict):
+                    global_state = loaded
+            except (json.JSONDecodeError, OSError):
+                global_state = {}
+
         bandit_path = self.root / "bandit.json"
         if bandit_path.exists():
-            data = json.loads(bandit_path.read_text())
-            from agentprop.rl.bandit import BanditArmStats
+            self._load_bandit_from_dict(json.loads(bandit_path.read_text()))
+        elif isinstance(global_state.get("bandit"), dict):
+            self._load_bandit_from_dict(global_state["bandit"])
 
-            self._bandit = CategoryBanditRoutingPolicy(
-                arms=tuple(data.get("arms", self._bandit.arms)),
-                epsilon=float(data.get("epsilon", self._bandit.epsilon)),
-                default_arm=data.get("default_arm", self._bandit.default_arm),
-            )
-            for category, arms in dict(data.get("stats", {})).items():
-                for arm, stats in arms.items():
-                    self._bandit.stats.setdefault(category, {})[arm] = BanditArmStats(
-                        count=int(stats.get("count", 0)),
-                        value=float(stats.get("value", 0.0)),
-                    )
         risk_path = self.root / "risk_state.json"
         if risk_path.exists():
             self._risk_state = LearnedRiskState.load(risk_path)
+        elif isinstance(global_state.get("risk_state"), dict):
+            self._risk_state = LearnedRiskState.from_dict(global_state["risk_state"])
         for path in sorted(self.root.glob("*.json")):
             if path.name in {"bandit.json", "risk_state.json"}:
                 continue

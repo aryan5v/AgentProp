@@ -35,10 +35,16 @@ from agentprop.evaluation.terminal_bench import (
     write_terminal_bench_launch_bundle,
     write_terminal_bench_summary_report,
 )
-from agentprop.integrations import graph_from_trace, render_coding_agent_instructions
+from agentprop.integrations import (
+    aggregate_session_stats,
+    graph_from_trace,
+    render_coding_agent_instructions,
+    render_session_stats_markdown,
+)
 from agentprop.runtime.demos import CONTROL_DEMOS, run_control_demo
 from agentprop.visualization import write_dot
 from agentprop.workflows import WORKFLOW_DESCRIPTIONS, WORKFLOW_TEMPLATES
+from agentprop.workflows.scaffolder import TOPOLOGIES, scaffold_workflow
 
 _CLI_EPILOG = """
 examples:
@@ -108,6 +114,10 @@ def _dispatch(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
         return _ingest_trace(args)
     if args.command == "trace-replay":
         return _trace_replay(args)
+    if args.command == "init":
+        return _init(args)
+    if args.command == "sessions":
+        return _sessions(args)
 
     parser.print_help()
     return 1
@@ -403,6 +413,54 @@ def _build_parser() -> argparse.ArgumentParser:
         ),
     )
     trace_replay.add_argument("--json", action="store_true", help="emit JSON instead of Markdown")
+
+    init = subparsers.add_parser(
+        "init",
+        help="scaffold a starter workflow JSON file from a node list and topology",
+    )
+    init.add_argument("name", help="workflow name (used for the output file stem)")
+    init.add_argument(
+        "--nodes",
+        required=True,
+        help="comma-separated node ids, e.g. planner,coder,tester",
+    )
+    init.add_argument(
+        "--type",
+        dest="topology",
+        choices=list(TOPOLOGIES),
+        default="pipeline",
+        help="graph topology to wire the nodes into (default: pipeline)",
+    )
+    init.add_argument(
+        "--out",
+        type=Path,
+        default=None,
+        help="output path (default: ./<name>.json)",
+    )
+    init.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+
+    sessions = subparsers.add_parser(
+        "sessions",
+        help="inspect saved control sessions",
+    )
+    sessions_sub = sessions.add_subparsers(dest="sessions_command")
+    sessions_stats = sessions_sub.add_parser(
+        "stats",
+        help="aggregate analytics across saved session records",
+    )
+    sessions_stats.add_argument(
+        "--dir",
+        type=Path,
+        default=None,
+        help="session directory (default: $AGENTPROP_SESSION_DIR or ~/.agentprop/sessions)",
+    )
+    sessions_stats.add_argument(
+        "--out",
+        type=Path,
+        default=None,
+        help="write the report to a file instead of stdout",
+    )
+    sessions_stats.add_argument("--json", action="store_true", help="emit machine-readable JSON")
 
     return parser
 
@@ -845,6 +903,65 @@ def _trace_replay(args: argparse.Namespace) -> int:
         )
     else:
         print(format_replay_table(result))
+    return 0
+
+
+def _init(args: argparse.Namespace) -> int:
+    node_ids = [node.strip() for node in args.nodes.split(",") if node.strip()]
+    if not node_ids:
+        raise ValueError("--nodes must list at least one node id")
+    graph = scaffold_workflow(node_ids, topology=args.topology)
+    out_path = args.out if args.out is not None else Path(f"{args.name}.json")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    graph.to_json(out_path)
+    payload = {
+        "name": args.name,
+        "topology": args.topology,
+        "nodes": node_ids,
+        "out": str(out_path),
+        "node_count": graph.node_count,
+        "edge_count": graph.edge_count,
+    }
+    if args.json:
+        print(json.dumps(payload, indent=2, sort_keys=True))
+    else:
+        print(f"Wrote starter workflow to {out_path}")
+        print(f"  Topology: {args.topology}")
+        print(f"  Nodes ({graph.node_count}): {', '.join(node_ids)}")
+        print(f"  Edges: {graph.edge_count}")
+        print(f"Next: agentprop analyze {out_path} --json")
+    return 0
+
+
+def _resolve_sessions_dir(explicit: Path | None) -> Path:
+    if explicit is not None:
+        return explicit
+    import os
+
+    env = os.environ.get("AGENTPROP_SESSION_DIR")
+    if env:
+        return Path(env)
+    return Path.home() / ".agentprop" / "sessions"
+
+
+def _sessions(args: argparse.Namespace) -> int:
+    if args.sessions_command != "stats":
+        raise SystemExit("Error: sessions requires a subcommand: stats")
+
+    sessions_dir = _resolve_sessions_dir(args.dir)
+    report = aggregate_session_stats(sessions_dir)
+
+    if args.json:
+        content = json.dumps(report.to_dict(), indent=2, sort_keys=True) + "\n"
+    else:
+        content = render_session_stats_markdown(report, root=sessions_dir)
+
+    if args.out is not None:
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        args.out.write_text(content)
+        print(f"Wrote {args.out}")
+    else:
+        print(content, end="")
     return 0
 
 
