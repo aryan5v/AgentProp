@@ -67,24 +67,32 @@ stdio server config:
 ```bash
 python -m pip install "agentprop[mcp]"
 codex plugin marketplace add aryan5v/AgentProp --sparse .agents --sparse plugins
+codex plugin add agentprop@agentprop
 ```
 
-Then open the Codex plugin directory, choose the AgentProp marketplace, and
-install the AgentProp plugin. A separate repository is not required for this
-beta path; this repo can host the skill, plugin bundle, and marketplace
-metadata together while the integration is moving quickly. See
+Then start a new Codex session and ask it to use the AgentProp plugin or MCP
+tools. A separate repository is not required for this beta path; this repo can
+host the skill, plugin bundle, and marketplace metadata together while the
+integration is moving quickly. See
 [plugin distribution](plugin_distribution.md) for the dedicated-repo plan.
 
-For Claude Code, use the canonical skill at
-`skills/agentprop-workflow-optimizer/`. The
-`integrations/claude-code/agentprop-workflow-optimizer/` path is a thin install
-wrapper that adds Claude/Codex UI metadata (`agents/openai.yaml`) and points at
-the same skill content.
-
-Install the public skill package with:
+For Claude Code, install the same bundle as a Claude plugin:
 
 ```bash
-npx skills add https://github.com/aryan5v/AgentProp --skill agentprop-workflow-optimizer
+python -m pip install "agentprop[mcp]"
+claude plugin marketplace add aryan5v/AgentProp --sparse .claude-plugin plugins
+claude plugin install agentprop
+```
+
+The canonical skill lives at `skills/agentprop-workflow-optimizer/`. The
+`integrations/claude-code/agentprop-workflow-optimizer/` path is a thin wrapper
+for skill-specific metadata (`agents/openai.yaml`) and points at the same skill
+content.
+
+Install only the public skill package with:
+
+```bash
+npx skills add aryan5v/AgentProp --skill agentprop-workflow-optimizer
 ```
 
 List skills before installing:

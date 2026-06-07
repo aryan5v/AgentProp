@@ -284,23 +284,38 @@ tools. See the [control layer quickstart](docs/control_layer_quickstart.md) and
 [coding-agent integration guide](docs/coding_agents.md). For step-by-step
 Codex/Claude setup, use the [beta quickstart](docs/beta_quickstart.md).
 
-For Codex plugin beta testing, AgentProp ships a same-repo plugin bundle at
-[`plugins/agentprop`](plugins/agentprop) and a repo marketplace at
-`.agents/plugins/marketplace.json`:
+AgentProp ships one same-repo editor-agent bundle at
+[`plugins/agentprop`](plugins/agentprop). It includes:
+
+- a Codex plugin manifest
+- a Claude Code plugin manifest
+- the `agentprop-workflow-optimizer` skill
+- an `agentprop-mcp` stdio server config
 
 ```bash
+python -m pip install "agentprop[mcp]"
+
+# Codex plugin
 codex plugin marketplace add aryan5v/AgentProp --sparse .agents --sparse plugins
+codex plugin add agentprop@agentprop
+
+# Claude Code plugin
+claude plugin marketplace add aryan5v/AgentProp --sparse .claude-plugin plugins
+claude plugin install agentprop
+```
+
+If you only want the portable skill, install it directly from skills.sh:
+
+```bash
+npx skills add aryan5v/AgentProp \
+  --skill agentprop-workflow-optimizer \
+  --agent codex \
+  --agent claude-code \
+  --global
 ```
 
 Before broader beta distribution, this may move into a smaller dedicated plugin
 repo. See [plugin distribution](docs/plugin_distribution.md).
-
-The installable agent skill lives at
-[`skills/agentprop-workflow-optimizer`](skills/agentprop-workflow-optimizer):
-
-```bash
-npx skills add https://github.com/aryan5v/AgentProp --skill agentprop-workflow-optimizer
-```
 
 ## Research Position
 

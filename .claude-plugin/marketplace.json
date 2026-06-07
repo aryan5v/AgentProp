@@ -1,0 +1,14 @@
+{
+  "name": "agentprop",
+  "description": "AgentProp coding-agent plugins and skills.",
+  "owner": {
+    "name": "AgentProp contributors"
+  },
+  "plugins": [
+    {
+      "name": "agentprop",
+      "source": "./plugins/agentprop",
+      "description": "Graph control for coding-agent and multi-agent workflows."
+    }
+  ]
+}

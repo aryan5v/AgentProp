@@ -1,8 +1,12 @@
-# Claude Code Install Path
+# Claude Code Skill Install Path
 
-This directory is a **thin wrapper** for Claude Code and Codex-compatible agent
-metadata. The canonical skill content lives at
+This directory is a **thin wrapper** for skill-specific metadata. The canonical
+skill content lives at
 [`skills/agentprop-workflow-optimizer/`](../../../skills/agentprop-workflow-optimizer/).
+
+For the full Claude Code plugin, use
+[`plugins/agentprop`](../../../plugins/agentprop), which includes the Claude
+plugin manifest, the skill, and the MCP server config.
 
 ## What lives here
 
@@ -10,10 +14,18 @@ metadata. The canonical skill content lives at
   skill discovery
 - [`SKILL.md`](SKILL.md) — same entry point as the canonical skill (keep in sync)
 
-## Install (preferred)
+## Install the full plugin
 
 ```bash
-npx skills add https://github.com/aryan5v/AgentProp --skill agentprop-workflow-optimizer
+python -m pip install "agentprop[mcp]"
+claude plugin marketplace add aryan5v/AgentProp --sparse .claude-plugin plugins
+claude plugin install agentprop
+```
+
+## Install only the skill
+
+```bash
+npx skills add aryan5v/AgentProp --skill agentprop-workflow-optimizer
 ```
 
 For a source checkout, point Claude Code at either:

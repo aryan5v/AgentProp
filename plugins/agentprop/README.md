@@ -1,13 +1,15 @@
-# AgentProp Codex Plugin
+# AgentProp Coding-Agent Plugin
 
-This plugin packages AgentProp for Codex users. It includes:
+This bundle packages AgentProp for Codex and Claude Code users. It includes:
 
 - the `agentprop-workflow-optimizer` skill
 - the local `agentprop-mcp` stdio server configuration
+- a Codex plugin manifest
+- a Claude Code plugin manifest
 - starter prompts for graph analysis, routing, verifier placement, and runtime
   control
 
-The plugin expects AgentProp to be installed in the environment where Codex
+The plugin expects AgentProp to be installed in the environment where the host
 starts MCP servers:
 
 ```bash
@@ -15,19 +17,31 @@ python -m pip install "agentprop[mcp]"
 agentprop doctor --tier graph
 ```
 
-Install the repo marketplace from this repository:
+Install in Codex:
 
 ```bash
 codex plugin marketplace add aryan5v/AgentProp --sparse .agents --sparse plugins
+codex plugin add agentprop@agentprop
 ```
 
-Then open Codex, browse the AgentProp marketplace, and install the AgentProp
-plugin. In a new thread, ask Codex to use `@agentprop` or the bundled
+Then start a new Codex thread and ask Codex to use `@agentprop` or the bundled
 `$agentprop-workflow-optimizer` skill.
+
+Install in Claude Code:
+
+```bash
+claude plugin marketplace add aryan5v/AgentProp --sparse .claude-plugin plugins
+claude plugin install agentprop
+```
+
+In a new Claude Code session, ask Claude to use the AgentProp skill and MCP
+tools while analyzing or wrapping the workflow.
 
 For direct MCP setup without the plugin wrapper:
 
 ```bash
 codex mcp add agentprop -- agentprop-mcp
+claude mcp add agentprop -- agentprop-mcp
 codex mcp list
+claude mcp list
 ```
