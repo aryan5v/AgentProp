@@ -1,0 +1,25 @@
+
+../tmp/test_outputs.py ..F                                               [100%]
+
+=================================== FAILURES ===================================
+_____________________________ test_avg_temp_value ______________________________
+
+    def test_avg_temp_value():
+        # Compare ground truth answer to agent answer up to 3 decimals
+        GROUND_TRUTH = 11.428571428571429
+        agent_answer = float(Path("/app/avg_temp.txt").read_text().strip())
+>       assert round(GROUND_TRUTH, 3) == round(agent_answer, 3), (
+            f"Expected {round(GROUND_TRUTH, 3)} but got {round(agent_answer, 3)}"
+        )
+E       AssertionError: Expected 11.429 but got nan
+E       assert 11.429 == nan
+E        +  where 11.429 = round(11.428571428571429, 3)
+E        +  and   nan = round(nan, 3)
+
+/tmp/test_outputs.py:26: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tmp/test_outputs.py::test_avg_temp_file_exists
+PASSED ../tmp/test_outputs.py::test_avg_temp_file_format
+FAILED ../tmp/test_outputs.py::test_avg_temp_value - AssertionError: Expected...
+========================= 1 failed, 2 passed in 0.02s ==========================

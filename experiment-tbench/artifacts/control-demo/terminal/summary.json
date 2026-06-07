@@ -1,0 +1,128 @@
+{
+  "analysis": {
+    "bottlenecks": [
+      {
+        "node": "code_tool",
+        "score": 0.29250000000000004
+      },
+      {
+        "node": "tester",
+        "score": 0.2675
+      },
+      {
+        "node": "analyst",
+        "score": 0.245
+      },
+      {
+        "node": "search_tool",
+        "score": 0.22499999999999998
+      },
+      {
+        "node": "planner",
+        "score": 0.135
+      }
+    ],
+    "edges": 7,
+    "nodes": 6,
+    "pruning_candidates": [
+      {
+        "source": "tester",
+        "target": "code_tool"
+      }
+    ],
+    "verifier_candidates": [
+      "tester",
+      "planner"
+    ],
+    "workflow": "tool_use_pipeline"
+  },
+  "category": "terminal-repair",
+  "decision_counts": {
+    "CONTINUE": 2,
+    "FINALIZE": 1,
+    "SWITCH_STRATEGY": 1
+  },
+  "event_count": 4,
+  "features": {
+    "elapsed_s": 17.0,
+    "evaluator_passed": true,
+    "final_answer_written": true,
+    "last_error_signature": null,
+    "last_exit_code": null,
+    "repeated_error_count": 0,
+    "step_count": 4,
+    "steps_since_progress": 0,
+    "steps_since_verifier": 0,
+    "token_budget_fraction": 0.9333333333333333,
+    "total_tokens": 140,
+    "unconfirmed_pass": false,
+    "verifier_failed_count": 2,
+    "wall_time_budget_fraction": null
+  },
+  "latest_decision": {
+    "action": "FINALIZE",
+    "defer_command": true,
+    "reason": "independent verifier passed",
+    "strategy": null
+  },
+  "outcome": {
+    "action": "FINALIZE",
+    "bandit_values": {
+      "agentprop_controller": 0.8392222222222221,
+      "baseline": 0.0
+    },
+    "category": "terminal-repair",
+    "features": {
+      "elapsed_s": 17.0,
+      "evaluator_passed": true,
+      "final_answer_written": true,
+      "last_error_signature": null,
+      "last_exit_code": null,
+      "repeated_error_count": 0,
+      "step_count": 4,
+      "steps_since_progress": 0,
+      "steps_since_verifier": 0,
+      "token_budget_fraction": 0.9333333333333333,
+      "total_tokens": 140,
+      "unconfirmed_pass": false,
+      "verifier_failed_count": 2,
+      "wall_time_budget_fraction": null
+    },
+    "outcome": {
+      "claim": "repeated-error control avoids another redundant probe",
+      "demo": "terminal",
+      "passed": true,
+      "quality_loss": 0.0,
+      "quality_score": 1.0,
+      "regression_risk": 0.0,
+      "timeout_risk": 0.7320000000000001,
+      "token_savings": 0.2222222222222222
+    },
+    "passed": true,
+    "quality_loss": 0.0,
+    "quality_score": 1.0,
+    "regression_risk": 0.0,
+    "state": {
+      "elapsed_s": 17.0,
+      "evaluator_passed": true,
+      "final_answer_written": true,
+      "last_error_signature": null,
+      "last_exit_code": null,
+      "repeated_error_count": 0,
+      "step_count": 4,
+      "steps_since_progress": 0,
+      "steps_since_verifier": 0,
+      "token_budget_fraction": 0.9333333333333333,
+      "total_tokens": 140,
+      "unconfirmed_pass": false,
+      "verifier_failed_count": 2,
+      "wall_time_budget_fraction": null
+    },
+    "strategy": "agentprop_controller",
+    "task_id": "terminal-control-demo",
+    "timeout_risk": 0.7320000000000001,
+    "token_savings": 0.2222222222222222
+  },
+  "task_id": "terminal-control-demo",
+  "workflow": "tool_use_pipeline"
+}

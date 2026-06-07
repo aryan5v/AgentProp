@@ -1,0 +1,89 @@
+{
+  "baseline_tokens": 12500,
+  "reduction_pct": 24.8,
+  "replay_warning": null,
+  "rows": [
+    {
+      "command": "ls -la /app",
+      "decision_no_control": "CONTINUE",
+      "decision_with_control": "CONTINUE",
+      "step": 1,
+      "tokens_used": 600
+    },
+    {
+      "command": "cat daily_temp_sf_high.csv daily_temp_sf_low.csv",
+      "decision_no_control": "CONTINUE",
+      "decision_with_control": "CONTINUE",
+      "step": 2,
+      "tokens_used": 900
+    },
+    {
+      "command": "python merge_naive.py  # merge on raw date",
+      "decision_no_control": "CONTINUE",
+      "decision_with_control": "CONTINUE",
+      "step": 3,
+      "tokens_used": 1500
+    },
+    {
+      "command": "echo nan > /app/avg_temp.txt",
+      "decision_no_control": "CONTINUE",
+      "decision_with_control": "FORCE_VERIFY",
+      "step": 4,
+      "tokens_used": 800
+    },
+    {
+      "command": "pytest tests  # value test fails (nan)",
+      "decision_no_control": "CONTINUE",
+      "decision_with_control": "FORCE_VERIFY",
+      "step": 5,
+      "tokens_used": 1200
+    },
+    {
+      "command": "head low.csv  # inspect date formats",
+      "decision_no_control": "CONTINUE",
+      "decision_with_control": "FORCE_VERIFY",
+      "step": 6,
+      "tokens_used": 1300
+    },
+    {
+      "command": "python merge_fixed.py  # normalize + merge",
+      "decision_no_control": "CONTINUE",
+      "decision_with_control": "FORCE_VERIFY",
+      "step": 7,
+      "tokens_used": 1700
+    },
+    {
+      "command": "pytest tests  # all pass",
+      "decision_no_control": "CONTINUE",
+      "decision_with_control": "FINALIZE",
+      "step": 8,
+      "tokens_used": 1400
+    },
+    {
+      "command": "cat avg_temp.txt  # re-confirm value",
+      "decision_no_control": "CONTINUE",
+      "decision_with_control": "STOPPED",
+      "step": 9,
+      "tokens_used": 1000
+    },
+    {
+      "command": "pytest tests  # run again to be safe",
+      "decision_no_control": "CONTINUE",
+      "decision_with_control": "STOPPED",
+      "step": 10,
+      "tokens_used": 1200
+    },
+    {
+      "command": "write verbose summary of approach",
+      "decision_no_control": "CONTINUE",
+      "decision_with_control": "STOPPED",
+      "step": 11,
+      "tokens_used": 900
+    }
+  ],
+  "task_id": "heterogeneous-dates",
+  "token_delta": 3100,
+  "total_tokens_no_control": 12500,
+  "total_tokens_with_control": 9400,
+  "workflow": "tool_use_pipeline"
+}
