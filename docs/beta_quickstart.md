@@ -56,7 +56,9 @@ Or install the same-repo Codex plugin bundle, which packages the AgentProp
 skill and MCP configuration:
 
 ```bash
-codex plugin marketplace add aryan5v/AgentProp --sparse .agents --sparse plugins
+codex plugin marketplace add aryan5v/AgentProp \
+  --sparse .agents \
+  --sparse integrations/coding-agents/agentprop
 codex plugin add agentprop@agentprop
 ```
 
@@ -76,7 +78,9 @@ Use Claude Code's normal authentication path. Install the AgentProp plugin,
 which packages the AgentProp skill and MCP configuration:
 
 ```bash
-claude plugin marketplace add aryan5v/AgentProp --sparse .claude-plugin plugins
+claude plugin marketplace add aryan5v/AgentProp \
+  --sparse .claude-plugin \
+  --sparse integrations/coding-agents/agentprop
 claude plugin install agentprop
 ```
 

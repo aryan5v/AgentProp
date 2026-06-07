@@ -66,7 +66,9 @@ stdio server config:
 
 ```bash
 python -m pip install "agentprop[mcp]"
-codex plugin marketplace add aryan5v/AgentProp --sparse .agents --sparse plugins
+codex plugin marketplace add aryan5v/AgentProp \
+  --sparse .agents \
+  --sparse integrations/coding-agents/agentprop
 codex plugin add agentprop@agentprop
 ```
 
@@ -80,14 +82,16 @@ For Claude Code, install the same bundle as a Claude plugin:
 
 ```bash
 python -m pip install "agentprop[mcp]"
-claude plugin marketplace add aryan5v/AgentProp --sparse .claude-plugin plugins
+claude plugin marketplace add aryan5v/AgentProp \
+  --sparse .claude-plugin \
+  --sparse integrations/coding-agents/agentprop
 claude plugin install agentprop
 ```
 
 The canonical skill lives at `skills/agentprop-workflow-optimizer/`. The
-`integrations/claude-code/agentprop-workflow-optimizer/` path is a thin wrapper
-for skill-specific metadata (`agents/openai.yaml`) and points at the same skill
-content.
+`integrations/coding-agents/claude-code/agentprop-workflow-optimizer/` path is a
+thin wrapper for skill-specific metadata (`agents/openai.yaml`) and points at
+the same skill content.
 
 Install only the public skill package with:
 
@@ -337,13 +341,13 @@ Current implemented MCP-style tools:
 Claude Code skill template:
 
 ```text
-integrations/claude-code/agentprop-workflow-optimizer/SKILL.md
+integrations/coding-agents/claude-code/agentprop-workflow-optimizer/SKILL.md
 ```
 
 Codex instruction template:
 
 ```text
-integrations/codex/AGENTPROP.md
+integrations/coding-agents/codex/AGENTPROP.md
 ```
 
 ## What This Enables

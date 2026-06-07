@@ -285,7 +285,8 @@ tools. See the [control layer quickstart](docs/control_layer_quickstart.md) and
 Codex/Claude setup, use the [beta quickstart](docs/beta_quickstart.md).
 
 AgentProp ships one same-repo editor-agent bundle at
-[`plugins/agentprop`](plugins/agentprop). It includes:
+[`integrations/coding-agents/agentprop`](integrations/coding-agents/agentprop).
+It includes:
 
 - a Codex plugin manifest
 - a Claude Code plugin manifest
@@ -296,11 +297,15 @@ AgentProp ships one same-repo editor-agent bundle at
 python -m pip install "agentprop[mcp]"
 
 # Codex plugin
-codex plugin marketplace add aryan5v/AgentProp --sparse .agents --sparse plugins
+codex plugin marketplace add aryan5v/AgentProp \
+  --sparse .agents \
+  --sparse integrations/coding-agents/agentprop
 codex plugin add agentprop@agentprop
 
 # Claude Code plugin
-claude plugin marketplace add aryan5v/AgentProp --sparse .claude-plugin plugins
+claude plugin marketplace add aryan5v/AgentProp \
+  --sparse .claude-plugin \
+  --sparse integrations/coding-agents/agentprop
 claude plugin install agentprop
 ```
 

@@ -20,7 +20,9 @@ agentprop doctor --tier graph
 Install in Codex:
 
 ```bash
-codex plugin marketplace add aryan5v/AgentProp --sparse .agents --sparse plugins
+codex plugin marketplace add aryan5v/AgentProp \
+  --sparse .agents \
+  --sparse integrations/coding-agents/agentprop
 codex plugin add agentprop@agentprop
 ```
 
@@ -30,7 +32,9 @@ Then start a new Codex thread and ask Codex to use `@agentprop` or the bundled
 Install in Claude Code:
 
 ```bash
-claude plugin marketplace add aryan5v/AgentProp --sparse .claude-plugin plugins
+claude plugin marketplace add aryan5v/AgentProp \
+  --sparse .claude-plugin \
+  --sparse integrations/coding-agents/agentprop
 claude plugin install agentprop
 ```
 

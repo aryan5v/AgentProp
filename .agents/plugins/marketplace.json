@@ -8,7 +8,7 @@
       "name": "agentprop",
       "source": {
         "source": "local",
-        "path": "./plugins/agentprop"
+        "path": "./integrations/coding-agents/agentprop"
       },
       "policy": {
         "installation": "AVAILABLE",

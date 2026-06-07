@@ -90,7 +90,7 @@ claiming the workflow is improved.
 ## Canonical Skill Location
 
 This directory is the **source of truth** for the AgentProp agent skill.
-`integrations/claude-code/agentprop-workflow-optimizer/` is a thin Claude Code
+`integrations/coding-agents/claude-code/agentprop-workflow-optimizer/` is a thin Claude Code
 install wrapper with `agents/openai.yaml`; keep its `SKILL.md` aligned with
 this one.
 
