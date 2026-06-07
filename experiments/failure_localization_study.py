@@ -4,8 +4,9 @@ Deterministic script. Injects a synthetic fault at each node and measures whethe
 the observable verifier-distance signature is unique (localizable) under different
 placement methods.
 
-Run:
-    PYTHONPATH=src python experiments/failure_localization_study.py
+Run (after `pip install -e ".[dev]"`):
+
+    python experiments/failure_localization_study.py
 """
 
 from __future__ import annotations

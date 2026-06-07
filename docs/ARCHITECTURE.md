@@ -8,15 +8,18 @@ orchestrator: it analyzes, simulates, and supervises workflows you already run.
 ```text
 Inputs                Core                 Analysis
 ──────                ────                 ────────
-Workflow JSON    →    AgentGraph      →    algorithms/ (seeds, verifiers, pruning)
-Trace JSON       →    validation      →    propagation/ (IC, QC, RZF, learned)
-Framework dict   →    NetworkX export →    evaluation/ (benchmarks, reports)
+Workflow JSON    →    AgentGraph      →    algorithms/ (seeds, verifiers, IMM, pruning)
+Trace JSON       →    validation      →    propagation/ (IC, QC, RZF, fast kernel, learned)
+Framework dict   →    dynamic_graph   →    evaluation/ (benchmarks, evidence harness, reports)
+                     propagation_index
 
 Runtime               Integrations         Surfaces
 ───────               ────────────         ────────
-ControlSession   ←    trace_loader    →    CLI (agentprop)
-StoppingController    framework_adapters   MCP (agentprop-mcp)
+ControlSession   ←    trace_loader    →    CLI (agentprop, run-evidence)
+StoppingController    framework_adapters   MCP (agentprop-mcp + session_store)
 RuntimeController     agent_instructions   Python SDK
+critical_facts        context_advisor
+hierarchical_context
 ```
 
 ## When to use which runtime API
@@ -44,14 +47,16 @@ Most integrations should start with `ControlSession`. See
 
 | Path | Role |
 | --- | --- |
-| `src/agentprop/core/` | `AgentGraph`, nodes, edges, JSON validation |
-| `src/agentprop/propagation/` | Diffusion and quality models |
-| `src/agentprop/algorithms/` | Seed selection, verifier placement, bottlenecks |
-| `src/agentprop/evaluation/` | Benchmarks, reports, readiness, Terminal-Bench helpers |
-| `src/agentprop/runtime/` | Control loop, session facade, demos |
-| `src/agentprop/integrations/` | Traces, framework adapters, MCP, coding-agent briefs |
-| `src/agentprop/workflows/` | Built-in template graphs |
-| `experiments/` | Reproducible research scripts (run from repo checkout) |
+| `src/agentprop/core/` | `AgentGraph`, `dynamic_graph`, `propagation_index`, JSON validation |
+| `src/agentprop/propagation/` | IC, QC, RZF, learned models, fast propagation kernel |
+| `src/agentprop/algorithms/` | Seeds, verifier placement, IMM/TIM backend, bottlenecks |
+| `src/agentprop/evaluation/` | Benchmarks, `evidence_harness`, reports, readiness, Terminal-Bench |
+| `src/agentprop/runtime/` | Control loop, `ControlSession`, critical facts, hierarchical context |
+| `src/agentprop/integrations/` | Traces, adapters, MCP, `session_store`, coding-agent briefs |
+| `src/agentprop/workflows/` | Built-in template graphs (incl. dynamic/conditional) |
+| `experiments/` | Reproducible scripts — [experiments/README.md](../experiments/README.md) |
+| `examples/` | Minimal integrations — [examples/README.md](../examples/README.md) |
+| `docs/results/` | Sanitized public artifacts — [ARTIFACTS.md](results/ARTIFACTS.md) |
 
 ## What's real today
 
@@ -60,10 +65,22 @@ analysis, propagation simulation, verifier placement, and key-free control demos
 work without API keys. Real LLM validation and multi-task Terminal-Bench arms
 require credentials documented in [environment.md](environment.md).
 
+## Recent capabilities (v0.1.0a4+)
+
+| Feature | Entry point |
+| --- | --- |
+| Influence maximization (IMM) for large graphs | `algorithm=auto` or `imm` in benchmark/optimize |
+| Dynamic graph mutations at runtime | `ControlSession.enable_dynamic_graph()` |
+| Scale/quality evidence matrix | `agentprop run-evidence` or `experiments/run_evidence_harness.py` |
+| MCP session persistence | `SessionStore` under `~/.agentprop/sessions` (see coding agents doc) |
+| Critical-fact routing hints | `runtime/critical_facts.py`, `integrations/context_advisor.py` |
+
 ## Related docs
 
+- [Overview](overview.md) — core ideas and capability summary
+- [Repository layout](repository_layout.md) — where artifacts and scripts live
 - [Tutorial](tutorial.md) — hands-on walkthrough
 - [Workflow JSON schema](workflow_schema.md) — graph contract
 - [Verifier semantics](verifier_semantics.md) — metric dimension contribution
 - [Framework integrations](framework_integrations.md) — LangGraph, CrewAI, etc.
-- [AGENTS.md](../AGENTS.md) — quick guide for coding agents
+- [AGENTS.md](project/AGENTS.md) — quick guide for coding agents
