@@ -132,7 +132,12 @@ def make_propagation_model(name: str) -> PropagationModel:
         return LearnedPropagation(seed=0)
     if name == "quality-cascade":
         return QualityCascade()
-    raise ValueError(f"Unknown propagation model: {name}")
+    from agentprop.propagation.plugins import get_plugin
+
+    plugin = get_plugin(name)
+    if plugin is not None:
+        return plugin
+    raise ValueError(f"Unknown propagation model: {name!r}. Did you call load_plugins()?")
 
 
 def select_seeds(

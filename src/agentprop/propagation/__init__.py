@@ -10,6 +10,7 @@ from agentprop.propagation.learned import (
     fit_learned_propagation_from_trace_dicts,
 )
 from agentprop.propagation.linear_threshold import LinearThreshold
+from agentprop.propagation.plugins import get_plugin, list_plugins, load_plugins, register_plugin
 from agentprop.propagation.quality_cascade import QualityCascade, QualityCascadeResult
 from agentprop.propagation.randomized_zero_forcing import RandomizedZeroForcing
 from agentprop.propagation.zero_forcing import ZeroForcing
@@ -28,4 +29,8 @@ __all__ = [
     "ZeroForcing",
     "fit_learned_propagation_from_graph",
     "fit_learned_propagation_from_trace_dicts",
+    "get_plugin",
+    "list_plugins",
+    "load_plugins",
+    "register_plugin",
 ]

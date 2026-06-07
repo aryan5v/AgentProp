@@ -58,7 +58,7 @@ mcp = [
 [project.urls]
 Homepage = "https://github.com/aryan5v/AgentProp"
 Repository = "https://github.com/aryan5v/AgentProp"
-Documentation = "https://github.com/aryan5v/AgentProp#readme"
+Documentation = "https://aryan5v.github.io/AgentProp/"
 Issues = "https://github.com/aryan5v/AgentProp/issues"
 
 [tool.hatch.build.targets.wheel]
