@@ -10,8 +10,8 @@ Governance, history, and contributor docs.
 
 Related:
 
-- [Security policy](../SECURITY.md) — GitHub security policy
-- [Environment template](../../configs/env.example) — copy to `.env` locally
+- [Security policy](../../SECURITY.md) — GitHub security policy
+- [Environment template](../../configs/.env.example) — copy to `.env` locally
 
 ## Root files (tooling requirements)
 

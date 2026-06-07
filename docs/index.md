@@ -63,7 +63,7 @@ Sanitized benchmark outputs — see [ARTIFACTS.md](results/ARTIFACTS.md):
 
 - [Project meta docs](project/README.md)
 - [Contributing](project/CONTRIBUTING.md)
-- [Security policy](SECURITY.md)
+- [Security policy](../SECURITY.md)
 - [Changelog](project/CHANGELOG.md)
 - [Agent guide for coding agents](project/AGENTS.md)
 
