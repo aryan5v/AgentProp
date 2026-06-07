@@ -1,0 +1,11 @@
+{
+  "name": "agentprop",
+  "description": "Graph control for coding-agent and multi-agent workflows.",
+  "version": "0.1.0",
+  "author": {
+    "name": "AgentProp contributors",
+    "url": "https://github.com/aryan5v/AgentProp"
+  },
+  "homepage": "https://github.com/aryan5v/AgentProp",
+  "license": "Apache-2.0"
+}

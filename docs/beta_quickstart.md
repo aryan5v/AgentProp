@@ -57,10 +57,11 @@ skill and MCP configuration:
 
 ```bash
 codex plugin marketplace add aryan5v/AgentProp --sparse .agents --sparse plugins
+codex plugin add agentprop@agentprop
 ```
 
-Then open the Codex plugin directory, choose the AgentProp marketplace, and
-install the AgentProp plugin.
+Then start a new Codex session and ask it to use the AgentProp plugin or MCP
+tools while it works.
 
 Then start Codex with the brief in context:
 
@@ -71,8 +72,15 @@ codex exec --cd /path/to/project \
 
 ## Claude Code
 
-Use Claude Code's normal authentication path. Install the AgentProp skill and
-MCP server locally:
+Use Claude Code's normal authentication path. Install the AgentProp plugin,
+which packages the AgentProp skill and MCP configuration:
+
+```bash
+claude plugin marketplace add aryan5v/AgentProp --sparse .claude-plugin plugins
+claude plugin install agentprop
+```
+
+Or install the portable skill and MCP server directly:
 
 ```bash
 npx skills add aryan5v/AgentProp \
@@ -207,4 +215,12 @@ a new Codex thread:
 ```bash
 codex plugin marketplace list
 codex plugin marketplace upgrade agentprop
+```
+
+If the Claude Code plugin marketplace does not appear, refresh marketplaces and
+start a new Claude Code session:
+
+```bash
+claude plugin marketplace list
+claude plugin marketplace update
 ```

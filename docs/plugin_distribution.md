@@ -1,10 +1,13 @@
 # Plugin Distribution
 
-AgentProp has two plugin surfaces:
+AgentProp has three install surfaces:
 
-- **Main repo beta bundle:** this repository contains `plugins/agentprop/` and
-  `.agents/plugins/marketplace.json` so Codex users can test the full
-  skill-plus-MCP path directly from the source repository.
+- **Main repo beta bundle:** this repository contains `plugins/agentprop/` with
+  Codex and Claude Code plugin manifests, the packaged skill, and `.mcp.json`.
+  The repo also contains `.agents/plugins/marketplace.json` for Codex and
+  `.claude-plugin/marketplace.json` for Claude Code.
+- **Portable skill:** `skills/agentprop-workflow-optimizer/` can be installed
+  through skills.sh for Codex, Claude Code, or other skill-aware agents.
 - **Future dedicated plugin repo:** before broader beta distribution, create a
   smaller repo focused only on coding-agent installation and daily use.
 
