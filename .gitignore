@@ -35,3 +35,6 @@ docs/local/
 **/PARTIAL_REPORT.md
 **/results_partial.json
 **/checkpoint.json
+
+# Claude Code project instructions — local only, never committed
+CLAUDE.md
