@@ -61,11 +61,6 @@ Repository = "https://github.com/aryan5v/AgentProp"
 Documentation = "https://aryan5v.github.io/AgentProp/"
 Issues = "https://github.com/aryan5v/AgentProp/issues"
 
-[project.entry-points."agentprop.propagation"]
-# Built-in models are NOT declared here — they are always available.
-# Third-party packages add their own models here, for example:
-#   my-model = "my_package.propagation:MyModel"
-
 [tool.hatch.build.targets.wheel]
 packages = ["src/agentprop"]
 

@@ -28,6 +28,23 @@ _PLUGIN_REGISTRY: dict[str, PropagationModel] = {}
 
 _ENTRY_POINT_GROUP = "agentprop.propagation"
 
+_BUILTIN_MODELS: frozenset[str] = frozenset(
+    {
+        "independent-cascade",
+        "linear-threshold",
+        "bootstrap",
+        "rzf",
+        "randomized-zero-forcing",
+        "zero-forcing",
+        "learned",
+        "quality-cascade",
+    }
+)
+
+
+def _normalize(name: str) -> str:
+    return name.lower().replace("_", "-")
+
 
 def register_plugin(name: str, model: PropagationModel) -> None:
     """Register a propagation model under *name* for use by :func:`make_propagation_model`.
@@ -38,16 +55,22 @@ def register_plugin(name: str, model: PropagationModel) -> None:
 
     Args:
         name: The key that callers pass to ``--model`` or
-            :func:`make_propagation_model`. Must be non-empty and may not
-            shadow a built-in model name.
+            :func:`make_propagation_model`. Must be non-empty, must not shadow
+            a built-in model name, and must not already be registered.
         model: Any object satisfying the :class:`PropagationModel` protocol.
 
     Raises:
-        ValueError: If *name* is empty or already registered.
+        ValueError: If *name* is empty, conflicts with a built-in, or is already registered.
     """
 
     if not name:
         raise ValueError("Plugin name must be a non-empty string.")
+    normalized = _normalize(name)
+    if normalized in _BUILTIN_MODELS:
+        raise ValueError(
+            f"Plugin name {name!r} conflicts with built-in model {normalized!r}. "
+            "Choose a different name to avoid shadowing built-in behaviour."
+        )
     if name in _PLUGIN_REGISTRY:
         raise ValueError(
             f"A propagation plugin named {name!r} is already registered. "
@@ -77,11 +100,20 @@ def load_plugins() -> dict[str, PropagationModel]:
 
     eps = importlib.metadata.entry_points(group=_ENTRY_POINT_GROUP)
     for ep in eps:
+        normalized = _normalize(ep.name)
+        if normalized in _BUILTIN_MODELS:
+            logger.warning(
+                "Skipping propagation plugin %r: conflicts with built-in model %r.",
+                ep.name,
+                normalized,
+            )
+            continue
         if ep.name in _PLUGIN_REGISTRY:
             logger.debug("Skipping already-registered propagation plugin: %s", ep.name)
             continue
         try:
-            model = ep.load()
+            loaded = ep.load()
+            model = loaded() if isinstance(loaded, type) else loaded
             _PLUGIN_REGISTRY[ep.name] = model
             logger.debug(
                 "Loaded propagation plugin: %s → %s", ep.name, type(model).__name__

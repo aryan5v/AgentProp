@@ -61,6 +61,14 @@ def test_empty_name_raises() -> None:
         register_plugin("", _ConstantModel())
 
 
+def test_builtin_name_raises() -> None:
+    _clean_registry()
+    with pytest.raises(ValueError, match="conflicts with built-in"):
+        register_plugin("independent-cascade", _ConstantModel())
+    with pytest.raises(ValueError, match="conflicts with built-in"):
+        register_plugin("Independent_Cascade", _ConstantModel())
+
+
 def test_get_plugin_returns_none_for_unknown() -> None:
     _clean_registry()
     assert get_plugin("does-not-exist") is None
@@ -85,6 +93,37 @@ def test_load_plugins_idempotent(monkeypatch: pytest.MonkeyPatch) -> None:
     assert "idempotent-model" in _PLUGIN_REGISTRY
     load_plugins()
     assert list(_PLUGIN_REGISTRY).count("idempotent-model") == 1
+    _clean_registry()
+
+
+def test_load_plugins_auto_instantiates_class(monkeypatch: pytest.MonkeyPatch) -> None:
+    _clean_registry()
+    import importlib.metadata
+
+    ep_mock = type(
+        "EP", (), {"name": "class-model", "value": "x", "load": lambda self: _ConstantModel}
+    )()
+
+    monkeypatch.setattr(importlib.metadata, "entry_points", lambda group: [ep_mock])
+    load_plugins()
+    assert "class-model" in _PLUGIN_REGISTRY
+    assert isinstance(_PLUGIN_REGISTRY["class-model"], _ConstantModel)
+    _clean_registry()
+
+
+def test_load_plugins_skips_builtin_names(monkeypatch: pytest.MonkeyPatch) -> None:
+    _clean_registry()
+    import importlib.metadata
+
+    ep_mock = type(
+        "EP",
+        (),
+        {"name": "independent-cascade", "value": "x", "load": lambda self: _ConstantModel()},
+    )()
+
+    monkeypatch.setattr(importlib.metadata, "entry_points", lambda group: [ep_mock])
+    load_plugins()
+    assert "independent-cascade" not in _PLUGIN_REGISTRY
     _clean_registry()
 
 
