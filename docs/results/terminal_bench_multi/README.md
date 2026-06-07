@@ -40,7 +40,7 @@ agentprop terminal-bench summarize \
 ## Early signal (single task)
 
 On `regex-log` with Codex + gpt-5.5, A2 preserved pass while reducing tokens
-33.8% vs A0. See [README early signal section](../../README.md). Multi-task
+33.8% vs A0. See [README early signal section](../../../README.md). Multi-task
 replication is required before treating this as a benchmark claim.
 
 ## Public artifacts
