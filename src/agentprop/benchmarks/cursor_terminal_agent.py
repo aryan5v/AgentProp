@@ -16,9 +16,9 @@ from agentprop.integrations import CursorAgentConfig, CursorCommandProposer
 from agentprop.integrations.cursor_usage import CursorUsageAccumulator
 from agentprop.rl import CategoryBanditRoutingPolicy
 from agentprop.runtime import (
+    ControlDecision,
     ControlledTerminalLoop,
     ExecutionEvent,
-    ExecutionStateFeatures,
     ExecutionStateTracker,
     RuntimeRewardLogger,
     StoppingController,
@@ -127,7 +127,7 @@ def main(argv: list[str] | None = None) -> int:
     }
     try:
         if config.fast_path == "yolo-until-verifier-miss":
-            fast_result, verifier_result = _run_fast_path(config, usage)
+            fast_result, verifier_result = _run_fast_path(config, usage, run_state)
             initial_events = (fast_result.event,)
             initial_stdout = fast_result.stdout
             initial_stderr = fast_result.stderr
@@ -137,18 +137,25 @@ def main(argv: list[str] | None = None) -> int:
                 initial_stderr += verifier_result.stderr
                 if verifier_result.event.verifier_passed:
                     run_state.fast_path_verifier_passed = True
-        loop.on_strategy_switch = _on_strategy_switch(config, usage, run_state)
-        result = loop.run(
-            task=config.instruction,
-            proposer=_proposer_with_state(proposer, run_state, run_metadata),
-            executor=_executor(config),
-            verifier=_verifier(config, run_state),
-            strategy_switcher=_strategy_switcher_factory(run_state),
-            initial_events=initial_events,
-            metadata=run_metadata,
-        )
-        if initial_stdout or initial_stderr:
-            result = _prepend_output(result, stdout=initial_stdout, stderr=initial_stderr)
+        if run_state.fast_path_verifier_passed:
+            result = _loop_result_from_fast_path(
+                events=initial_events,
+                stdout=initial_stdout,
+                stderr=initial_stderr,
+            )
+        else:
+            loop.on_strategy_switch = _on_strategy_switch(config, usage, run_state)
+            result = loop.run(
+                task=config.instruction,
+                proposer=_proposer_with_state(proposer, run_state, run_metadata),
+                executor=_executor(config),
+                verifier=_verifier(config, run_state),
+                strategy_switcher=_strategy_switcher_factory(run_state),
+                initial_events=initial_events,
+                metadata=run_metadata,
+            )
+            if initial_stdout or initial_stderr:
+                result = _prepend_output(result, stdout=initial_stdout, stderr=initial_stderr)
         _write_result(config.trace_dir, result)
     except Exception as exc:  # noqa: BLE001 - Harbor should still grade container state
         crash_info = {
@@ -417,9 +424,34 @@ def _run_yolo_repair(
     return repair_result, verifier(request, None)
 
 
+def _loop_result_from_fast_path(
+    *,
+    events: tuple[ExecutionEvent, ...],
+    stdout: str,
+    stderr: str,
+) -> TerminalLoopResult:
+    """Skip the per-command control loop when yolo already passed the verifier."""
+
+    tracker = ExecutionStateTracker()
+    for event in events:
+        tracker.observe(event)
+    features = tracker.features()
+    return TerminalLoopResult(
+        strategy="cursor_yolo_fast_path",
+        decisions=(ControlDecision("FINALIZE", "yolo fast path verifier passed"),),
+        proposals=(),
+        events=events,
+        stdout=stdout,
+        stderr=stderr,
+        passed=features.evaluator_passed,
+        features=features,
+    )
+
+
 def _run_fast_path(
     config: RunnerConfig,
     usage: CursorUsageAccumulator,
+    run_state: _RunState,
 ) -> tuple[TerminalCommandResult, TerminalCommandResult | None]:
     command = _cursor_yolo_command(config)
     completed = _run_shell(
@@ -444,7 +476,7 @@ def _run_fast_path(
         stderr=completed.stderr,
         metadata={"source": "cursor-yolo-fast-path"},
     )
-    verifier = _verifier(config)
+    verifier = _verifier(config, run_state)
     if verifier is None:
         return fast_result, None
     request = TerminalTurnRequest(
@@ -460,8 +492,10 @@ def _run_fast_path(
 
 
 def _cursor_yolo_command(config: RunnerConfig) -> str:
+    workspace = config.workspace.resolve()
     prompt = (
-        "Complete the benchmark task in this workspace. You may edit files and run commands. "
+        f"Complete the benchmark task in this workspace: {workspace}\n"
+        "You may edit files and run commands there. "
         "Stop once the task is ready for the external verifier.\n\n"
         f"{config.instruction}"
     )

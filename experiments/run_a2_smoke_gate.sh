@@ -10,7 +10,7 @@ if [[ "$MODEL" != */* ]]; then
   MODEL="cursor/${MODEL}"
 fi
 OUT_ROOT="${OUT_ROOT:-benchmark-results/composer-comparison/a2-smoke-gate}"
-SMOKE_TASKS=(
+DEFAULT_SMOKE_TASKS=(
   regex-log
   nginx-request-logging
   build-cython-ext
@@ -18,6 +18,11 @@ SMOKE_TASKS=(
   torch-pipeline-parallelism
   bn-fit-modify
 )
+if [[ -n "${SMOKE_ONLY:-}" ]]; then
+  IFS=',' read -r -a SMOKE_TASKS <<< "$SMOKE_ONLY"
+else
+  SMOKE_TASKS=("${DEFAULT_SMOKE_TASKS[@]}")
+fi
 
 if [[ -z "${CURSOR_API_KEY:-}" ]]; then
   if [[ -f benchmark-results/.env.local ]]; then
@@ -43,8 +48,10 @@ if ! "$HARBOR_PYTHON" -c "import agentprop" 2>/dev/null; then
   uv pip install --python "$HARBOR_PYTHON" -e "$ROOT" -q
 fi
 
-SUMMARY_JSONL="${OUT_ROOT}/smoke-results.jsonl"
-: >"$SUMMARY_JSONL"
+SUMMARY_JSONL="${SUMMARY_JSONL:-${OUT_ROOT}/smoke-results.jsonl}"
+if [[ "${SMOKE_APPEND:-0}" != "1" ]]; then
+  : >"$SUMMARY_JSONL"
+fi
 FAILURES=0
 
 for TASK in "${SMOKE_TASKS[@]}"; do

@@ -6,12 +6,13 @@ import pytest
 
 from agentprop.benchmarks.cursor_terminal_agent import (
     _default_verifier_command,
+    _loop_result_from_fast_path,
     _parse_args,
     _write_harbor_usage,
     main,
 )
 from agentprop.integrations.cursor_usage import CursorUsageAccumulator
-from agentprop.runtime import TerminalLoopResult
+from agentprop.runtime import ExecutionEvent, TerminalLoopResult
 from agentprop.runtime.control_loop import ExecutionStateFeatures
 
 
@@ -147,6 +148,30 @@ def test_main_returns_zero_on_crash_when_score_only(tmp_path: Path, monkeypatch)
     assert code == 0
     crash = json.loads((tmp_path / "trace" / "agentprop_cursor_crash.json").read_text(encoding="utf-8"))
     assert crash["exception_type"] == "RuntimeError"
+
+
+def test_loop_result_from_fast_path_skips_control_when_verifier_passed() -> None:
+    events = (
+        ExecutionEvent(
+            step=0,
+            command="cursor-agent --yolo",
+            exit_code=0,
+            progress_made=True,
+        ),
+        ExecutionEvent(
+            step=0,
+            command="pytest -q",
+            exit_code=0,
+            verifier_run=True,
+            verifier_passed=True,
+            trusted=True,
+        ),
+    )
+    result = _loop_result_from_fast_path(events=events, stdout="yolo", stderr="")
+    assert result.passed is True
+    assert result.proposals == ()
+    assert result.decisions[0].action == "FINALIZE"
+    assert result.strategy == "cursor_yolo_fast_path"
 
 
 def test_main_returns_one_on_crash_without_score_only(tmp_path: Path, monkeypatch) -> None:  # type: ignore[no-untyped-def]
