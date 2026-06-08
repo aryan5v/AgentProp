@@ -239,6 +239,12 @@ class StoppingController:
             return ControlDecision("FINALIZE", "wall-clock budget reached")
         if features.repeated_error_count >= self.config.repeated_error_threshold:
             return ControlDecision("SWITCH_STRATEGY", "same error repeated")
+        if features.verifier_failed_count >= 2:
+            return ControlDecision(
+                "FORCE_VERIFY",
+                "repeated verifier failures",
+                defer_command=False,
+            )
         # Proactive checks below run *alongside* the agent's command (defer_command
         # =False) so a routine verification never discards useful in-flight work.
         if features.steps_since_verifier >= self.config.max_steps_without_verifier:
