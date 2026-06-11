@@ -12,7 +12,7 @@ A verifier may observe:
 - selected paths around the verifier
 - full trace context in a broadcast-style workflow
 
-The current v1-alpha metrics assume graph-local observability: ancestors,
+The current v1 metrics assume graph-local observability: ancestors,
 descendants, and paths adjacent to the verifier.
 
 ## What A Verifier Can Correct

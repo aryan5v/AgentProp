@@ -168,7 +168,7 @@ def test_cli_readiness_emits_json(capsys) -> None:  # type: ignore[no-untyped-de
     assert exit_code == 0
     payload = json.loads(capsys.readouterr().out)
     assert payload["overall_score"] >= 0.8
-    assert payload["target"] == "public alpha"
+    assert payload["target"] == "public beta"
     assert "blockers" not in payload
     assert "items" in payload
 

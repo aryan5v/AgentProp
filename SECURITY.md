@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-AgentProp is in public alpha. Security fixes are provided for the latest
+AgentProp is in public beta. Security fixes are provided for the latest
 published version and the `main` branch.
 
 ## Reporting a Vulnerability

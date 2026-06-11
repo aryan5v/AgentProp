@@ -112,5 +112,5 @@ this one.
 
 ## Source
 
-AgentProp is public alpha research software. See the main repository README and
+AgentProp is public beta software. See the main repository README and
 docs for current capabilities, caveats, and evidence.

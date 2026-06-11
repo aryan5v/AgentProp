@@ -129,9 +129,9 @@
       "min_coverage": 0.65
     },
     {
-      "id": "docs_release_alpha",
+      "id": "docs_release_beta",
       "category": "docs",
-      "prompt": "Clarify the public alpha release status and benchmark limitations.",
+      "prompt": "Clarify the public beta release status and benchmark limitations.",
       "expected": "Release notes mark real LLM validation as pending.",
       "verification_command": "pytest tests/test_reporting.py",
       "min_coverage": 0.65
