@@ -46,3 +46,29 @@ def test_difference_interval_sign() -> None:
 def test_interval_str_mentions_confidence() -> None:
     ci = bootstrap_mean_interval([1.0, 2.0, 3.0], seed=5)
     assert "95% CI" in str(ci)
+
+
+def test_mcnemar_no_discordant_pairs_is_null() -> None:
+    from agentprop.evaluation import mcnemar_exact
+
+    result = mcnemar_exact([True, False], [True, False])
+    assert result.discordant == 0
+    assert result.p_value == 1.0
+
+
+def test_mcnemar_detects_one_sided_advantage() -> None:
+    from agentprop.evaluation import mcnemar_exact
+
+    treatment = [True] * 10 + [True] * 20
+    control = [True] * 10 + [False] * 20
+    result = mcnemar_exact(treatment, control)
+    assert result.treatment_only_successes == 20
+    assert result.control_only_successes == 0
+    assert result.p_value < 0.001
+
+
+def test_mcnemar_requires_paired_lengths() -> None:
+    from agentprop.evaluation import mcnemar_exact
+
+    with pytest.raises(ValueError):
+        mcnemar_exact([True], [True, False])

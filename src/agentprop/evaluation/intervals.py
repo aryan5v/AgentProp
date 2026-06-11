@@ -88,3 +88,55 @@ def bootstrap_difference_interval(
     lower = diffs[int(alpha * (resamples - 1))]
     upper = diffs[int((1.0 - alpha) * (resamples - 1))]
     return ConfidenceInterval(point, lower, upper, confidence, len(treatment) + len(control))
+
+
+@dataclass(frozen=True, slots=True)
+class McNemarResult:
+    """Exact McNemar test over paired binary outcomes."""
+
+    treatment_only_successes: int
+    control_only_successes: int
+    discordant: int
+    p_value: float
+
+    def to_dict(self) -> dict[str, float | int]:
+        """Serialize to JSON-compatible data."""
+
+        return {
+            "treatment_only_successes": self.treatment_only_successes,
+            "control_only_successes": self.control_only_successes,
+            "discordant": self.discordant,
+            "p_value": self.p_value,
+        }
+
+
+def mcnemar_exact(
+    treatment: Sequence[bool],
+    control: Sequence[bool],
+) -> McNemarResult:
+    """Two-sided exact McNemar test on paired pass/fail outcomes.
+
+    Uses the exact binomial distribution over discordant pairs, which is the
+    appropriate form at benchmark-scale n (the chi-square approximation needs
+    far more discordant pairs than 30-task studies produce).
+    """
+
+    if len(treatment) != len(control):
+        raise ValueError("treatment and control must be paired (same length)")
+    if not treatment:
+        raise ValueError("mcnemar_exact requires at least one pair")
+    b = sum(1 for t, c in zip(treatment, control, strict=True) if t and not c)
+    c = sum(1 for t, c_ in zip(treatment, control, strict=True) if not t and c_)
+    n = b + c
+    if n == 0:
+        return McNemarResult(b, c, 0, 1.0)
+    k = min(b, c)
+    tail = sum(_binomial_pmf(n, i) for i in range(k + 1))
+    p_value = min(1.0, 2.0 * tail)
+    return McNemarResult(b, c, n, p_value)
+
+
+def _binomial_pmf(n: int, k: int) -> float:
+    from math import comb
+
+    return comb(n, k) * (0.5**n)

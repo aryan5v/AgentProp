@@ -21,8 +21,10 @@ from agentprop.evaluation.failure_taxonomy import (
 )
 from agentprop.evaluation.intervals import (
     ConfidenceInterval,
+    McNemarResult,
     bootstrap_difference_interval,
     bootstrap_mean_interval,
+    mcnemar_exact,
 )
 from agentprop.evaluation.llm_execution import (
     LLMExecutionResult,
@@ -105,6 +107,7 @@ __all__ = [
     "ArtifactKind",
     "ArtifactRecord",
     "ConfidenceInterval",
+    "McNemarResult",
     "CostSummary",
     "CoverageConstrainedCost",
     "ContextCompressionProfile",
@@ -153,6 +156,7 @@ __all__ = [
     "evaluate_pruning",
     "graded_context_allocations",
     "load_harbor_trial_result",
+    "mcnemar_exact",
     "load_artifact_registry",
     "quality_cost_summary",
     "openai_compatible_env_status",
