@@ -58,3 +58,15 @@ session.write_artifacts("reports/task-123")
 
 AgentProp observes and decides. The host agent or runtime executes shell
 commands, model calls, tools, and verifiers.
+
+## Escalation And Calibration Add-ons
+
+- `CascadeRiskAdvisor` wraps controller decisions and upgrades borderline
+  CONTINUE to FORCE_VERIFY when forward simulation says a failure at the
+  active node would cascade widely. See
+  `references/statistics-and-learning.md` for usage.
+- `ConformalRiskGate` turns any risk score into a calibrated FORCE_VERIFY
+  threshold with a guaranteed miss rate.
+- Every `record_outcome` reward row carries graph-position features
+  (schema v2, `docs/reward_record_schema.md`) so routing policies can learn
+  from history.

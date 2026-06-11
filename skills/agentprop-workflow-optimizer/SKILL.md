@@ -1,6 +1,6 @@
 ---
 name: agentprop-workflow-optimizer
-description: Use when installing or using AgentProp to improve multi-agent workflows. Covers CLI setup, workflow graph analysis, context routing, verifier placement, pruning risk, Codex/Claude Code briefs, FastMCP tools, runtime ControlSession wrapping, and evidence preservation.
+description: Analyze, supervise, and cut the cost of AI-agent workflows with AgentProp. Use whenever the user mentions multi-agent workflows, agent token costs, verifier or checker placement, workflow graphs, LangGraph/CrewAI/AutoGen optimization, runaway agent loops, or debugging which agent in a pipeline failed — even if they don't name AgentProp. Covers CLI setup, graph analysis with confidence intervals, the interactive HTML view, context routing, pruning risk, runtime ControlSession wrapping, cascade-risk escalation, calibrated risk gates, Thompson-sampling routing, off-policy evaluation, Codex/Claude Code briefs, FastMCP tools, and evidence preservation.
 ---
 
 # AgentProp Workflow Optimizer
@@ -19,11 +19,13 @@ the right structural points.
 Prefer current project docs and CLI output over memory:
 
 - Repository: `https://github.com/aryan5v/AgentProp`
+- Docs site: `https://aryan5v.github.io/AgentProp/`
 - Package: `agentprop`
 - CLI help: `agentprop --help`
 - Docs index: `docs/index.md`
 - Coding-agent guide: `docs/coding_agents.md`
 - Control-layer guide: `docs/control_layer_quickstart.md`
+- Troubleshooting: `docs/troubleshooting.md`
 
 If a command fails because the package is not installed, install or locate
 AgentProp before continuing.
@@ -40,13 +42,19 @@ agentprop agent-instructions planner_coder_tester_reviewer \
   --out reports/claude_code_agent_brief.md
 
 agentprop analyze planner_coder_tester_reviewer --json
+agentprop view planner_coder_tester_reviewer --out reports/view.html
 agentprop report planner_coder_tester_reviewer \
   --out reports/agentprop_report.html \
   --format html
 ```
 
 Read the generated brief before editing. Treat selected seed agents as the first
-full-context recipients and verifier candidates as required check points.
+full-context recipients and verifier candidates as required check points. The
+`view` command writes a self-contained interactive HTML graph (verifier, seed,
+and bottleneck overlays; optional `--trace trace.jsonl` decision timeline) —
+generate it when the user wants to see the workflow. `analyze` output includes
+a `seed_coverage` bootstrap confidence interval; quote the interval, not just
+the mean, when reporting propagation numbers.
 
 ## Reference Map
 
@@ -60,6 +68,7 @@ Coding agents | `references/coding-agents.md` | Codex, Claude Code, Cursor, Copi
 Runtime control | `references/runtime-control.md` | Need live wrapping with `ControlSession`, repeated-error control, force-verify, stop, switch, or traces
 Framework builders | `references/framework-builders.md` | User is building LangGraph, CrewAI, AutoGen, OpenAI Agents, LlamaIndex, or custom multi-agent systems
 Benchmarks and evidence | `references/benchmarks-and-evidence.md` | User wants benchmark setup, claims, reports, or saved evidence
+Statistics and learning | `references/statistics-and-learning.md` | Confidence intervals, calibrated FORCE_VERIFY gates, cascade-risk escalation, Thompson-sampling routing, off-policy evaluation, or learned propagation models
 
 ## Core Rules
 

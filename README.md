@@ -36,7 +36,7 @@ observability tool does:
 It is a **control layer**, not an orchestrator: it sits beside LangGraph,
 CrewAI, OpenAI Agents, Claude Code, or Codex rather than replacing them.
 Full documentation: **[aryan5v.github.io/AgentProp](https://aryan5v.github.io/AgentProp/)** ·
-core ideas: [overview](docs/overview.md).
+Core ideas: [overview](docs/overview.md).
 
 ## Get started — pick your path
 

@@ -67,3 +67,15 @@ agentprop report <workflow> \
 ```
 
 Save the report path in the final response.
+
+## Interactive View
+
+```bash
+agentprop view <workflow> --out reports/view.html
+agentprop view <workflow> --trace reports/control-demo/trace.jsonl --out reports/view.html
+```
+
+Writes a single self-contained HTML file: force-directed graph with verifier
+(green), seed (blue), and bottleneck (orange) overlays, node detail on click,
+and a decision timeline when a control trace is supplied. No server or
+external assets — safe to attach to CI artifacts or send to the user.

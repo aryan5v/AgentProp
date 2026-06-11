@@ -62,3 +62,11 @@ agentprop terminal-bench summarize \
 
 For small samples, report task-level deltas instead of headline benchmark claims.
 If A3 has no real train split, do not describe it as learned.
+
+## Report Uncertainty, Not Points
+
+- Wrap per-run metrics in `bootstrap_mean_interval`; compare arms with
+  `bootstrap_difference_interval` and say whether the interval excludes zero.
+- For "policy X would have saved Y%" claims from logs alone, use
+  `agentprop.rl.ope` (weighted importance sampling / doubly robust) and report
+  the effective sample size alongside the estimate.
