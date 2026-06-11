@@ -99,6 +99,8 @@ def _dispatch(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
         return _trace(args)
     if args.command == "viz":
         return _viz(args)
+    if args.command == "view":
+        return _view(args)
     if args.command == "agent-instructions":
         return _agent_instructions(args)
     if args.command == "readiness":
@@ -268,6 +270,19 @@ def _build_parser() -> argparse.ArgumentParser:
     viz = subparsers.add_parser("viz", help="export a workflow graph as Graphviz DOT")
     viz.add_argument("workflow", help="workflow JSON path or built-in workflow name")
     viz.add_argument("--out", type=Path, default=Path("reports/workflow.dot"))
+
+    view = subparsers.add_parser(
+        "view",
+        help="write a self-contained interactive HTML view of a workflow",
+    )
+    view.add_argument("workflow", help="workflow JSON path or built-in workflow name")
+    view.add_argument("--out", type=Path, default=Path("reports/workflow_view.html"))
+    view.add_argument(
+        "--trace",
+        type=Path,
+        help="optional control-session trace.jsonl to overlay as a decision timeline",
+    )
+    view.add_argument("--trials", type=int, default=50)
 
     instructions = subparsers.add_parser(
         "agent-instructions",
@@ -648,6 +663,24 @@ def _trace(args: argparse.Namespace) -> int:
 def _viz(args: argparse.Namespace) -> int:
     workflow_name, graph = _load_workflow(args.workflow)
     output_path = write_dot(graph, args.out, name=workflow_name)
+    print(f"Wrote {output_path}")
+    return 0
+
+
+def _view(args: argparse.Namespace) -> int:
+    from agentprop.analysis import analyze
+    from agentprop.visualization import load_trace_rows, write_workflow_view
+
+    workflow_name, graph = _load_workflow(args.workflow)
+    analysis = analyze(graph, workflow_name=workflow_name, trials=args.trials).to_dict()
+    trace_rows = load_trace_rows(args.trace) if args.trace else None
+    output_path = write_workflow_view(
+        graph,
+        args.out,
+        title=workflow_name,
+        analysis=analysis,
+        trace_rows=trace_rows,
+    )
     print(f"Wrote {output_path}")
     return 0
 

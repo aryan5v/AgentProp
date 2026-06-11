@@ -22,6 +22,7 @@ Onboarding and day-to-day use:
 - [Plugin distribution](plugin_distribution.md)
 - [Framework integrations](framework_integrations.md)
 - [Trace ingestion](trace_ingestion.md)
+- [Troubleshooting](troubleshooting.md)
 
 ## Reference
 
