@@ -5,7 +5,8 @@
 </p>
 
 <p align="center">
-  <strong>Graph control for agent workflows.</strong>
+  <strong>Observability tools watch. Orchestrators run. Nobody supervises.</strong><br />
+  AgentProp is the control layer for agent workflows.
 </p>
 
 <p align="center">
@@ -21,12 +22,21 @@
 
 AgentProp models AI-agent workflows as directed weighted graphs—agents, tools,
 context, verifiers, and failures become nodes and edges you can analyze,
-simulate, and supervise.
+simulate, and supervise. It answers two questions no orchestrator or
+observability tool does:
 
-It is a **control layer**, not an orchestrator. Your harness emits one
-`ExecutionEvent` per step; AgentProp returns whether to continue, verify,
-switch strategy, or finalize. See the [overview](docs/overview.md) for the core
-ideas (metric-dimension verifiers, quality cascade, RZF scaling, runtime control).
+- **Where do I put checks?** Verifier placement is solved as a resolving-set
+  problem: at full resolving coverage, any single failing node produces a
+  unique signature and is exactly localizable — a guarantee, not a heuristic.
+- **Should this run keep going?** Your harness emits one `ExecutionEvent` per
+  step; AgentProp returns continue, verify, switch strategy, or finalize —
+  backed by forward cascade simulation, calibrated risk gates, and budget
+  control.
+
+It is a **control layer**, not an orchestrator: it sits beside LangGraph,
+CrewAI, OpenAI Agents, Claude Code, or Codex rather than replacing them.
+Full documentation: **[aryan5v.github.io/AgentProp](https://aryan5v.github.io/AgentProp/)** ·
+core ideas: [overview](docs/overview.md).
 
 ## Get started — pick your path
 
@@ -155,10 +165,10 @@ Details: [repository layout](docs/repository_layout.md).
 
 ## Status
 
-Public alpha research software. Graph analysis, propagation, runtime control,
-and key-free demos work without API keys. Treat live-agent numbers as
-**directional** until larger studies with saved artifacts are published under
-`docs/results/`.
+Public beta. Graph analysis, propagation, runtime control, the interactive
+`view` report, and key-free demos all work without API keys. Live-agent
+numbers are labeled **directional** until the multi-task study with saved
+artifacts lands under `docs/results/`.
 
 ## License
 
