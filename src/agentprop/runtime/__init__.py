@@ -25,6 +25,8 @@ from agentprop.runtime.controller import (
     RuntimeNodeResult,
     RuntimeRunResult,
 )
+from agentprop.runtime.observability import OTelTraceExporter, RegexPIIScrubber, scrub_event
+from agentprop.runtime.persistence import Controller, DurableController, JSONLEventStore, RunState
 from agentprop.runtime.session import (
     AsyncControlSession,
     ControlAnalysis,
@@ -39,6 +41,15 @@ from agentprop.runtime.terminal_loop import (
     TerminalLoopResult,
     TerminalTurnRequest,
 )
+from agentprop.runtime.test_harness import TestHarness
+from agentprop.runtime.traffic import (
+    ArmResult,
+    ArmRollup,
+    ShadowMode,
+    TrafficSplit,
+    TrafficSplitReport,
+    rollup_arms,
+)
 
 __all__ = [
     "AgentPropRuntimeController",
@@ -52,16 +63,23 @@ __all__ = [
     "ControlAnalysis",
     "ControlSession",
     "ControlSessionConfig",
+    "Controller",
     "ControlledAgentLoop",
     "ControlledTerminalLoop",
+    "DurableController",
     "ExecutionEvent",
     "ExecutionStateFeatures",
     "ExecutionStateTracker",
+    "JSONLEventStore",
+    "OTelTraceExporter",
+    "RegexPIIScrubber",
     "RuntimeControllerConfig",
     "RuntimeNodeRequest",
     "RuntimeNodeResult",
     "RuntimeRewardLogger",
     "RuntimeRunResult",
+    "RunState",
+    "ShadowMode",
     "StoppingController",
     "StoppingControllerConfig",
     "TerminalCommandProposal",
@@ -69,5 +87,12 @@ __all__ = [
     "TerminalLoopConfig",
     "TerminalLoopResult",
     "TerminalTurnRequest",
+    "TestHarness",
+    "TrafficSplit",
+    "TrafficSplitReport",
+    "ArmResult",
+    "ArmRollup",
     "execution_features_to_dict",
+    "rollup_arms",
+    "scrub_event",
 ]

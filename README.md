@@ -44,6 +44,25 @@ agentprop analyze planner_coder_tester_reviewer
 agentprop control-demo --demo terminal --out-dir reports/control-demo
 ```
 
+Analyze a LangGraph workflow in a few lines:
+
+```python
+from agentprop import analyze
+
+report = analyze(my_langgraph_workflow)
+print(report.to_markdown())
+```
+
+Wrap a LangGraph workflow with runtime control:
+
+```python
+from agentprop import wrap
+
+controlled = wrap(my_langgraph_workflow, budget={"tokens": 100_000, "cost": 0.50})
+result = controlled.run({"task": "ship the workflow"})
+print(result.decision_trace)
+```
+
 Development checkout:
 
 ```bash

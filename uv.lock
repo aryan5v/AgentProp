@@ -29,6 +29,9 @@ mcp = [
 ml = [
     { name = "numpy" },
 ]
+otel = [
+    { name = "opentelemetry-api" },
+]
 rl = [
     { name = "gymnasium" },
 ]
@@ -40,11 +43,12 @@ requires-dist = [
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.10" },
     { name = "networkx", specifier = ">=3.2" },
     { name = "numpy", marker = "extra == 'ml'", specifier = ">=1.26" },
+    { name = "opentelemetry-api", marker = "extra == 'otel'", specifier = ">=1.25" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.5" },
     { name = "torch", marker = "extra == 'dl'", specifier = ">=2.2" },
 ]
-provides-extras = ["dev", "ml", "rl", "dl", "mcp"]
+provides-extras = ["dev", "ml", "rl", "dl", "mcp", "otel"]
 
 [[package]]
 name = "aiofile"

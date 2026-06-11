@@ -138,6 +138,27 @@ def graph_from_langgraph_dict(data: Mapping[str, Any]) -> AgentGraph:
     )
 
 
+def graph_from_langgraph_object(workflow: Any) -> AgentGraph:
+    """Best-effort import of a LangGraph ``StateGraph`` or compiled graph object.
+
+    The adapter intentionally uses duck typing so AgentProp can analyze real
+    LangGraph objects while keeping ``langgraph`` an optional dependency.
+    """
+
+    graph_obj = workflow.get_graph() if callable(getattr(workflow, "get_graph", None)) else workflow
+    nodes_obj = getattr(graph_obj, "nodes", None)
+    edges_obj = getattr(graph_obj, "edges", None)
+
+    nodes = _langgraph_nodes(nodes_obj)
+    edges = _langgraph_edges(edges_obj)
+    if not nodes:
+        raise NativeFrameworkUnavailable(
+            "Could not inspect LangGraph nodes; pass an AgentGraph or a compiled "
+            "LangGraph object exposing get_graph().nodes."
+        )
+    return _graph_from_node_edge_payloads(nodes, edges)
+
+
 def to_autogen_dict(graph: AgentGraph) -> dict[str, Any]:
     """Export an AutoGen-style agent transition spec."""
 
@@ -598,6 +619,51 @@ def _required_list(data: Mapping[str, Any], key: str) -> list[Mapping[str, Any]]
 def _list_field(data: Mapping[str, Any], key: str) -> list[Any]:
     value = data.get(key, [])
     return value if isinstance(value, list) else []
+
+
+def _langgraph_nodes(nodes_obj: Any) -> list[dict[str, Any]]:
+    if callable(nodes_obj):
+        nodes_obj = nodes_obj()
+    if isinstance(nodes_obj, Mapping):
+        return [
+            {"id": str(node_id), "type": NodeType.AGENT.value}
+            for node_id in nodes_obj
+            if str(node_id) not in {"__start__", "__end__", "START", "END"}
+        ]
+    if isinstance(nodes_obj, Iterable) and not isinstance(nodes_obj, str | bytes):
+        nodes: list[dict[str, Any]] = []
+        for item in nodes_obj:
+            node_id = getattr(item, "id", getattr(item, "name", item))
+            node_id_str = str(node_id)
+            if node_id_str not in {"__start__", "__end__", "START", "END"}:
+                nodes.append({"id": node_id_str, "type": NodeType.AGENT.value})
+        return nodes
+    return []
+
+
+def _langgraph_edges(edges_obj: Any) -> list[dict[str, Any]]:
+    if callable(edges_obj):
+        edges_obj = edges_obj()
+    if edges_obj is None:
+        return []
+    edges: list[dict[str, Any]] = []
+    for item in edges_obj:
+        if isinstance(item, Mapping):
+            source = item.get("source")
+            target = item.get("target")
+        elif isinstance(item, tuple) and len(item) >= 2:
+            source, target = item[0], item[1]
+        else:
+            source = getattr(item, "source", None)
+            target = getattr(item, "target", None)
+        if source is None or target is None:
+            continue
+        source_str = str(source)
+        target_str = str(target)
+        if source_str in {"__start__", "START"} or target_str in {"__end__", "END"}:
+            continue
+        edges.append({"source": source_str, "target": target_str})
+    return edges
 
 
 def _node_type(value: Any) -> NodeType:

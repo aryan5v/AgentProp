@@ -54,6 +54,9 @@ dl = [
 mcp = [
   "fastmcp>=2.0",
 ]
+otel = [
+  "opentelemetry-api>=1.25",
+]
 
 [project.urls]
 Homepage = "https://github.com/aryan5v/AgentProp"

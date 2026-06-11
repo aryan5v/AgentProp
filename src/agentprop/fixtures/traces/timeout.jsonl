@@ -1,0 +1,2 @@
+{"event":{"step":1,"command":"sleep 30","exit_code":null,"verifier_run":false,"verifier_passed":null,"progress_made":false,"tokens_used":20,"elapsed_s":30.0,"error_signature":null,"final_answer_written":false,"trusted":true}}
+{"event":{"step":2,"command":"sleep 30","exit_code":null,"verifier_run":false,"verifier_passed":null,"progress_made":false,"tokens_used":20,"elapsed_s":30.0,"error_signature":null,"final_answer_written":false,"trusted":true}}

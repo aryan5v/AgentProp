@@ -1,0 +1,3 @@
+{"event":{"step":1,"command":"pytest","exit_code":1,"verifier_run":true,"verifier_passed":false,"progress_made":false,"tokens_used":100,"elapsed_s":3.0,"error_signature":"AssertionError","final_answer_written":false,"trusted":true}}
+{"event":{"step":2,"command":"pytest","exit_code":1,"verifier_run":true,"verifier_passed":false,"progress_made":false,"tokens_used":100,"elapsed_s":3.0,"error_signature":"AssertionError","final_answer_written":false,"trusted":true}}
+{"event":{"step":3,"command":"pytest","exit_code":1,"verifier_run":true,"verifier_passed":false,"progress_made":false,"tokens_used":100,"elapsed_s":3.0,"error_signature":"AssertionError","final_answer_written":false,"trusted":true}}
