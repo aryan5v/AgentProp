@@ -1,0 +1,443 @@
+[
+  {
+    "budget": 2,
+    "exact_resolving_coverage": 0.925,
+    "graph": "layered",
+    "surrogate_objective_fraction": 0.925,
+    "surrogate_resolving_coverage": 0.925
+  },
+  {
+    "budget": 3,
+    "exact_resolving_coverage": 0.975,
+    "graph": "layered",
+    "surrogate_objective_fraction": 0.975,
+    "surrogate_resolving_coverage": 0.975
+  },
+  {
+    "budget": 4,
+    "exact_resolving_coverage": 0.9916666666666667,
+    "graph": "layered",
+    "surrogate_objective_fraction": 0.9916666666666667,
+    "surrogate_resolving_coverage": 0.9916666666666667
+  },
+  {
+    "budget": 2,
+    "exact_resolving_coverage": 1.0,
+    "graph": "chain",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 3,
+    "exact_resolving_coverage": 1.0,
+    "graph": "chain",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 4,
+    "exact_resolving_coverage": 1.0,
+    "graph": "chain",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 2,
+    "exact_resolving_coverage": 0.9615384615384616,
+    "graph": "spider",
+    "surrogate_objective_fraction": 0.9615384615384616,
+    "surrogate_resolving_coverage": 0.9615384615384616
+  },
+  {
+    "budget": 3,
+    "exact_resolving_coverage": 1.0,
+    "graph": "spider",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 4,
+    "exact_resolving_coverage": 1.0,
+    "graph": "spider",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 2,
+    "exact_resolving_coverage": 0.989010989010989,
+    "graph": "arborescence",
+    "surrogate_objective_fraction": 0.989010989010989,
+    "surrogate_resolving_coverage": 0.989010989010989
+  },
+  {
+    "budget": 3,
+    "exact_resolving_coverage": 1.0,
+    "graph": "arborescence",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 4,
+    "exact_resolving_coverage": 1.0,
+    "graph": "arborescence",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 2,
+    "exact_resolving_coverage": 1.0,
+    "graph": "dynamic_conditional",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 3,
+    "exact_resolving_coverage": 1.0,
+    "graph": "dynamic_conditional",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 4,
+    "exact_resolving_coverage": 1.0,
+    "graph": "dynamic_conditional",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 2,
+    "exact_resolving_coverage": 0.8571428571428571,
+    "graph": "fan_out_parallel",
+    "surrogate_objective_fraction": 0.8571428571428571,
+    "surrogate_resolving_coverage": 0.8571428571428571
+  },
+  {
+    "budget": 3,
+    "exact_resolving_coverage": 0.9523809523809523,
+    "graph": "fan_out_parallel",
+    "surrogate_objective_fraction": 0.9523809523809523,
+    "surrogate_resolving_coverage": 0.9523809523809523
+  },
+  {
+    "budget": 4,
+    "exact_resolving_coverage": 1.0,
+    "graph": "fan_out_parallel",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 2,
+    "exact_resolving_coverage": 1.0,
+    "graph": "feedback_loop",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 3,
+    "exact_resolving_coverage": 1.0,
+    "graph": "feedback_loop",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 4,
+    "exact_resolving_coverage": 1.0,
+    "graph": "feedback_loop",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 2,
+    "exact_resolving_coverage": 1.0,
+    "graph": "shared_memory",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 3,
+    "exact_resolving_coverage": 1.0,
+    "graph": "shared_memory",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 4,
+    "exact_resolving_coverage": 1.0,
+    "graph": "shared_memory",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 2,
+    "exact_resolving_coverage": 1.0,
+    "graph": "planner_coder_tester_reviewer",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 3,
+    "exact_resolving_coverage": 1.0,
+    "graph": "planner_coder_tester_reviewer",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 4,
+    "exact_resolving_coverage": 1.0,
+    "graph": "planner_coder_tester_reviewer",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 2,
+    "exact_resolving_coverage": 1.0,
+    "graph": "research_writer_verifier",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 3,
+    "exact_resolving_coverage": 1.0,
+    "graph": "research_writer_verifier",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 4,
+    "exact_resolving_coverage": 1.0,
+    "graph": "research_writer_verifier",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 2,
+    "exact_resolving_coverage": 0.9333333333333333,
+    "graph": "debate_judge",
+    "surrogate_objective_fraction": 0.9333333333333333,
+    "surrogate_resolving_coverage": 0.9333333333333333
+  },
+  {
+    "budget": 3,
+    "exact_resolving_coverage": 1.0,
+    "graph": "debate_judge",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 4,
+    "exact_resolving_coverage": 1.0,
+    "graph": "debate_judge",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 2,
+    "exact_resolving_coverage": 0.5238095238095238,
+    "graph": "dense_graph",
+    "surrogate_objective_fraction": 0.5238095238095238,
+    "surrogate_resolving_coverage": 0.5238095238095238
+  },
+  {
+    "budget": 3,
+    "exact_resolving_coverage": 0.7142857142857143,
+    "graph": "dense_graph",
+    "surrogate_objective_fraction": 0.7142857142857143,
+    "surrogate_resolving_coverage": 0.7142857142857143
+  },
+  {
+    "budget": 4,
+    "exact_resolving_coverage": 0.8571428571428571,
+    "graph": "dense_graph",
+    "surrogate_objective_fraction": 0.8571428571428571,
+    "surrogate_resolving_coverage": 0.8571428571428571
+  },
+  {
+    "budget": 2,
+    "exact_resolving_coverage": 0.8444444444444444,
+    "graph": "generic_dag",
+    "surrogate_objective_fraction": 0.8444444444444444,
+    "surrogate_resolving_coverage": 0.8444444444444444
+  },
+  {
+    "budget": 3,
+    "exact_resolving_coverage": 0.8888888888888888,
+    "graph": "generic_dag",
+    "surrogate_objective_fraction": 0.8888888888888888,
+    "surrogate_resolving_coverage": 0.8888888888888888
+  },
+  {
+    "budget": 4,
+    "exact_resolving_coverage": 0.9333333333333333,
+    "graph": "generic_dag",
+    "surrogate_objective_fraction": 0.9333333333333333,
+    "surrogate_resolving_coverage": 0.9333333333333333
+  },
+  {
+    "budget": 2,
+    "exact_resolving_coverage": 1.0,
+    "graph": "rag_pipeline",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 3,
+    "exact_resolving_coverage": 1.0,
+    "graph": "rag_pipeline",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 4,
+    "exact_resolving_coverage": 1.0,
+    "graph": "rag_pipeline",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 2,
+    "exact_resolving_coverage": 0.9722222222222222,
+    "graph": "random_directed_graph",
+    "surrogate_objective_fraction": 0.9722222222222222,
+    "surrogate_resolving_coverage": 0.9722222222222222
+  },
+  {
+    "budget": 3,
+    "exact_resolving_coverage": 1.0,
+    "graph": "random_directed_graph",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 4,
+    "exact_resolving_coverage": 1.0,
+    "graph": "random_directed_graph",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 2,
+    "exact_resolving_coverage": 1.0,
+    "graph": "tool_use_pipeline",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 3,
+    "exact_resolving_coverage": 1.0,
+    "graph": "tool_use_pipeline",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 4,
+    "exact_resolving_coverage": 1.0,
+    "graph": "tool_use_pipeline",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 2,
+    "exact_resolving_coverage": 0.8571428571428571,
+    "graph": "hub_and_spoke_supervisor",
+    "surrogate_objective_fraction": 0.8571428571428571,
+    "surrogate_resolving_coverage": 0.8571428571428571
+  },
+  {
+    "budget": 3,
+    "exact_resolving_coverage": 0.9523809523809523,
+    "graph": "hub_and_spoke_supervisor",
+    "surrogate_objective_fraction": 0.9523809523809523,
+    "surrogate_resolving_coverage": 0.9523809523809523
+  },
+  {
+    "budget": 4,
+    "exact_resolving_coverage": 1.0,
+    "graph": "hub_and_spoke_supervisor",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 2,
+    "exact_resolving_coverage": 0.9047619047619048,
+    "graph": "layered_pipeline",
+    "surrogate_objective_fraction": 0.9047619047619048,
+    "surrogate_resolving_coverage": 0.9047619047619048
+  },
+  {
+    "budget": 3,
+    "exact_resolving_coverage": 0.9523809523809523,
+    "graph": "layered_pipeline",
+    "surrogate_objective_fraction": 0.9523809523809523,
+    "surrogate_resolving_coverage": 0.9523809523809523
+  },
+  {
+    "budget": 4,
+    "exact_resolving_coverage": 1.0,
+    "graph": "layered_pipeline",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 2,
+    "exact_resolving_coverage": 0.8888888888888888,
+    "graph": "small_world_graph",
+    "surrogate_objective_fraction": 0.8888888888888888,
+    "surrogate_resolving_coverage": 0.8888888888888888
+  },
+  {
+    "budget": 3,
+    "exact_resolving_coverage": 1.0,
+    "graph": "small_world_graph",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 4,
+    "exact_resolving_coverage": 1.0,
+    "graph": "small_world_graph",
+    "surrogate_objective_fraction": 1.0,
+    "surrogate_resolving_coverage": 1.0
+  },
+  {
+    "budget": 2,
+    "exact_resolving_coverage": 0.8095238095238095,
+    "graph": "star",
+    "surrogate_objective_fraction": 0.8095238095238095,
+    "surrogate_resolving_coverage": 0.8095238095238095
+  },
+  {
+    "budget": 3,
+    "exact_resolving_coverage": 0.9047619047619048,
+    "graph": "star",
+    "surrogate_objective_fraction": 0.9047619047619048,
+    "surrogate_resolving_coverage": 0.9047619047619048
+  },
+  {
+    "budget": 4,
+    "exact_resolving_coverage": 0.9523809523809523,
+    "graph": "star",
+    "surrogate_objective_fraction": 0.9523809523809523,
+    "surrogate_resolving_coverage": 0.9523809523809523
+  },
+  {
+    "budget": 2,
+    "exact_resolving_coverage": 0.9166666666666666,
+    "graph": "tree",
+    "surrogate_objective_fraction": 0.9166666666666666,
+    "surrogate_resolving_coverage": 0.9166666666666666
+  },
+  {
+    "budget": 3,
+    "exact_resolving_coverage": 0.9666666666666667,
+    "graph": "tree",
+    "surrogate_objective_fraction": 0.9666666666666667,
+    "surrogate_resolving_coverage": 0.9666666666666667
+  },
+  {
+    "budget": 4,
+    "exact_resolving_coverage": 0.975,
+    "graph": "tree",
+    "surrogate_objective_fraction": 0.975,
+    "surrogate_resolving_coverage": 0.975
+  }
+]
