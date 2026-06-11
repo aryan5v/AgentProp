@@ -205,7 +205,7 @@ def load_trace_rows(path: str | Path) -> list[dict[str, Any]]:
     """Load JSONL trace rows, skipping lines that fail to parse."""
 
     rows: list[dict[str, Any]] = []
-    for line in Path(path).read_text().splitlines():
+    for line in Path(path).read_text(encoding="utf-8").splitlines():
         line = line.strip()
         if not line:
             continue
@@ -231,5 +231,5 @@ def write_workflow_view(
     path = Path(out_path)
     path.parent.mkdir(parents=True, exist_ok=True)
     html = render_workflow_view(graph, title=title, analysis=analysis, trace_rows=trace_rows)
-    path.write_text(html)
+    path.write_text(html, encoding="utf-8")
     return path

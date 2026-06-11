@@ -119,14 +119,14 @@ class ConformalRiskGate:
         out = Path(path)
         out.parent.mkdir(parents=True, exist_ok=True)
         payload: dict[str, Any] = {"alpha": self.alpha, "result": self.result.to_dict()}
-        out.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+        out.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         return out
 
     @classmethod
     def load(cls, path: str | Path) -> ConformalRiskGate:
         """Load a calibrated gate from JSON."""
 
-        payload = json.loads(Path(path).read_text())
+        payload = json.loads(Path(path).read_text(encoding="utf-8"))
         result = payload["result"]
         gate = cls(alpha=float(payload["alpha"]))
         gate._result = ConformalCalibrationResult(

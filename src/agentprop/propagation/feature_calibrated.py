@@ -115,14 +115,16 @@ class FeatureCalibratedPropagation:
 
         out = Path(path)
         out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(json.dumps(self.to_dict(), indent=2, sort_keys=True) + "\n")
+        out.write_text(
+            json.dumps(self.to_dict(), indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
         return out
 
     @classmethod
     def load(cls, path: str | Path, *, seed: int | None = None) -> FeatureCalibratedPropagation:
         """Load fitted parameters from JSON."""
 
-        payload = json.loads(Path(path).read_text())
+        payload = json.loads(Path(path).read_text(encoding="utf-8"))
         model = cls(seed=seed)
         model.weights = {str(k): float(v) for k, v in payload["weights"].items()}
         model.bias = float(payload["bias"])

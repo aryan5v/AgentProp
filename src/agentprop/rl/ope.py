@@ -136,7 +136,7 @@ def load_logged_decisions(
     """Load reward-record JSONL rows into logged decisions."""
 
     decisions: list[LoggedDecision] = []
-    for line in Path(path).read_text().splitlines():
+    for line in Path(path).read_text(encoding="utf-8").splitlines():
         line = line.strip()
         if not line:
             continue
