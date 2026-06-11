@@ -34,7 +34,14 @@ fi
 WHEEL_DIR="${WHEEL_DIR:-/tmp/agentprop-wheels}"
 mkdir -p "$WHEEL_DIR" "$OUT_ROOT"
 python3 -m pip wheel "$ROOT" -w "$WHEEL_DIR" --no-deps -q
-export AGENTPROP_WHEEL_PATH="${AGENTPROP_WHEEL_PATH:-$(ls -t "$WHEEL_DIR"/*.whl | head -1)}"
+shopt -s nullglob
+wheels=("$WHEEL_DIR"/*.whl)
+shopt -u nullglob
+if [[ ${#wheels[@]} -eq 0 ]]; then
+  echo "Error: No wheel files found in $WHEEL_DIR" >&2
+  exit 1
+fi
+export AGENTPROP_WHEEL_PATH="${AGENTPROP_WHEEL_PATH:-$(ls -t "${wheels[@]}" | head -1)}"
 export AGENTPROP_MAX_STEPS="${AGENTPROP_MAX_STEPS:-64}"
 
 HARBOR_PYTHON="${HARBOR_PYTHON:-$HOME/.local/share/uv/tools/harbor/bin/python}"

@@ -239,7 +239,9 @@ class StoppingController:
             return ControlDecision("FINALIZE", "wall-clock budget reached")
         if features.repeated_error_count >= self.config.repeated_error_threshold:
             return ControlDecision("SWITCH_STRATEGY", "same error repeated")
-        if features.verifier_failed_count >= 2:
+        # Require minimum spacing since the last verification so repeated
+        # verifier failures escalate without a verify-every-step storm.
+        if features.verifier_failed_count >= 2 and features.steps_since_verifier >= 2:
             return ControlDecision(
                 "FORCE_VERIFY",
                 "repeated verifier failures",

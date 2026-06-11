@@ -617,16 +617,36 @@ def _write_result(trace_dir: Path, result: object) -> None:
     )
 
 
+_SECRET_ENV_MARKERS = ("KEY", "TOKEN", "SECRET", "PASSWORD", "CREDENTIAL")
+
+
+def _redact_secrets(text: str) -> str:
+    """Strip values of secret-bearing env vars before anything hits disk."""
+
+    for name, value in os.environ.items():
+        if len(value) < 8:
+            continue
+        if any(marker in name.upper() for marker in _SECRET_ENV_MARKERS):
+            text = text.replace(value, "[redacted]")
+    return text
+
+
 def _write_json(path: Path, payload: object) -> None:
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    serialized = json.dumps(payload, indent=2, sort_keys=True)
+    path.write_text(_redact_secrets(serialized) + "\n", encoding="utf-8")
+
+
+_SNAPSHOT_IGNORED_DIRS = {".git", ".venv", "node_modules", ".agentprop", "__pycache__"}
 
 
 def _workspace_snapshot(workspace: Path) -> dict[Path, float]:
     snapshot: dict[Path, float] = {}
     if not workspace.exists():
         return snapshot
-    for path in workspace.rglob("*"):
-        if path.is_file():
+    for root, dirs, files in os.walk(workspace):
+        dirs[:] = [d for d in dirs if d not in _SNAPSHOT_IGNORED_DIRS]
+        for name in files:
+            path = Path(root) / name
             try:
                 snapshot[path.relative_to(workspace)] = path.stat().st_mtime
             except OSError:

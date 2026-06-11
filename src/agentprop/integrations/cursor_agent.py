@@ -459,7 +459,20 @@ def _iter_json_object_strings(value: str) -> list[str]:
         if start == -1:
             break
         depth = 0
+        in_string = False
+        escaped = False
         for offset, char in enumerate(value[start:], start=start):
+            if escaped:
+                escaped = False
+                continue
+            if char == "\\":
+                escaped = True
+                continue
+            if char == '"':
+                in_string = not in_string
+                continue
+            if in_string:
+                continue
             if char == "{":
                 depth += 1
             elif char == "}":
