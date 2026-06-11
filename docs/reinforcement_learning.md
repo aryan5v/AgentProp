@@ -144,3 +144,18 @@ PYTHONPATH=src:. python experiments/replay_rl_trajectory.py \
 The environment also exposes `reset_gymnasium()` and `step_gymnasium()` methods
 that return Gymnasium-style observations without making Gymnasium a required
 core dependency.
+
+## Thompson sampling and off-policy evaluation
+
+`ThompsonSamplingRoutingPolicy` (`agentprop.rl.thompson`) replaces fixed
+epsilon-greedy exploration with per-category Gaussian posteriors: exploration
+decays automatically as evidence accumulates, a circuit breaker routes cold
+categories to `default_arm`, and priors can be seeded from simulations or a
+similar workflow's history.
+
+`agentprop.rl.ope` evaluates a candidate policy on logged reward records
+without redeploying: `weighted_importance_sampling` and `doubly_robust` both
+return bootstrap confidence intervals plus the effective sample size, so
+"this policy would have saved X%" claims carry uncertainty and a
+data-sufficiency check. Logged records come from `RuntimeRewardLogger`
+(see the [reward record schema](reward_record_schema.md)).

@@ -27,6 +27,13 @@ from agentprop.rl.graph_features import (
     reward_record_graph_features,
     workflow_embedding,
 )
+from agentprop.rl.ope import (
+    LoggedDecision,
+    OPEResult,
+    doubly_robust,
+    load_logged_decisions,
+    weighted_importance_sampling,
+)
 from agentprop.rl.policies import GreedyCoveragePolicy, NodeScorerRoutingPolicy
 from agentprop.rl.ppo import (
     PPOConfig,
@@ -74,7 +81,9 @@ __all__ = [
     "FeaturePolicyTrainingResult",
     "GraphFeaturePolicy",
     "GreedyCoveragePolicy",
+    "LoggedDecision",
     "NodeScorerRoutingPolicy",
+    "OPEResult",
     "PPOConfig",
     "PPOPolicy",
     "PPOTrainingResult",
@@ -101,6 +110,8 @@ __all__ = [
     "TabularQPolicy",
     "WorkflowControlReward",
     "calibrate_routing_reward_profile",
+    "doubly_robust",
+    "load_logged_decisions",
     "propagation_reward",
     "replay_actions",
     "save_rl_policy",
@@ -108,6 +119,7 @@ __all__ = [
     "train_ppo_policy",
     "train_q_policy",
     "train_reinforce_policy",
+    "weighted_importance_sampling",
     "workflow_control_reward",
     "workflow_embedding",
 ]
