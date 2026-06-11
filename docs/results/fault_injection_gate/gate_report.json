@@ -1,0 +1,393 @@
+{
+  "conditions": [
+    {
+      "budget": 2,
+      "classical_accuracy": 0.192,
+      "directed_accuracy": 0.209,
+      "family": "layered",
+      "noise": 0.02,
+      "trials": 2000
+    },
+    {
+      "budget": 3,
+      "classical_accuracy": 0.2525,
+      "directed_accuracy": 0.267,
+      "family": "layered",
+      "noise": 0.02,
+      "trials": 2000
+    },
+    {
+      "budget": 4,
+      "classical_accuracy": 0.3035,
+      "directed_accuracy": 0.355,
+      "family": "layered",
+      "noise": 0.02,
+      "trials": 2000
+    },
+    {
+      "budget": 2,
+      "classical_accuracy": 0.182,
+      "directed_accuracy": 0.1875,
+      "family": "layered",
+      "noise": 0.05,
+      "trials": 2000
+    },
+    {
+      "budget": 3,
+      "classical_accuracy": 0.2375,
+      "directed_accuracy": 0.2455,
+      "family": "layered",
+      "noise": 0.05,
+      "trials": 2000
+    },
+    {
+      "budget": 4,
+      "classical_accuracy": 0.28049999999999997,
+      "directed_accuracy": 0.3235,
+      "family": "layered",
+      "noise": 0.05,
+      "trials": 2000
+    },
+    {
+      "budget": 2,
+      "classical_accuracy": 0.1655,
+      "directed_accuracy": 0.16899999999999998,
+      "family": "layered",
+      "noise": 0.1,
+      "trials": 2000
+    },
+    {
+      "budget": 3,
+      "classical_accuracy": 0.199,
+      "directed_accuracy": 0.20949999999999996,
+      "family": "layered",
+      "noise": 0.1,
+      "trials": 2000
+    },
+    {
+      "budget": 4,
+      "classical_accuracy": 0.2385,
+      "directed_accuracy": 0.2815,
+      "family": "layered",
+      "noise": 0.1,
+      "trials": 2000
+    },
+    {
+      "budget": 2,
+      "classical_accuracy": 0.13799999999999998,
+      "directed_accuracy": 0.132,
+      "family": "layered",
+      "noise": 0.2,
+      "trials": 2000
+    },
+    {
+      "budget": 3,
+      "classical_accuracy": 0.153,
+      "directed_accuracy": 0.1675,
+      "family": "layered",
+      "noise": 0.2,
+      "trials": 2000
+    },
+    {
+      "budget": 4,
+      "classical_accuracy": 0.1815,
+      "directed_accuracy": 0.1915,
+      "family": "layered",
+      "noise": 0.2,
+      "trials": 2000
+    },
+    {
+      "budget": 2,
+      "classical_accuracy": 0.229,
+      "directed_accuracy": 0.22599999999999998,
+      "family": "chain",
+      "noise": 0.02,
+      "trials": 2000
+    },
+    {
+      "budget": 3,
+      "classical_accuracy": 0.325,
+      "directed_accuracy": 0.313,
+      "family": "chain",
+      "noise": 0.02,
+      "trials": 2000
+    },
+    {
+      "budget": 4,
+      "classical_accuracy": 0.4095,
+      "directed_accuracy": 0.3895,
+      "family": "chain",
+      "noise": 0.02,
+      "trials": 2000
+    },
+    {
+      "budget": 2,
+      "classical_accuracy": 0.21800000000000003,
+      "directed_accuracy": 0.2285,
+      "family": "chain",
+      "noise": 0.05,
+      "trials": 2000
+    },
+    {
+      "budget": 3,
+      "classical_accuracy": 0.3045,
+      "directed_accuracy": 0.3015,
+      "family": "chain",
+      "noise": 0.05,
+      "trials": 2000
+    },
+    {
+      "budget": 4,
+      "classical_accuracy": 0.378,
+      "directed_accuracy": 0.35350000000000004,
+      "family": "chain",
+      "noise": 0.05,
+      "trials": 2000
+    },
+    {
+      "budget": 2,
+      "classical_accuracy": 0.196,
+      "directed_accuracy": 0.21150000000000002,
+      "family": "chain",
+      "noise": 0.1,
+      "trials": 2000
+    },
+    {
+      "budget": 3,
+      "classical_accuracy": 0.27349999999999997,
+      "directed_accuracy": 0.265,
+      "family": "chain",
+      "noise": 0.1,
+      "trials": 2000
+    },
+    {
+      "budget": 4,
+      "classical_accuracy": 0.3315,
+      "directed_accuracy": 0.315,
+      "family": "chain",
+      "noise": 0.1,
+      "trials": 2000
+    },
+    {
+      "budget": 2,
+      "classical_accuracy": 0.1595,
+      "directed_accuracy": 0.17250000000000001,
+      "family": "chain",
+      "noise": 0.2,
+      "trials": 2000
+    },
+    {
+      "budget": 3,
+      "classical_accuracy": 0.211,
+      "directed_accuracy": 0.2085,
+      "family": "chain",
+      "noise": 0.2,
+      "trials": 2000
+    },
+    {
+      "budget": 4,
+      "classical_accuracy": 0.2535,
+      "directed_accuracy": 0.2345,
+      "family": "chain",
+      "noise": 0.2,
+      "trials": 2000
+    },
+    {
+      "budget": 2,
+      "classical_accuracy": 0.2225,
+      "directed_accuracy": 0.2065,
+      "family": "spider",
+      "noise": 0.02,
+      "trials": 2000
+    },
+    {
+      "budget": 3,
+      "classical_accuracy": 0.3205,
+      "directed_accuracy": 0.29500000000000004,
+      "family": "spider",
+      "noise": 0.02,
+      "trials": 2000
+    },
+    {
+      "budget": 4,
+      "classical_accuracy": 0.3805,
+      "directed_accuracy": 0.369,
+      "family": "spider",
+      "noise": 0.02,
+      "trials": 2000
+    },
+    {
+      "budget": 2,
+      "classical_accuracy": 0.20800000000000002,
+      "directed_accuracy": 0.21600000000000003,
+      "family": "spider",
+      "noise": 0.05,
+      "trials": 2000
+    },
+    {
+      "budget": 3,
+      "classical_accuracy": 0.2965,
+      "directed_accuracy": 0.2925,
+      "family": "spider",
+      "noise": 0.05,
+      "trials": 2000
+    },
+    {
+      "budget": 4,
+      "classical_accuracy": 0.34199999999999997,
+      "directed_accuracy": 0.333,
+      "family": "spider",
+      "noise": 0.05,
+      "trials": 2000
+    },
+    {
+      "budget": 2,
+      "classical_accuracy": 0.1915,
+      "directed_accuracy": 0.211,
+      "family": "spider",
+      "noise": 0.1,
+      "trials": 2000
+    },
+    {
+      "budget": 3,
+      "classical_accuracy": 0.258,
+      "directed_accuracy": 0.254,
+      "family": "spider",
+      "noise": 0.1,
+      "trials": 2000
+    },
+    {
+      "budget": 4,
+      "classical_accuracy": 0.3,
+      "directed_accuracy": 0.302,
+      "family": "spider",
+      "noise": 0.1,
+      "trials": 2000
+    },
+    {
+      "budget": 2,
+      "classical_accuracy": 0.157,
+      "directed_accuracy": 0.1605,
+      "family": "spider",
+      "noise": 0.2,
+      "trials": 2000
+    },
+    {
+      "budget": 3,
+      "classical_accuracy": 0.2015,
+      "directed_accuracy": 0.195,
+      "family": "spider",
+      "noise": 0.2,
+      "trials": 2000
+    },
+    {
+      "budget": 4,
+      "classical_accuracy": 0.23199999999999998,
+      "directed_accuracy": 0.21349999999999997,
+      "family": "spider",
+      "noise": 0.2,
+      "trials": 2000
+    },
+    {
+      "budget": 2,
+      "classical_accuracy": 0.21150000000000002,
+      "directed_accuracy": 0.211,
+      "family": "arborescence",
+      "noise": 0.02,
+      "trials": 2000
+    },
+    {
+      "budget": 3,
+      "classical_accuracy": 0.28650000000000003,
+      "directed_accuracy": 0.297,
+      "family": "arborescence",
+      "noise": 0.02,
+      "trials": 2000
+    },
+    {
+      "budget": 4,
+      "classical_accuracy": 0.3715,
+      "directed_accuracy": 0.3915,
+      "family": "arborescence",
+      "noise": 0.02,
+      "trials": 2000
+    },
+    {
+      "budget": 2,
+      "classical_accuracy": 0.202,
+      "directed_accuracy": 0.20750000000000002,
+      "family": "arborescence",
+      "noise": 0.05,
+      "trials": 2000
+    },
+    {
+      "budget": 3,
+      "classical_accuracy": 0.2615,
+      "directed_accuracy": 0.2785,
+      "family": "arborescence",
+      "noise": 0.05,
+      "trials": 2000
+    },
+    {
+      "budget": 4,
+      "classical_accuracy": 0.335,
+      "directed_accuracy": 0.359,
+      "family": "arborescence",
+      "noise": 0.05,
+      "trials": 2000
+    },
+    {
+      "budget": 2,
+      "classical_accuracy": 0.186,
+      "directed_accuracy": 0.182,
+      "family": "arborescence",
+      "noise": 0.1,
+      "trials": 2000
+    },
+    {
+      "budget": 3,
+      "classical_accuracy": 0.238,
+      "directed_accuracy": 0.248,
+      "family": "arborescence",
+      "noise": 0.1,
+      "trials": 2000
+    },
+    {
+      "budget": 4,
+      "classical_accuracy": 0.28900000000000003,
+      "directed_accuracy": 0.281,
+      "family": "arborescence",
+      "noise": 0.1,
+      "trials": 2000
+    },
+    {
+      "budget": 2,
+      "classical_accuracy": 0.153,
+      "directed_accuracy": 0.15,
+      "family": "arborescence",
+      "noise": 0.2,
+      "trials": 2000
+    },
+    {
+      "budget": 3,
+      "classical_accuracy": 0.173,
+      "directed_accuracy": 0.175,
+      "family": "arborescence",
+      "noise": 0.2,
+      "trials": 2000
+    },
+    {
+      "budget": 4,
+      "classical_accuracy": 0.21150000000000002,
+      "directed_accuracy": 0.2045,
+      "family": "arborescence",
+      "noise": 0.2,
+      "trials": 2000
+    }
+  ],
+  "go": false,
+  "go_threshold": 0.05,
+  "mean_advantage": 0.003114583333333365,
+  "mean_classical": 0.24668749999999998,
+  "mean_directed": 0.24980208333333334
+}

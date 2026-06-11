@@ -35,6 +35,12 @@ from agentprop.algorithms.seed_selection import (
     random_seed_selection,
     rzf_centrality_seed_selection,
 )
+from agentprop.algorithms.submodular_placement import (
+    SubmodularPlacement,
+    coverage_objective,
+    pair_separation_scores,
+    submodular_verifier_placement,
+)
 from agentprop.algorithms.verifier_placement import (
     betweenness_verifier_placement,
     context_sensitive_verifier_placement,
@@ -84,6 +90,10 @@ __all__ = [
     "random_seed_selection",
     "resolving_coverage",
     "risk_aware_verifier_placement",
+    "SubmodularPlacement",
+    "coverage_objective",
+    "pair_separation_scores",
+    "submodular_verifier_placement",
     "rzf_centrality_seed_selection",
     "tim_seed_selection",
     "verifier_observability_placement",

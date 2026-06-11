@@ -159,3 +159,21 @@ return bootstrap confidence intervals plus the effective sample size, so
 "this policy would have saved X%" claims carry uncertainty and a
 data-sufficiency check. Logged records come from `RuntimeRewardLogger`
 (see the [reward record schema](reward_record_schema.md)).
+
+## Contextual Thompson sampling (production path)
+
+`ContextualThompsonSamplingPolicy` (`agentprop.rl.contextual_thompson`) is the
+production routing policy: a Bayesian linear model per arm over
+graph-position features (depth, quality-cascade score, resolving-coverage
+contribution, workflow embedding) — exactly the context every schema-v2
+reward record logs, so historical logs are directly trainable. Exploration
+decays automatically per region of feature space; the cold-start circuit
+breaker routes to `default_arm` until enough successes accumulate.
+
+The reward shape is `shaped_reward`: success × (1 + α·token_savings), with
+cost credit only on success — failing cheaply earns nothing.
+`update_batch_rloo` applies REINFORCE leave-one-out advantages when several
+runs of one arm arrive together.
+
+The tabular Q-learning/PPO/REINFORCE modules remain available as pedagogical
+baselines for small synthetic state spaces; they are not the runtime story.

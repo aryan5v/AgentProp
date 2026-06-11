@@ -114,3 +114,30 @@ harness_event = ExecutionEvent(
 
 Set `require_independent_verification=False` only when your harness does not
 support separate verification and you are willing to accept self-reported results.
+
+## Submodular surrogate with a greedy guarantee
+
+Exact resolving coverage is monotone but **not** submodular, so greedy
+placement on it carries no approximation bound. The probabilistic
+pairwise-coverage surrogate restores one:
+
+F(A) = Σ over node pairs (u,v) of P(at least one verifier in A separates u,v)
+     = Σ_{u<v} [ 1 − Π_{a∈A} (1 − s_a(u,v)) ]
+
+with s_a(u,v) ∈ [0,1] the per-verifier separation probability (an indicator
+under deterministic distances; a total-variation distance between the
+verifier's fault-conditional observation distributions under noise).
+
+*Why F is monotone submodular:* for each pair, 1 − Π_{a∈A}(1 − s_a) is the
+standard probabilistic-coverage form — adding a verifier multiplies the
+uncovered probability by a factor in [0,1], so per-pair gains are nonnegative
+and shrink as A grows. F is a nonnegative weighted sum of such terms, and
+monotone submodularity is closed under nonnegative sums. Lazy greedy
+(`agentprop.algorithms.submodular_verifier_placement`) therefore achieves the
+(1 − 1/e) guarantee of Nemhauser–Wolsey–Fisher (1978). A property-based test
+(`tests/test_submodular_placement.py`) checks diminishing returns empirically
+on random graphs for both separation models.
+
+Under deterministic distances, F(A) equals the count of resolved pairs, so
+F(A)/pairs = resolving coverage: the surrogate's greedy optimizes the same
+quantity the exact tracker reports, now with a worst-case bound.

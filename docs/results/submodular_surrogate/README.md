@@ -1,0 +1,70 @@
+# Submodular Surrogate vs Exact Greedy Resolving Coverage
+
+Resolving coverage achieved by exact greedy (no guarantee) vs the
+(1-1/e)-guaranteed submodular surrogate, same verifier budgets.
+
+| Graph | k | Exact greedy | Surrogate greedy | Gap |
+| --- | ---: | ---: | ---: | ---: |
+| layered | 2 | 92.5% | 92.5% | +0.0% |
+| layered | 3 | 97.5% | 97.5% | +0.0% |
+| layered | 4 | 99.2% | 99.2% | +0.0% |
+| chain | 2 | 100.0% | 100.0% | +0.0% |
+| chain | 3 | 100.0% | 100.0% | +0.0% |
+| chain | 4 | 100.0% | 100.0% | +0.0% |
+| spider | 2 | 96.2% | 96.2% | +0.0% |
+| spider | 3 | 100.0% | 100.0% | +0.0% |
+| spider | 4 | 100.0% | 100.0% | +0.0% |
+| arborescence | 2 | 98.9% | 98.9% | +0.0% |
+| arborescence | 3 | 100.0% | 100.0% | +0.0% |
+| arborescence | 4 | 100.0% | 100.0% | +0.0% |
+| dynamic_conditional | 2 | 100.0% | 100.0% | +0.0% |
+| dynamic_conditional | 3 | 100.0% | 100.0% | +0.0% |
+| dynamic_conditional | 4 | 100.0% | 100.0% | +0.0% |
+| fan_out_parallel | 2 | 85.7% | 85.7% | +0.0% |
+| fan_out_parallel | 3 | 95.2% | 95.2% | +0.0% |
+| fan_out_parallel | 4 | 100.0% | 100.0% | +0.0% |
+| feedback_loop | 2 | 100.0% | 100.0% | +0.0% |
+| feedback_loop | 3 | 100.0% | 100.0% | +0.0% |
+| feedback_loop | 4 | 100.0% | 100.0% | +0.0% |
+| shared_memory | 2 | 100.0% | 100.0% | +0.0% |
+| shared_memory | 3 | 100.0% | 100.0% | +0.0% |
+| shared_memory | 4 | 100.0% | 100.0% | +0.0% |
+| planner_coder_tester_reviewer | 2 | 100.0% | 100.0% | +0.0% |
+| planner_coder_tester_reviewer | 3 | 100.0% | 100.0% | +0.0% |
+| planner_coder_tester_reviewer | 4 | 100.0% | 100.0% | +0.0% |
+| research_writer_verifier | 2 | 100.0% | 100.0% | +0.0% |
+| research_writer_verifier | 3 | 100.0% | 100.0% | +0.0% |
+| research_writer_verifier | 4 | 100.0% | 100.0% | +0.0% |
+| debate_judge | 2 | 93.3% | 93.3% | +0.0% |
+| debate_judge | 3 | 100.0% | 100.0% | +0.0% |
+| debate_judge | 4 | 100.0% | 100.0% | +0.0% |
+| dense_graph | 2 | 52.4% | 52.4% | +0.0% |
+| dense_graph | 3 | 71.4% | 71.4% | +0.0% |
+| dense_graph | 4 | 85.7% | 85.7% | +0.0% |
+| generic_dag | 2 | 84.4% | 84.4% | +0.0% |
+| generic_dag | 3 | 88.9% | 88.9% | +0.0% |
+| generic_dag | 4 | 93.3% | 93.3% | +0.0% |
+| rag_pipeline | 2 | 100.0% | 100.0% | +0.0% |
+| rag_pipeline | 3 | 100.0% | 100.0% | +0.0% |
+| rag_pipeline | 4 | 100.0% | 100.0% | +0.0% |
+| random_directed_graph | 2 | 97.2% | 97.2% | +0.0% |
+| random_directed_graph | 3 | 100.0% | 100.0% | +0.0% |
+| random_directed_graph | 4 | 100.0% | 100.0% | +0.0% |
+| tool_use_pipeline | 2 | 100.0% | 100.0% | +0.0% |
+| tool_use_pipeline | 3 | 100.0% | 100.0% | +0.0% |
+| tool_use_pipeline | 4 | 100.0% | 100.0% | +0.0% |
+| hub_and_spoke_supervisor | 2 | 85.7% | 85.7% | +0.0% |
+| hub_and_spoke_supervisor | 3 | 95.2% | 95.2% | +0.0% |
+| hub_and_spoke_supervisor | 4 | 100.0% | 100.0% | +0.0% |
+| layered_pipeline | 2 | 90.5% | 90.5% | +0.0% |
+| layered_pipeline | 3 | 95.2% | 95.2% | +0.0% |
+| layered_pipeline | 4 | 100.0% | 100.0% | +0.0% |
+| small_world_graph | 2 | 88.9% | 88.9% | +0.0% |
+| small_world_graph | 3 | 100.0% | 100.0% | +0.0% |
+| small_world_graph | 4 | 100.0% | 100.0% | +0.0% |
+| star | 2 | 81.0% | 81.0% | +0.0% |
+| star | 3 | 90.5% | 90.5% | +0.0% |
+| star | 4 | 95.2% | 95.2% | +0.0% |
+| tree | 2 | 91.7% | 91.7% | +0.0% |
+| tree | 3 | 96.7% | 96.7% | +0.0% |
+| tree | 4 | 97.5% | 97.5% | +0.0% |
