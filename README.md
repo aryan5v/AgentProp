@@ -168,7 +168,7 @@ Details: [repository layout](docs/repository_layout.md).
 Public beta. Graph analysis, propagation, runtime control, the interactive
 `view` report, and key-free demos all work without API keys. Live-agent
 numbers are labeled **directional** until the multi-task study with saved
-artifacts lands under `docs/results/`.
+artifacts is published under `docs/results/`.
 
 ## License
 
