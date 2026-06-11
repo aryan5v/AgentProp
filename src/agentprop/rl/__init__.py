@@ -53,6 +53,10 @@ from agentprop.rl.rewards import (
     propagation_reward,
     workflow_control_reward,
 )
+from agentprop.rl.thompson import (
+    GaussianArmPosterior,
+    ThompsonSamplingRoutingPolicy,
+)
 from agentprop.rl.trajectory import (
     RoutingReplayResult,
     RoutingReplayStep,
@@ -65,6 +69,8 @@ __all__ = [
     "BanditArmStats",
     "CategoryBanditRoutingPolicy",
     "FeaturePolicyConfig",
+    "GaussianArmPosterior",
+    "ThompsonSamplingRoutingPolicy",
     "FeaturePolicyTrainingResult",
     "GraphFeaturePolicy",
     "GreedyCoveragePolicy",

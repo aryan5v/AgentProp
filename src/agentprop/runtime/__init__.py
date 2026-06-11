@@ -27,6 +27,11 @@ from agentprop.runtime.controller import (
 )
 from agentprop.runtime.observability import OTelTraceExporter, RegexPIIScrubber, scrub_event
 from agentprop.runtime.persistence import Controller, DurableController, JSONLEventStore, RunState
+from agentprop.runtime.recoverability import (
+    CascadeRiskAdvisor,
+    CascadeRiskEstimate,
+    estimate_cascade_risk,
+)
 from agentprop.runtime.session import (
     AsyncControlSession,
     ControlAnalysis,
@@ -59,6 +64,8 @@ __all__ = [
     "AgentLoopResult",
     "AgentTurnRequest",
     "AgentTurnResult",
+    "CascadeRiskAdvisor",
+    "CascadeRiskEstimate",
     "ControlDecision",
     "ControlAnalysis",
     "ControlSession",
@@ -92,6 +99,7 @@ __all__ = [
     "TrafficSplitReport",
     "ArmResult",
     "ArmRollup",
+    "estimate_cascade_risk",
     "execution_features_to_dict",
     "rollup_arms",
     "scrub_event",
