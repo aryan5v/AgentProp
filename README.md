@@ -29,7 +29,7 @@ observability tool does:
   problem: at full resolving coverage, any single failing node produces a
   unique signature and is exactly localizable — a guarantee, not a heuristic.
 - **Should this run keep going?** Your harness emits one `ExecutionEvent` per
-  step; AgentProp returns continue, verify, switch strategy, or finalize —
+  step; AgentProp returns `continue`, `verify`, `switch strategy`, or `finalize` —
   backed by forward cascade simulation, calibrated risk gates, and budget
   control.
 
