@@ -1,0 +1,2 @@
+{"event":{"step":1,"command":"python eval.py","exit_code":0,"verifier_run":true,"verifier_passed":true,"progress_made":true,"tokens_used":50,"elapsed_s":1.0,"error_signature":null,"final_answer_written":false,"trusted":false}}
+{"event":{"step":2,"command":"pytest","exit_code":0,"verifier_run":true,"verifier_passed":true,"progress_made":true,"tokens_used":70,"elapsed_s":2.0,"error_signature":null,"final_answer_written":true,"trusted":true}}

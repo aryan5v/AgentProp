@@ -16,6 +16,7 @@ from agentprop.algorithms import (
     low_weight_edges,
     risk_aware_verifier_placement,
 )
+from agentprop.analysis import analyze as analyze_workflow
 from agentprop.core import AgentGraph
 from agentprop.core.validation import WorkflowValidationError
 from agentprop.evaluation import compare_routing, evaluate_pruning, summarize_pruning_risk
@@ -163,6 +164,12 @@ def _build_parser() -> argparse.ArgumentParser:
     analyze = subparsers.add_parser("analyze", help="show graph diagnostics")
     analyze.add_argument("workflow", help="workflow JSON path or built-in workflow name")
     analyze.add_argument("--json", action="store_true")
+    analyze.add_argument(
+        "--out",
+        type=Path,
+        default=None,
+        help="write the Markdown or JSON report to a file",
+    )
 
     benchmark = subparsers.add_parser("benchmark", help="compare algorithms and propagation models")
     benchmark.add_argument("workflow", help="workflow JSON path or built-in workflow name")
@@ -983,31 +990,14 @@ def _control_demo(args: argparse.Namespace) -> int:
 
 
 def _analyze(args: argparse.Namespace) -> int:
-    _, graph = _load_workflow(args.workflow)
-    bottlenecks = bottleneck_nodes(graph)
-    pruning_candidates = low_weight_edges(graph)
-    verifier_candidates = risk_aware_verifier_placement(graph, min(3, graph.node_count))
-    payload = {
-        "nodes": graph.node_count,
-        "edges": graph.edge_count,
-        "bottlenecks": bottlenecks,
-        "pruning_candidates": pruning_candidates,
-        "verifier_candidates": verifier_candidates,
-    }
-    if args.json:
-        print(json.dumps(payload, indent=2, sort_keys=True))
+    report = analyze_workflow(args.workflow)
+    content = report.to_json() if args.json else report.to_markdown()
+    if args.out is not None:
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        args.out.write_text(content, encoding="utf-8")
+        print(f"Wrote {args.out}")
     else:
-        print(f"Nodes: {payload['nodes']}")
-        print(f"Edges: {payload['edges']}")
-        print("Bottlenecks:")
-        for node_id, score in bottlenecks:
-            print(f"  - {node_id}: {score:.3f}")
-        print("Pruning candidates:")
-        for source, target in pruning_candidates:
-            print(f"  - {source} -> {target}")
-        print("Verifier candidates:")
-        for node_id in verifier_candidates:
-            print(f"  - {node_id}")
+        print(content, end="")
     return 0
 
 
