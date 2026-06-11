@@ -21,6 +21,12 @@ from agentprop.rl.feature_policy import (
     GraphFeaturePolicy,
     train_feature_policy,
 )
+from agentprop.rl.graph_features import (
+    REWARD_RECORD_SCHEMA_VERSION,
+    node_position_features,
+    reward_record_graph_features,
+    workflow_embedding,
+)
 from agentprop.rl.policies import GreedyCoveragePolicy, NodeScorerRoutingPolicy
 from agentprop.rl.ppo import (
     PPOConfig,
@@ -67,6 +73,7 @@ __all__ = [
     "PPOPolicy",
     "PPOTrainingResult",
     "QLearningConfig",
+    "REWARD_RECORD_SCHEMA_VERSION",
     "QLearningTrainingResult",
     "ReinforceConfig",
     "ReinforcePolicy",
@@ -82,7 +89,9 @@ __all__ = [
     "actions_from_exported_trajectory",
     "format_routing_action",
     "load_rl_policy",
+    "node_position_features",
     "parse_routing_action",
+    "reward_record_graph_features",
     "TabularQPolicy",
     "WorkflowControlReward",
     "calibrate_routing_reward_profile",
@@ -94,4 +103,5 @@ __all__ = [
     "train_q_policy",
     "train_reinforce_policy",
     "workflow_control_reward",
+    "workflow_embedding",
 ]

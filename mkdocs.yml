@@ -57,6 +57,7 @@ nav:
       - Quality scoring: quality_scoring.md
       - Quality-aware routing: routing_quality.md
       - Visualization: visualization.md
+      - Reward record schema: reward_record_schema.md
       - Performance guide: performance_guide.md
       - Repository layout: repository_layout.md
   - Research:
