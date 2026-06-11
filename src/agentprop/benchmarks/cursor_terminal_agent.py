@@ -9,6 +9,7 @@ import shlex
 import subprocess
 import traceback
 from collections.abc import Callable
+from cryptography.fernet import Fernet
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
@@ -618,6 +619,7 @@ def _write_result(trace_dir: Path, result: object) -> None:
 
 
 _SECRET_ENV_MARKERS = ("KEY", "TOKEN", "SECRET", "PASSWORD", "CREDENTIAL")
+_TRACE_ENCRYPTION_KEY_ENV = "AGENTPROP_TRACE_ENCRYPTION_KEY"
 
 
 def _redact_secrets(text: str) -> str:
@@ -631,9 +633,19 @@ def _redact_secrets(text: str) -> str:
     return text
 
 
+def _get_trace_fernet() -> Fernet:
+    key = os.environ.get(_TRACE_ENCRYPTION_KEY_ENV)
+    if not key:
+        key = Fernet.generate_key().decode("utf-8")
+        os.environ[_TRACE_ENCRYPTION_KEY_ENV] = key
+    return Fernet(key.encode("utf-8"))
+
+
 def _write_json(path: Path, payload: object) -> None:
     serialized = json.dumps(payload, indent=2, sort_keys=True)
-    path.write_text(_redact_secrets(serialized) + "\n", encoding="utf-8")
+    redacted = _redact_secrets(serialized) + "\n"
+    token = _get_trace_fernet().encrypt(redacted.encode("utf-8"))
+    path.write_bytes(token + b"\n")
 
 
 _SNAPSHOT_IGNORED_DIRS = {".git", ".venv", "node_modules", ".agentprop", "__pycache__"}
