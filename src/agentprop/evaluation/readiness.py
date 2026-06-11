@@ -192,7 +192,7 @@ def build_v1_readiness_report() -> MaturityReport:
         MaturityItem(
             id="release-packaging",
             area="Release",
-            title="Public alpha packaging",
+            title="Public beta packaging",
             status="stable",
             evidence=(
                 "License, changelog, contributing guide, release notes, CI, docs index, "
@@ -210,7 +210,7 @@ def build_v1_readiness_report() -> MaturityReport:
         "training-free baselines, with alpha integrations and optional ML/DL/RL paths."
     )
     return MaturityReport(
-        target="public alpha",
+        target="public beta",
         summary=summary,
         overall_score=round(score, 3),
         counts=counts,

@@ -44,7 +44,7 @@ Any harness that can emit `ExecutionEvent` rows can integrate. See
 [framework integrations](framework_integrations.md) and
 [control layer quickstart](control_layer_quickstart.md).
 
-## Performance (v0.1.0a4+)
+## Performance (v0.1.0b1+)
 
 | Area | Improvement |
 | --- | --- |
