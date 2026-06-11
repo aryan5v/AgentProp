@@ -7,6 +7,11 @@ from agentprop.rl.checkpointing import (
     load_rl_policy,
     save_rl_policy,
 )
+from agentprop.rl.contextual_thompson import (
+    ContextualThompsonSamplingPolicy,
+    rloo_advantages,
+    shaped_reward,
+)
 from agentprop.rl.env import (
     AgentRoutingEnv,
     RoutingAction,
@@ -75,6 +80,7 @@ __all__ = [
     "AgentRoutingEnv",
     "BanditArmStats",
     "CategoryBanditRoutingPolicy",
+    "ContextualThompsonSamplingPolicy",
     "FeaturePolicyConfig",
     "GaussianArmPosterior",
     "ThompsonSamplingRoutingPolicy",
@@ -114,7 +120,9 @@ __all__ = [
     "load_logged_decisions",
     "propagation_reward",
     "replay_actions",
+    "rloo_advantages",
     "save_rl_policy",
+    "shaped_reward",
     "train_feature_policy",
     "train_ppo_policy",
     "train_q_policy",

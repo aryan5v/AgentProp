@@ -1,4 +1,9 @@
-"""Dependency-light PPO-style training for sequential routing."""
+"""Dependency-light PPO-style training for sequential routing.
+
+Pedagogical baseline on small tabular state spaces. The production
+routing path is ContextualThompsonSamplingPolicy (rl/contextual_thompson.py)
+plus off-policy evaluation (rl/ope.py); see docs/reinforcement_learning.md.
+"""
 
 from __future__ import annotations
 
