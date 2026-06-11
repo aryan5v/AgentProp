@@ -14,9 +14,9 @@
   <a href="https://www.skills.sh/aryan5v/AgentProp"><img alt="skills.sh" src="https://www.skills.sh/b/aryan5v/AgentProp" /></a>
   <a href="docs/coding_agents.md#mcp-server-shape"><img alt="MCP" src="https://img.shields.io/badge/MCP-FastMCP-12c95b" /></a>
   <a href="https://github.com/aryan5v/AgentProp/security"><img alt="Security" src="https://img.shields.io/badge/security-policy-black" /></a>
-  <img alt="Version" src="https://img.shields.io/badge/version-0.1.0a4-black" />
+  <img alt="Version" src="https://img.shields.io/badge/version-0.1.0b1-black" />
   <img alt="License" src="https://img.shields.io/badge/license-Apache--2.0-black" />
-  <img alt="Status" src="https://img.shields.io/badge/status-public_alpha-12c95b" />
+  <img alt="Status" src="https://img.shields.io/badge/status-public_beta-12c95b" />
 </p>
 
 AgentProp models AI-agent workflows as directed weighted graphs—agents, tools,

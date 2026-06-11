@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "agentprop"
-version = "0.1.0a4"
+version = "0.1.0b1"
 description = "Graph control for AI-agent workflows."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -12,7 +12,7 @@ license = "Apache-2.0"
 license-files = ["LICENSE"]
 authors = [{ name = "AgentProp contributors" }]
 classifiers = [
-  "Development Status :: 3 - Alpha",
+  "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
   "Intended Audience :: Science/Research",
   "License :: OSI Approved :: Apache Software License",

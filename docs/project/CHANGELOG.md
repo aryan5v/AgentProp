@@ -1,5 +1,33 @@
 # Changelog
 
+## 0.1.0-beta.1 - 2026-06-11
+
+First beta: devtool readiness, statistical guarantees, and the RL flywheel
+phase 1 (PR #66).
+
+- Hosted docs site (mkdocs-material + GitHub Pages deploy workflow),
+  `docs/troubleshooting.md`, README rewritten with per-audience install paths.
+- New `agentprop view` command: self-contained interactive HTML graph view
+  with verifier/seed/bottleneck overlays and an optional control-trace
+  timeline.
+- `AnalyzeReport.seed_coverage` bootstrap confidence interval;
+  `agentprop.evaluation.intervals` with mean and difference estimators.
+- `ConformalRiskGate` (`agentprop.ml.conformal`): split-conformal threshold
+  over any scalar risk score with a finite-sample miss-rate guarantee.
+- Graph-position features in every bandit reward record (schema v2,
+  `docs/reward_record_schema.md`), wired automatically through
+  `ControlSession`.
+- `ThompsonSamplingRoutingPolicy`: auto-decaying exploration, cold-start
+  circuit breaker, seedable priors.
+- `CascadeRiskAdvisor`: forward-simulated failure-cascade impact escalates
+  borderline CONTINUE decisions to FORCE_VERIFY.
+- Off-policy evaluation (`agentprop.rl.ope`): weighted importance sampling
+  and doubly-robust estimators with bootstrap CIs.
+- `FeatureCalibratedPropagation`: edge-feature logistic propagation model
+  that transfers to unseen graphs.
+- CI coverage reporting, pre-commit config, and a version-consistency test
+  guarding README and plugin manifests.
+
 ## 0.1.0-alpha.4 - 2026-06-06
 
 Coding-agent beta distribution refresh:
