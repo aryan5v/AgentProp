@@ -85,10 +85,16 @@ class _ArmModel:
         return _solve(self.precision, self.weighted_sum)
 
     def sample_theta(self, rng: random.Random, noise_variance: float) -> Vector:
+        # With precision L L^T, solving L^T offset = v for v ~ N(0, sigma^2 I)
+        # yields offset ~ N(0, sigma^2 * precision^-1) directly — no inversion
+        # or second factorization needed.
         mean = self.posterior_mean()
-        covariance_factor = _cholesky(_inverse(self.precision))
-        z = [rng.gauss(0.0, math.sqrt(noise_variance)) for _ in range(self.dim)]
-        offset = _mat_vec(covariance_factor, z)
+        lower = _cholesky(self.precision)
+        v = [rng.gauss(0.0, math.sqrt(noise_variance)) for _ in range(self.dim)]
+        offset = [0.0] * self.dim
+        for i in reversed(range(self.dim)):
+            s = sum(lower[k][i] * offset[k] for k in range(i + 1, self.dim))
+            offset[i] = (v[i] - s) / lower[i][i]
         return [m + o for m, o in zip(mean, offset, strict=True)]
 
     def to_dict(self) -> dict[str, object]:
@@ -245,15 +251,3 @@ def _solve(matrix: Matrix, rhs: Vector) -> Vector:
         x[i] = (y[i] - sum(lower[k][i] * x[k] for k in range(i + 1, n))) / lower[i][i]
     return x
 
-
-def _inverse(matrix: Matrix) -> Matrix:
-    n = len(matrix)
-    columns = []
-    for j in range(n):
-        e = [1.0 if i == j else 0.0 for i in range(n)]
-        columns.append(_solve(matrix, e))
-    return [[columns[j][i] for j in range(n)] for i in range(n)]
-
-
-def _mat_vec(matrix: Matrix, vector: Vector) -> Vector:
-    return [sum(row[j] * vector[j] for j in range(len(vector))) for row in matrix]
