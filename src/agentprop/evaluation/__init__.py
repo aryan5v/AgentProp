@@ -19,6 +19,11 @@ from agentprop.evaluation.failure_taxonomy import (
     FailureClassification,
     classify_benchmark_failure,
 )
+from agentprop.evaluation.intervals import (
+    ConfidenceInterval,
+    bootstrap_difference_interval,
+    bootstrap_mean_interval,
+)
 from agentprop.evaluation.llm_execution import (
     LLMExecutionResult,
     LLMUsage,
@@ -99,6 +104,7 @@ __all__ = [
     "BenchmarkRow",
     "ArtifactKind",
     "ArtifactRecord",
+    "ConfidenceInterval",
     "CostSummary",
     "CoverageConstrainedCost",
     "ContextCompressionProfile",
@@ -133,6 +139,8 @@ __all__ = [
     "WatchdogResult",
     "AgentBudgetPolicy",
     "aggregate_quality_scores",
+    "bootstrap_difference_interval",
+    "bootstrap_mean_interval",
     "build_v1_readiness_report",
     "budget_policy_by_category",
     "calibrate_context_compression",

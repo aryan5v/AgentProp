@@ -14,6 +14,7 @@ from agentprop.core import AgentGraph
 from agentprop.core.dynamic_graph import DynamicGraphSession
 from agentprop.ml.risk_predictors import TimeoutRiskPredictor
 from agentprop.rl import CategoryBanditRoutingPolicy
+from agentprop.rl.graph_features import reward_record_graph_features
 from agentprop.runtime.control_loop import (
     ControlDecision,
     ExecutionEvent,
@@ -118,7 +119,11 @@ class ControlSession:
                 arms=("agentprop_controller", "baseline"),
                 epsilon=0.0,
                 default_arm="agentprop_controller",
-            )
+            ),
+            graph_context=reward_record_graph_features(
+                graph,
+                verifiers=tuple(self.analysis.verifier_candidates),
+            ),
         )
         self._record(
             "analysis",

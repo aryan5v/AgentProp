@@ -62,3 +62,14 @@ model reads edge reliability and activation probability from the graph.
 Once real LLM case-study traces exist, this model should be compared against
 Independent Cascade, Linear Threshold, Randomized Zero Forcing, and learned
 GNN/RL policies.
+
+## Feature-calibrated propagation (transfers to unseen graphs)
+
+`LearnedPropagation` memorizes per-edge probabilities, so it cannot score an
+edge it never saw. `FeatureCalibratedPropagation`
+(`agentprop.propagation.feature_calibrated`) instead fits a logistic model
+from edge features (relevance, reliability, degrees, costs) to activation
+probability, pooled across any number of workflows — predictions then work on
+structurally new graphs. `fit` takes `(graph, {(source, target): activated})`
+observations; `simulate` runs IC with the predicted probabilities; `save` /
+`load` round-trip the parameters as JSON.

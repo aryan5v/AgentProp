@@ -6,6 +6,10 @@ from agentprop.ml.checkpointing import (
     load_ml_model,
     save_ml_model,
 )
+from agentprop.ml.conformal import (
+    ConformalCalibrationResult,
+    ConformalRiskGate,
+)
 from agentprop.ml.datasets import (
     EdgePruningExample,
     EmpiricalEdgePruningExample,
@@ -42,6 +46,8 @@ from agentprop.ml.models import (
 )
 
 __all__ = [
+    "ConformalCalibrationResult",
+    "ConformalRiskGate",
     "EdgeFeatures",
     "EdgePruningExample",
     "EmpiricalEdgePruningExample",

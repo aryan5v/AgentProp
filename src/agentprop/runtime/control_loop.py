@@ -259,6 +259,11 @@ class RuntimeRewardLogger:
     bandit: CategoryBanditRoutingPolicy
     jsonl_path: Path | None = None
     rows: list[dict[str, object]] = field(default_factory=list)
+    graph_context: Mapping[str, object] | None = None
+    """Optional graph-position payload (see ``agentprop.rl.graph_features``).
+
+    When set, every reward row carries the workflow embedding and active
+    verifier coverage so phase-2 contextual bandits can train on history."""
 
     def record(
         self,
@@ -275,6 +280,7 @@ class RuntimeRewardLogger:
         regression_risk: float = 0.0,
         timeout_risk: float = 0.0,
         quality_loss: float | None = None,
+        graph_features: Mapping[str, object] | None = None,
     ) -> dict[str, object]:
         """Record one real task outcome and update the shaped bandit reward."""
 
@@ -310,6 +316,9 @@ class RuntimeRewardLogger:
             },
             "bandit_values": self.bandit.values(category),
         }
+        context = graph_features if graph_features is not None else self.graph_context
+        if context is not None:
+            row["graph_features"] = dict(context)
         if features is not None:
             row["state"] = execution_features_to_dict(features)
             row["features"] = row["state"]

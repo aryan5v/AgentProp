@@ -22,6 +22,7 @@ Onboarding and day-to-day use:
 - [Plugin distribution](plugin_distribution.md)
 - [Framework integrations](framework_integrations.md)
 - [Trace ingestion](trace_ingestion.md)
+- [Troubleshooting](troubleshooting.md)
 
 ## Reference
 
@@ -32,6 +33,7 @@ Contracts, algorithms, and repo structure:
 - [Quality scoring](quality_scoring.md)
 - [Quality-aware routing](routing_quality.md)
 - [Visualization](visualization.md)
+- [Reward record schema](reward_record_schema.md)
 - [Repository layout](repository_layout.md)
 - [Examples catalog](../examples/README.md)
 - [Experiments catalog](../experiments/README.md)

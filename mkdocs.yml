@@ -1,0 +1,68 @@
+site_name: AgentProp
+site_description: Graph control for AI-agent workflows.
+site_url: https://aryan5v.github.io/AgentProp/
+repo_url: https://github.com/aryan5v/AgentProp
+repo_name: aryan5v/AgentProp
+docs_dir: docs
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: black
+      accent: green
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: green
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences
+
+nav:
+  - Home: index.md
+  - Overview: overview.md
+  - Quickstarts:
+      - Beta quickstart (coding agents): beta_quickstart.md
+      - Control layer quickstart: control_layer_quickstart.md
+      - Tutorial: tutorial.md
+  - Guides:
+      - Architecture: ARCHITECTURE.md
+      - Environment setup: environment.md
+      - Coding agent integration: coding_agents.md
+      - Plugin distribution: plugin_distribution.md
+      - Framework integrations: framework_integrations.md
+      - Trace ingestion: trace_ingestion.md
+      - Troubleshooting: troubleshooting.md
+  - Reference:
+      - Workflow JSON schema: workflow_schema.md
+      - Verifier semantics: verifier_semantics.md
+      - Quality scoring: quality_scoring.md
+      - Quality-aware routing: routing_quality.md
+      - Visualization: visualization.md
+      - Reward record schema: reward_record_schema.md
+      - Performance guide: performance_guide.md
+      - Repository layout: repository_layout.md
+  - Research:
+      - Learned propagation: learned_propagation.md
+      - Routing baseline evaluation: routing_baseline_evaluation.md
+      - Reinforcement learning: reinforcement_learning.md
+      - Deep learning: deep_learning.md
+      - Terminal-Bench 2.1: terminal_bench_21.md

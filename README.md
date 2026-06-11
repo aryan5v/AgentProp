@@ -28,20 +28,27 @@ It is a **control layer**, not an orchestrator. Your harness emits one
 switch strategy, or finalize. See the [overview](docs/overview.md) for the core
 ideas (metric-dimension verifiers, quality cascade, RZF scaling, runtime control).
 
-## Get started
+## Get started — pick your path
 
-| Audience | Start here |
-| --- | --- |
-| Codex / Claude Code users | [Beta quickstart](docs/beta_quickstart.md) |
-| Library developers | [Tutorial](docs/tutorial.md) · [Architecture](docs/ARCHITECTURE.md) |
-| Contributors | [Agent guide](docs/project/AGENTS.md) · [Contributing](docs/project/CONTRIBUTING.md) |
-| Full doc map | [docs/index.md](docs/index.md) |
+### Path A: you use a coding agent (Claude Code / Codex)
+
+Install the package and register the plugin or MCP server so your agent can
+analyze its own workflow and run under budget control:
 
 ```bash
 python -m pip install "agentprop[mcp]"
 agentprop doctor --tier graph
-agentprop analyze planner_coder_tester_reviewer
-agentprop control-demo --demo terminal --out-dir reports/control-demo
+
+codex mcp add agentprop -- agentprop-mcp   # or the plugin bundle below
+```
+
+Then follow the [beta quickstart](docs/beta_quickstart.md). No API keys are
+needed for graph analysis.
+
+### Path B: you build multi-agent systems (LangGraph and friends)
+
+```bash
+python -m pip install agentprop
 ```
 
 Analyze a LangGraph workflow in a few lines:
@@ -53,7 +60,7 @@ report = analyze(my_langgraph_workflow)
 print(report.to_markdown())
 ```
 
-Wrap a LangGraph workflow with runtime control:
+Wrap it with runtime control:
 
 ```python
 from agentprop import wrap
@@ -62,6 +69,23 @@ controlled = wrap(my_langgraph_workflow, budget={"tokens": 100_000, "cost": 0.50
 result = controlled.run({"task": "ship the workflow"})
 print(result.decision_trace)
 ```
+
+Start with the [tutorial](docs/tutorial.md) and the
+[framework status matrix](docs/framework_integrations.md#integration-status)
+(LangGraph, CrewAI, and OpenAI Agents have native builders; AutoGen and
+LlamaIndex are dict-interchange only).
+
+### Try it without any framework
+
+```bash
+agentprop analyze planner_coder_tester_reviewer
+agentprop control-demo --demo terminal --out-dir reports/control-demo
+agentprop view planner_coder_tester_reviewer --out reports/view.html
+```
+
+More: [docs/index.md](docs/index.md) ·
+[troubleshooting](docs/troubleshooting.md) ·
+[contributing](docs/project/CONTRIBUTING.md)
 
 Development checkout:
 
