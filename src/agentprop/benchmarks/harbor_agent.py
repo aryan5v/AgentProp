@@ -24,8 +24,8 @@ except ModuleNotFoundError:  # pragma: no cover - exercised only without Harbor 
     def with_prompt_template(fn: Any) -> Any:
         return fn
 
-    BaseEnvironment = Any  # type: ignore[misc,assignment]
-    AgentContext = Any  # type: ignore[misc,assignment]
+    BaseEnvironment = Any
+    AgentContext = Any
 
 
 class AgentPropCursorAgent(BaseInstalledAgent):  # type: ignore[misc]
@@ -105,7 +105,7 @@ class AgentPropCursorAgent(BaseInstalledAgent):  # type: ignore[misc]
             ),
         )
 
-    @with_prompt_template
+    @with_prompt_template  # type: ignore[untyped-decorator,misc,unused-ignore]
     async def run(
         self,
         instruction: str,

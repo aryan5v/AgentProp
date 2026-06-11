@@ -2,8 +2,6 @@ import json
 from pathlib import Path
 from unittest.mock import patch
 
-import pytest
-
 from agentprop.benchmarks.cursor_terminal_agent import (
     _default_verifier_command,
     _loop_result_from_fast_path,
@@ -146,7 +144,8 @@ def test_main_returns_zero_on_crash_when_score_only(tmp_path: Path, monkeypatch)
             ]
         )
     assert code == 0
-    crash = json.loads((tmp_path / "trace" / "agentprop_cursor_crash.json").read_text(encoding="utf-8"))
+    crash_path = tmp_path / "trace" / "agentprop_cursor_crash.json"
+    crash = json.loads(crash_path.read_text(encoding="utf-8"))
     assert crash["exception_type"] == "RuntimeError"
 
 

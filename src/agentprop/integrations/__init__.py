@@ -35,21 +35,6 @@ from agentprop.integrations.framework_adapters import (
     to_native_framework,
     to_openai_agents_dict,
 )
-from agentprop.integrations.gemini_agent import (
-    GeminiAgentConfig,
-    GeminiAgentError,
-    GeminiAgentProcessResult,
-    GeminiCommandProposer,
-    ParsedGeminiCommand,
-    gemini_cli_available,
-    parse_gemini_command_output,
-    render_gemini_command_prompt,
-)
-from agentprop.integrations.role_briefs import (
-    AgentRoleBrief,
-    build_agent_role_briefs,
-    render_role_briefs_markdown,
-)
 from agentprop.integrations.session_stats import (
     SessionStatsReport,
     aggregate_session_stats,
@@ -69,19 +54,13 @@ from agentprop.integrations.trace_loader import (
 
 __all__ = [
     "CodingAgentTarget",
-    "AgentRoleBrief",
     "NativeFrameworkStatus",
     "NativeFrameworkUnavailable",
     "CursorAgentConfig",
     "CursorAgentError",
     "CursorAgentProcessResult",
     "CursorCommandProposer",
-    "GeminiAgentConfig",
-    "GeminiAgentError",
-    "GeminiAgentProcessResult",
-    "GeminiCommandProposer",
     "ParsedCursorCommand",
-    "ParsedGeminiCommand",
     "SUPPORTED_FRAMEWORKS",
     "SessionStatsReport",
     "TraceEmpiricalRowsResult",
@@ -104,15 +83,10 @@ __all__ = [
     "graph_from_trace",
     "graph_from_trace_dict",
     "native_framework_status",
-    "gemini_cli_available",
     "parse_cursor_command_output",
-    "parse_gemini_command_output",
-    "build_agent_role_briefs",
     "render_coding_agent_instructions",
     "render_session_stats_markdown",
     "render_cursor_command_prompt",
-    "render_gemini_command_prompt",
-    "render_role_briefs_markdown",
     "to_autogen_dict",
     "to_crewai_dict",
     "to_framework_dict",

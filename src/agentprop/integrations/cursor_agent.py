@@ -265,7 +265,8 @@ def render_cursor_command_prompt(request: TerminalTurnRequest) -> str:
         "metadata": metadata,
     }
     recovery_note = ""
-    if request.strategy.endswith("recovery_prompt") or metadata.get("proposer_profile") == "recovery":
+    profile = metadata.get("proposer_profile")
+    if request.strategy.endswith("recovery_prompt") or profile == "recovery":
         recovery_note = (
             "Recovery mode: the last verifier failed. Propose one command that directly "
             "addresses the verifier failure below.\n\n"

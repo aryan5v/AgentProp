@@ -8,6 +8,7 @@ import os
 import shlex
 import subprocess
 import traceback
+from collections.abc import Callable
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
@@ -19,6 +20,7 @@ from agentprop.runtime import (
     ControlDecision,
     ControlledTerminalLoop,
     ExecutionEvent,
+    ExecutionStateFeatures,
     ExecutionStateTracker,
     RuntimeRewardLogger,
     StoppingController,
@@ -204,7 +206,7 @@ def _executor(
         request: TerminalTurnRequest,
         proposal: TerminalCommandProposal,
     ) -> TerminalCommandResult:
-        tokens_used = int(proposal.metadata.get("tokens_used") or 0)
+        tokens_used = int(str(proposal.metadata.get("tokens_used") or 0))
         if proposal.metadata.get("proposal_failed"):
             return TerminalCommandResult(
                 event=ExecutionEvent(
@@ -217,7 +219,8 @@ def _executor(
                 ),
                 stdout="",
                 stderr="\n".join(
-                    str(error) for error in proposal.metadata.get("proposal_errors", ())
+                    str(error)
+                    for error in list(proposal.metadata.get("proposal_errors") or ())  # type: ignore[call-overload]
                 ),
                 metadata={"source": "cursor-proposal-fallback"},
             )
@@ -317,7 +320,10 @@ def _on_strategy_switch(
     config: RunnerConfig,
     usage: CursorUsageAccumulator,
     run_state: _RunState,
-):
+) -> Callable[
+    [TerminalTurnRequest, TerminalCommandProposal, object],
+    tuple[TerminalCommandResult, ...],
+]:
     def handler(
         request: TerminalTurnRequest,
         proposal: TerminalCommandProposal,
