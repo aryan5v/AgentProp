@@ -9,7 +9,7 @@ def test_v1_maturity_report_covers_core_surface() -> None:
     assert "blocked" not in report.counts
     titles = {item.title for item in report.items}
     assert "Directed weighted workflow graph backbone" in titles
-    assert "Public alpha packaging" in titles
+    assert "Public beta packaging" in titles
 
 
 def test_v1_maturity_markdown_is_public_safe() -> None:

@@ -65,7 +65,7 @@ analysis, propagation simulation, verifier placement, and key-free control demos
 work without API keys. Real LLM validation and multi-task Terminal-Bench arms
 require credentials documented in [environment.md](environment.md).
 
-## Recent capabilities (v0.1.0a4+)
+## Recent capabilities (v0.1.0b1+)
 
 | Feature | Entry point |
 | --- | --- |
