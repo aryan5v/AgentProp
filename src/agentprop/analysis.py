@@ -15,8 +15,10 @@ from agentprop.algorithms.verifier_placement import (
     resolving_coverage,
 )
 from agentprop.core import AgentGraph
+from agentprop.evaluation.intervals import ConfidenceInterval, bootstrap_mean_interval
 from agentprop.evaluation.runner import make_propagation_model, select_seeds
 from agentprop.integrations.framework_adapters import graph_from_langgraph_object
+from agentprop.propagation.independent_cascade import IndependentCascade
 from agentprop.workflows import WORKFLOW_TEMPLATES
 
 
@@ -37,6 +39,7 @@ class AnalyzeReport:
     recommended_seed_budget: int
     recommended_seeds: tuple[str, ...]
     pruning_candidates: tuple[tuple[str, str], ...]
+    seed_coverage: ConfidenceInterval | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize the report to JSON-compatible data."""
@@ -60,6 +63,7 @@ class AnalyzeReport:
                 {"source": source, "target": target}
                 for source, target in self.pruning_candidates
             ],
+            "seed_coverage": self.seed_coverage.to_dict() if self.seed_coverage else None,
         }
 
     def to_json(self) -> str:
@@ -78,6 +82,7 @@ class AnalyzeReport:
             f"- Edges: `{self.edges}`",
             f"- Recommended seed budget: `{self.recommended_seed_budget}`",
             f"- Recommended seeds: `{_join(self.recommended_seeds)}`",
+            f"- Seed propagation coverage: `{_coverage_text(self.seed_coverage)}`",
             "",
             "## Verifier Placement",
             f"- Recommended verifiers: `{_join(self.verifier_placement)}`",
@@ -143,6 +148,7 @@ def analyze(
         recommended_seed_budget=budget,
         recommended_seeds=recommended_seeds,
         pruning_candidates=tuple(low_weight_edges(graph)),
+        seed_coverage=_seed_coverage_interval(graph, list(recommended_seeds), trials),
     )
 
 
@@ -192,6 +198,32 @@ def _constrained_cost(
         total += node.token_cost * ratio
     total += sum(edge.message_cost * 0.6 for edge in graph.edges())
     return float(total)
+
+
+def _seed_coverage_interval(
+    graph: AgentGraph,
+    seeds: list[str],
+    trials: int,
+) -> ConfidenceInterval | None:
+    """Per-trial IC coverage from the recommended seeds, with a bootstrap CI."""
+
+    if not seeds or graph.node_count == 0:
+        return None
+    coverages = [
+        IndependentCascade(seed=trial).simulate(graph, seeds, trials=1).coverage
+        for trial in range(max(trials, 1))
+    ]
+    return bootstrap_mean_interval(coverages, seed=0)
+
+
+def _coverage_text(interval: ConfidenceInterval | None) -> str:
+    if interval is None:
+        return "n/a"
+    return (
+        f"{interval.mean:.1%} "
+        f"[95% CI {interval.lower:.1%}, {interval.upper:.1%}] "
+        f"over {interval.samples} trials"
+    )
 
 
 def _join(values: tuple[str, ...]) -> str:

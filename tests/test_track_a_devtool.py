@@ -119,3 +119,14 @@ def test_traffic_split_rollup_and_circuit_breaker() -> None:
     payload = report.to_dict()
     assert "a2" in payload["circuit_breaker_tripped"]
     assert json.dumps(payload)
+
+
+def test_analyze_report_includes_seed_coverage_interval() -> None:
+    report = analyze("planner_coder_tester_reviewer", trials=10)
+    interval = report.seed_coverage
+    assert interval is not None
+    assert 0.0 <= interval.lower <= interval.mean <= interval.upper <= 1.0
+    assert interval.samples == 10
+    payload = report.to_dict()
+    assert payload["seed_coverage"]["mean"] == interval.mean
+    assert "Seed propagation coverage" in report.to_markdown()
