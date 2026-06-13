@@ -30,7 +30,10 @@ class RetrievalResult:
 class RetrievalTool(Protocol):
     """Augments a model call so the model can gather external evidence."""
 
-    name: str
+    @property
+    def name(self) -> str:
+        """Identifier for logs/traces."""
+        ...
 
     def for_subtask(self, query: str) -> RetrievalResult:
         """Return request extensions enabling retrieval for this sub-task."""
