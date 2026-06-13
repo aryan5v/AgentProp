@@ -70,6 +70,38 @@ def test_empty_rubric_is_zero() -> None:
     assert score.pass_rate == 0.0
 
 
+def test_task_from_row_handles_hf_dict_of_columns() -> None:
+    from agentprop.evaluation.draco import _task_from_row
+
+    row = {
+        "task_id": "h",
+        "query": "Q",
+        "criteria": {
+            "text": ["c1", "c2"],
+            "weight": [5, -10],
+            "axis": ["factual-accuracy", "citation-quality"],
+        },
+    }
+    task = _task_from_row(row)
+    assert len(task.criteria) == 2
+    assert task.criteria[1].weight == -10.0
+
+
+def test_task_from_row_skips_criteria_missing_weight() -> None:
+    from agentprop.evaluation.draco import _task_from_row
+
+    row = {
+        "task_id": "x",
+        "query": "Q",
+        "criteria": [
+            {"text": "ok", "weight": 3},
+            {"text": "no weight"},
+            {"text": "null weight", "weight": None},
+        ],
+    }
+    assert len(_task_from_row(row).criteria) == 1
+
+
 def test_load_jsonl_roundtrip(tmp_path: Path) -> None:
     rows = [
         {

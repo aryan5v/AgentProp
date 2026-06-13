@@ -122,12 +122,11 @@ def load_draco_jsonl(path: str | Path) -> list[DracoTask]:
     """
 
     tasks: list[DracoTask] = []
-    for line in Path(path).read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        row = json.loads(line)
-        tasks.append(_task_from_row(row))
+    with Path(path).open(encoding="utf-8") as handle:
+        for raw_line in handle:
+            line = raw_line.strip()
+            if line:
+                tasks.append(_task_from_row(json.loads(line)))
     return tasks
 
 
@@ -145,16 +144,15 @@ def load_draco_hf(split: str = "test", *, name: str = "perplexity-ai/draco") -> 
 
 
 def _task_from_row(row: dict[str, object]) -> DracoTask:
-    raw_criteria = row.get("criteria", [])
-    criteria_rows = raw_criteria if isinstance(raw_criteria, list) else []
+    criteria_rows = _normalize_criteria(row.get("criteria", []))
     criteria = tuple(
         DracoCriterion(
             text=str(c["text"]),
-            weight=float(c["weight"]),
+            weight=float(str(c["weight"])),
             axis=str(c.get("axis", "factual-accuracy")),
         )
         for c in criteria_rows
-        if isinstance(c, dict) and c.get("text") is not None
+        if isinstance(c, dict) and c.get("text") is not None and c.get("weight") is not None
     )
     return DracoTask(
         task_id=str(row.get("task_id") or row.get("id") or "task"),
@@ -162,3 +160,21 @@ def _task_from_row(row: dict[str, object]) -> DracoTask:
         criteria=criteria,
         domain=str(row.get("domain", "general")),
     )
+
+
+def _normalize_criteria(raw: object) -> list[dict[str, object]]:
+    """Accept both a list of criterion dicts and HF's dict-of-columns layout.
+
+    ``datasets`` can return a nested struct sequence as ``{"text": [...],
+    "weight": [...]}`` instead of ``[{"text":..., "weight":...}, ...]``.
+    """
+
+    if isinstance(raw, list):
+        return [c for c in raw if isinstance(c, dict)]
+    if isinstance(raw, dict) and raw:
+        columns = {k: v for k, v in raw.items() if isinstance(v, list)}
+        if not columns:
+            return []
+        length = min(len(v) for v in columns.values())
+        return [{k: columns[k][i] for k in columns} for i in range(length)]
+    return []

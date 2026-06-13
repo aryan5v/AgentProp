@@ -28,7 +28,12 @@ from agentprop.council import (
     Synthesizer,
 )
 from agentprop.council.model_pool import ModelResponse
-from agentprop.evaluation.draco import DracoTask, grade_response, load_draco_jsonl
+from agentprop.evaluation.draco import (
+    DracoTask,
+    JudgeFn,
+    grade_response,
+    load_draco_jsonl,
+)
 from agentprop.evaluation.intervals import bootstrap_mean_interval
 
 # Budget panel (OpenRouter slugs) + a frontier reference. Prices are per-Mtok.
@@ -49,7 +54,7 @@ _JUDGE_SYSTEM = (
 )
 
 
-def make_judge(pool: ModelPool):  # noqa: ANN201
+def make_judge(pool: ModelPool) -> JudgeFn:
     def judge(query: str, response: str, criterion: str) -> bool:
         result = pool.call(
             JUDGE_MODEL,
@@ -58,6 +63,9 @@ def make_judge(pool: ModelPool):  # noqa: ANN201
             temperature=0.0,
             max_tokens=4,
         )
+        # A failed judge call would silently corrupt every score it touches.
+        if result.error:
+            raise RuntimeError(f"judge call failed: {result.error}")
         return result.text.strip().upper().startswith("MET")
 
     return judge
@@ -71,6 +79,8 @@ def _single(pool: ModelPool, model: str, task: DracoTask) -> tuple[str, float, f
         user_prompt=task.query,
         extra_body=web.extra_body or None,
     )
+    if resp.error:
+        raise RuntimeError(f"model call to {model} failed: {resp.error}")
     return resp.text, resp.cost_usd, resp.latency_s, resp.usage.total_tokens
 
 
@@ -111,6 +121,8 @@ def main() -> int:
     )
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
+    rows_file = args.out_dir / "rows.jsonl"
+    rows_file.write_text("", encoding="utf-8")  # fresh run
     rows: list[dict] = []
     for task in tasks:
         for arm in args.arms:
@@ -131,17 +143,18 @@ def main() -> int:
             else:
                 continue
             score = grade_response(task, text, judge)
-            rows.append({
+            row = {
                 "arm": arm, "task_id": task.task_id, "domain": task.domain,
                 "normalized_score": score.normalized_score, "pass_rate": score.pass_rate,
                 "cost_usd": cost, "latency_s": latency, "tokens": tokens,
-            })
+            }
+            rows.append(row)
+            # Append per result so a long run survives interruptions.
+            with rows_file.open("a", encoding="utf-8") as handle:
+                handle.write(json.dumps(row, sort_keys=True) + "\n")
             print(f"{arm} {task.task_id}: score={score.normalized_score:.1f} "
                   f"cost=${cost:.3f} {latency:.0f}s")
 
-    (args.out_dir / "rows.jsonl").write_text(
-        "\n".join(json.dumps(r, sort_keys=True) for r in rows) + "\n", encoding="utf-8"
-    )
     _write_summary(rows, args.out_dir)
     print(f"\nArtifacts: {args.out_dir}")
     return 0
@@ -156,12 +169,12 @@ def _write_summary(rows: list[dict], out_dir: Path) -> None:
     for arm in arms:
         ar = [r for r in rows if r["arm"] == arm]
         score = bootstrap_mean_interval([r["normalized_score"] for r in ar], seed=0)
+        pass_rate = bootstrap_mean_interval([r["pass_rate"] for r in ar], seed=0)
         cost = bootstrap_mean_interval([r["cost_usd"] for r in ar], seed=0)
         latency = bootstrap_mean_interval([r["latency_s"] for r in ar], seed=0)
         lines.append(
             f"| {arm} | {score.mean:.1f} [{score.lower:.1f},{score.upper:.1f}] | "
-            f"{bootstrap_mean_interval([r['pass_rate'] for r in ar], seed=0).mean:.1f} | "
-            f"{cost.mean:.3f} | {latency.mean:.0f} |"
+            f"{pass_rate.mean:.1f} | {cost.mean:.3f} | {latency.mean:.0f} |"
         )
         summary.append({"arm": arm, "norm_score": score.mean, "cost_usd": cost.mean})
     (out_dir / "summary.json").write_text(
