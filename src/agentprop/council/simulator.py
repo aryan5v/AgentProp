@@ -96,16 +96,17 @@ def _ensemble_trial(
 def _council_trial(
     pool: list[SimModel], synth: SimModel, cfg: SimConfig, rng: random.Random
 ) -> tuple[float, float]:
-    cheapest_by_tier: dict[int, SimModel] = {}
-    for m in sorted(pool, key=lambda x: x.price_per_ktok):
-        cheapest_by_tier.setdefault(m.tier, m)
     tiers = sorted({m.tier for m in pool})
+    # The pool is static, so precompute the cheapest model satisfying each tier
+    # once rather than re-scanning the pool inside the sub-task loop.
+    cheapest_capable = {
+        t: min((m for m in pool if m.tier >= t), key=lambda x: x.price_per_ktok)
+        for t in tiers
+    }
     correct = 0.0
     cost = 0.0
     for _ in range(cfg.subtasks):
-        required = rng.choice(tiers)
-        capable = [m for m in pool if m.tier >= required]
-        model = min(capable, key=lambda x: x.price_per_ktok)
+        model = cheapest_capable[rng.choice(tiers)]
         cost += cfg.subtask_ktok * model.price_per_ktok / 1000.0
         if rng.random() < model.competence:
             correct += 1.0
