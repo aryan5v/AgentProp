@@ -30,6 +30,8 @@ class LLMExecutionResult:
     usage: LLMUsage
     latency_s: float
     raw_response: dict[str, Any] = field(default_factory=dict)
+    citations: tuple[str, ...] = ()
+    """Source URLs surfaced by a web/search tool, when the provider returns them."""
 
 
 class OpenAICompatibleChatClient:
@@ -87,8 +89,14 @@ class OpenAICompatibleChatClient:
         user_prompt: str,
         temperature: float = 0.1,
         max_tokens: int | None = None,
+        extra_body: dict[str, Any] | None = None,
     ) -> LLMExecutionResult:
-        """Run one chat completion call."""
+        """Run one chat completion call.
+
+        ``extra_body`` is merged into the request payload, carrying provider
+        extensions such as OpenRouter ``plugins`` (web search) or OpenAI-style
+        ``tools`` without coupling this client to any one provider.
+        """
 
         payload: dict[str, Any] = {
             "model": self.model,
@@ -100,6 +108,9 @@ class OpenAICompatibleChatClient:
         }
         if max_tokens is not None:
             payload["max_tokens"] = max_tokens
+        if extra_body:
+            for key, value in extra_body.items():
+                payload[key] = value
         request = urllib.request.Request(
             f"{self.base_url}/chat/completions",
             data=json.dumps(payload).encode("utf-8"),
@@ -126,6 +137,7 @@ class OpenAICompatibleChatClient:
             usage=usage,
             latency_s=latency_s,
             raw_response=raw_payload,
+            citations=_extract_citations(raw_payload),
         )
 
 
@@ -183,6 +195,34 @@ def _extract_usage(raw_usage: Any) -> LLMUsage:
         completion_tokens=completion_tokens,
         total_tokens=total_tokens,
     )
+
+
+def _extract_citations(payload: dict[str, Any]) -> tuple[str, ...]:
+    """Pull source URLs from message annotations (OpenRouter/OpenAI web search)."""
+
+    choices = payload.get("choices", [])
+    if not isinstance(choices, list) or not choices:
+        return ()
+    first = choices[0]
+    if not isinstance(first, dict):
+        return ()
+    message = first.get("message", {})
+    if not isinstance(message, dict):
+        return ()
+    urls: list[str] = []
+    for annotation in message.get("annotations", []) or []:
+        if not isinstance(annotation, dict):
+            continue
+        citation = annotation.get("url_citation")
+        if isinstance(citation, dict) and isinstance(citation.get("url"), str):
+            urls.append(citation["url"])
+        elif isinstance(annotation.get("url"), str):
+            urls.append(annotation["url"])
+    # De-duplicate, preserve order.
+    seen: dict[str, None] = {}
+    for url in urls:
+        seen.setdefault(url, None)
+    return tuple(seen)
 
 
 def _first_present_env(*names: str) -> str | None:
