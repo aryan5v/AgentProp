@@ -86,7 +86,11 @@ def _depths(plan: Plan) -> dict[str, int]:
         if sub is None or not sub.depends_on or sid in seen:
             depth[sid] = 0
             return 0
-        d = 1 + max(resolve(p, seen | {sid}) for p in sub.depends_on if p in by_id)
+        known_deps = [p for p in sub.depends_on if p in by_id]
+        if not known_deps:
+            depth[sid] = 1
+            return 1
+        d = 1 + max(resolve(p, seen | {sid}) for p in known_deps)
         depth[sid] = d
         return d
 

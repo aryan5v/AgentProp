@@ -30,6 +30,7 @@ class SynthesisResult:
     latency_s: float
     citations: tuple[str, ...]
     used_subanswers: int
+    tokens_used: int = 0
 
 
 @dataclass(slots=True)
@@ -87,4 +88,5 @@ class Synthesizer:
             latency_s=response.latency_s,
             citations=tuple(seen),
             used_subanswers=len(ordered),
+            tokens_used=response.usage.total_tokens,
         )

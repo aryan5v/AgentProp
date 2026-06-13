@@ -110,12 +110,16 @@ def parse_plan(task: str, raw: str) -> Plan:
         subtasks = [SubTask(id="s1", question=task, needs_search=True)]
         confidence = 0.0
     else:
-        confidence = float(payload.get("confidence", 0.5))
+        try:
+            confidence = float(payload.get("confidence", 0.5))
+        except (ValueError, TypeError):
+            confidence = 0.5
+    confidence = max(0.0, min(1.0, confidence))
     return Plan(
         task=task,
         subtasks=tuple(subtasks),
         synthesis_instruction=str(payload.get("synthesis_instruction", "")),
-        confidence=max(0.0, min(1.0, confidence)),
+        confidence=confidence,
     )
 
 

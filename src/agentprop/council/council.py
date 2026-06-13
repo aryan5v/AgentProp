@@ -140,7 +140,7 @@ class Council:
             ExecutionEvent(
                 step=len(resolved) + 1,
                 command=f"synthesize:{synth.model}",
-                tokens_used=0,
+                tokens_used=synth.tokens_used,
                 elapsed_s=synth.latency_s,
                 progress_made=True,
                 final_answer_written=True,
@@ -176,12 +176,17 @@ class Council:
         whole = SubTask(id="whole", question=task, needs_search=True)
         checked: list[CheckedSubAnswer] = []
         for step, (model, resp) in enumerate(responses.items(), start=1):
+            risk = self.claim_checker.risk_fn(whole, resp)
+            if self.claim_checker.gate is not None and self.claim_checker.gate.is_calibrated:
+                quarantined = self.claim_checker.gate.should_flag(risk)
+            else:
+                quarantined = risk >= self.claim_checker.risk_threshold
             result = CheckedSubAnswer(
                 subtask_id=model,
                 model=model,
                 text=resp.text,
-                risk=self.claim_checker.risk_fn(whole, resp),
-                quarantined=False,
+                risk=risk,
+                quarantined=quarantined,
                 citations=resp.citations,
             )
             checked.append(result)
@@ -199,6 +204,7 @@ class Council:
             ExecutionEvent(
                 step=len(responses) + 1,
                 command=f"synthesize:{synth.model}",
+                tokens_used=synth.tokens_used,
                 elapsed_s=synth.latency_s,
                 progress_made=True,
                 final_answer_written=True,
@@ -227,6 +233,7 @@ class Council:
         subtask_cost = sum(r.cost_usd for _, r in resolved)
         subtask_tokens = sum(r.usage.total_tokens for _, r in resolved)
         synth_cost = getattr(synth, "cost_usd", 0.0)
+        synth_tokens = getattr(synth, "tokens_used", 0)
         wall = max((r.latency_s for _, r in resolved), default=0.0) + getattr(
             synth, "latency_s", 0.0
         )
@@ -244,7 +251,7 @@ class Council:
             quarantined_count=quarantined,
             total_cost_usd=planner_cost + subtask_cost + synth_cost,
             wall_latency_s=wall,
-            total_tokens=subtask_tokens,
+            total_tokens=subtask_tokens + synth_tokens,
             citations=getattr(synth, "citations", ()),
             plan_confidence=plan.confidence,
             trace=list(session.trace_rows),
