@@ -99,32 +99,21 @@ class Council:
 
         assignments = self.assigner.assign(plan, self.pool)
         by_id = {s.id: s for s in plan.subtasks}
-        calls = []
-        for assignment in assignments:
-            sub = by_id[assignment.subtask_id]
-            retrieval = self.retrieval.for_subtask(sub.question)
-            calls.append((assignment, sub, retrieval.extra_body))
-
+        ordered_subs = [by_id[a.subtask_id] for a in assignments]
         responses = self.pool.map_assignments(
             [
-                (a.model, self.subtask_system, sub.question)
-                for a, sub, _ in calls
-            ],
-            extra_body=None,
-        )
-        # Re-run only the search-augmented sub-tasks with their plugin body when
-        # retrieval differs per sub-task. (extra_body is per-call; map_assignments
-        # shares one body, so apply retrieval individually when enabled.)
-        resolved: list[tuple[SubTask, ModelResponse]] = []
-        for (assignment, sub, extra_body), resp in zip(calls, responses, strict=True):
-            if extra_body:
-                resp = self.pool.call(
-                    assignment.model,
-                    system_prompt=self.subtask_system,
-                    user_prompt=sub.question,
-                    extra_body=extra_body,
+                (
+                    a.model,
+                    self.subtask_system,
+                    sub.question,
+                    self.retrieval.for_subtask(sub.question).extra_body or None,
                 )
-            resolved.append((sub, resp))
+                for a, sub in zip(assignments, ordered_subs, strict=True)
+            ]
+        )
+        resolved: list[tuple[SubTask, ModelResponse]] = list(
+            zip(ordered_subs, responses, strict=True)
+        )
 
         checked: list[CheckedSubAnswer] = []
         for step, (sub, resp) in enumerate(resolved, start=1):

@@ -128,7 +128,7 @@ def test_council_assigned_path(monkeypatch) -> None:
     assert result.subtask_count == 2
     assert result.total_cost_usd > 0
     assert result.total_tokens > 0
-    assert "https://syn.example" in result.citations
+    assert any(url == "https://syn.example" for url in result.citations)
     assert result.trace  # ControlSession recorded events
 
 

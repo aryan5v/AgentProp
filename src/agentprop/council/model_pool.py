@@ -121,9 +121,9 @@ class ModelPool:
     ) -> ModelResponse:
         """Call one model; never raises — failures are captured on the response."""
 
-        spec = self.spec(model)
-        client = self._client(spec)
         try:
+            spec = self.spec(model)
+            client = self._client(spec)
             result = client.chat(
                 system_prompt=system_prompt,
                 user_prompt=user_prompt,
@@ -161,9 +161,10 @@ class ModelPool:
     ) -> dict[str, ModelResponse]:
         """Call several models on the same prompt in parallel (the Fusion shape)."""
 
-        if not models:
+        unique = list(dict.fromkeys(models))  # dedupe, preserve order
+        if not unique:
             return {}
-        with ThreadPoolExecutor(max_workers=min(self.max_workers, len(models))) as pool:
+        with ThreadPoolExecutor(max_workers=min(self.max_workers, len(unique))) as pool:
             futures = {
                 model: pool.submit(
                     self.call,
@@ -174,39 +175,51 @@ class ModelPool:
                     max_tokens=max_tokens,
                     extra_body=extra_body,
                 )
-                for model in models
+                for model in unique
             }
             return {model: future.result() for model, future in futures.items()}
 
     def map_assignments(
         self,
-        assignments: Sequence[tuple[str, str, str]],
+        assignments: Sequence[
+            tuple[str, str, str] | tuple[str, str, str, dict[str, Any] | None]
+        ],
         *,
         temperature: float = 0.1,
         max_tokens: int | None = None,
         extra_body: dict[str, Any] | None = None,
     ) -> list[ModelResponse]:
-        """Run a list of ``(model, system_prompt, user_prompt)`` calls in parallel.
+        """Run ``(model, system_prompt, user_prompt[, extra_body])`` calls in parallel.
 
         This is the decompose-and-assign shape: different models on different
-        sub-tasks, unlike ``fan_out`` which runs many models on one prompt.
+        sub-tasks, unlike ``fan_out`` which runs many models on one prompt. A
+        4th tuple element carries per-assignment request extensions (e.g. a
+        sub-task's own retrieval plugin), merged over the shared ``extra_body``.
         """
 
         if not assignments:
             return []
         with ThreadPoolExecutor(max_workers=min(self.max_workers, len(assignments))) as pool:
-            futures = [
-                pool.submit(
-                    self.call,
-                    model,
-                    system_prompt=system_prompt,
-                    user_prompt=user_prompt,
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                    extra_body=extra_body,
+            futures = []
+            for item in assignments:
+                model, system_prompt, user_prompt = item[0], item[1], item[2]
+                item_extra = item[3] if len(item) > 3 else None
+                merged = (
+                    {**(extra_body or {}), **(item_extra or {})}
+                    if (extra_body or item_extra)
+                    else None
                 )
-                for model, system_prompt, user_prompt in assignments
-            ]
+                futures.append(
+                    pool.submit(
+                        self.call,
+                        model,
+                        system_prompt=system_prompt,
+                        user_prompt=user_prompt,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                        extra_body=merged,
+                    )
+                )
             return [future.result() for future in futures]
 
     def _client(self, spec: ModelSpec) -> OpenAICompatibleChatClient:

@@ -132,10 +132,43 @@ def test_extra_body_passed_through(monkeypatch) -> None:
     assert _FakeClient.last_kwargs["extra_body"] == {"plugins": [{"id": "web"}]}
 
 
-def test_missing_key_raises() -> None:
+def test_missing_key_does_not_raise_returns_error(monkeypatch) -> None:
+    # call() honors its "never raises" contract even for config errors.
     pool = ModelPool(specs=(_spec("m", 1, 1),), api_key="")
+    resp = pool.call("m", system_prompt="s", user_prompt="u")
+    assert not resp.ok
+    assert "no API key" in (resp.error or "")
+
+
+def test_unknown_model_returns_error_not_raise(monkeypatch) -> None:
+    pool = _pool(monkeypatch, [_spec("m", 1, 1)])
+    resp = pool.call("does-not-exist", system_prompt="s", user_prompt="u")
+    assert not resp.ok
+    assert "KeyError" in (resp.error or "")
+
+
+def test_fan_out_dedupes_models(monkeypatch) -> None:
+    pool = _pool(monkeypatch, [_spec("a", 1, 1)])
+    out = pool.fan_out(["a", "a", "a"], system_prompt="s", user_prompt="u")
+    assert set(out) == {"a"}
+
+
+def test_map_assignments_merges_per_item_extra_body(monkeypatch) -> None:
+    pool = _pool(monkeypatch, [_spec("a", 1, 1)])
+    pool.map_assignments([("a", "sys", "q", {"plugins": [{"id": "web"}]})])
+    assert _FakeClient.last_kwargs["extra_body"] == {"plugins": [{"id": "web"}]}
+
+
+def test_extra_body_cannot_override_reserved_keys() -> None:
+    from agentprop.evaluation.llm_execution import OpenAICompatibleChatClient
+
+    client = OpenAICompatibleChatClient(api_key="k", model="m")
     with pytest.raises(ValueError):
-        pool.call("m", system_prompt="s", user_prompt="u")
+        client.chat(system_prompt="s", user_prompt="u", extra_body={"model": "evil"})
+
+
+def test_extract_citations_ignores_non_list_annotations() -> None:
+    assert _extract_citations({"choices": [{"message": {"annotations": 5}}]}) == ()
 
 
 def test_openrouter_web_search_builds_plugin() -> None:

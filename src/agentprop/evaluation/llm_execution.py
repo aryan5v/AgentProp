@@ -109,8 +109,13 @@ class OpenAICompatibleChatClient:
         if max_tokens is not None:
             payload["max_tokens"] = max_tokens
         if extra_body:
-            for key, value in extra_body.items():
-                payload[key] = value
+            reserved = {"model", "messages", "temperature", "max_tokens"}
+            overlap = reserved & set(extra_body)
+            if overlap:
+                raise ValueError(
+                    f"extra_body cannot override reserved keys: {', '.join(sorted(overlap))}"
+                )
+            payload.update(extra_body)
         request = urllib.request.Request(
             f"{self.base_url}/chat/completions",
             data=json.dumps(payload).encode("utf-8"),
@@ -210,14 +215,16 @@ def _extract_citations(payload: dict[str, Any]) -> tuple[str, ...]:
     if not isinstance(message, dict):
         return ()
     urls: list[str] = []
-    for annotation in message.get("annotations", []) or []:
-        if not isinstance(annotation, dict):
-            continue
-        citation = annotation.get("url_citation")
-        if isinstance(citation, dict) and isinstance(citation.get("url"), str):
-            urls.append(citation["url"])
-        elif isinstance(annotation.get("url"), str):
-            urls.append(annotation["url"])
+    annotations = message.get("annotations")
+    if isinstance(annotations, list):
+        for annotation in annotations:
+            if not isinstance(annotation, dict):
+                continue
+            citation = annotation.get("url_citation")
+            if isinstance(citation, dict) and isinstance(citation.get("url"), str):
+                urls.append(citation["url"])
+            elif isinstance(annotation.get("url"), str):
+                urls.append(annotation["url"])
     # De-duplicate, preserve order.
     seen: dict[str, None] = {}
     for url in urls:
