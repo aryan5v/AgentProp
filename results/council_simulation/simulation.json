@@ -1,0 +1,78 @@
+[
+  {
+    "accuracy": {
+      "confidence": 0.95,
+      "lower": 0.55,
+      "mean": 0.55,
+      "samples": 500,
+      "upper": 0.55
+    },
+    "cost_usd": {
+      "confidence": 0.95,
+      "lower": 0.06,
+      "mean": 0.06,
+      "samples": 500,
+      "upper": 0.06
+    },
+    "mean_accuracy": 0.55,
+    "mean_cost_usd": 0.06,
+    "strategy": "single-budget"
+  },
+  {
+    "accuracy": {
+      "confidence": 0.95,
+      "lower": 0.7,
+      "mean": 0.7,
+      "samples": 500,
+      "upper": 0.7
+    },
+    "cost_usd": {
+      "confidence": 0.95,
+      "lower": 0.72,
+      "mean": 0.72,
+      "samples": 500,
+      "upper": 0.72
+    },
+    "mean_accuracy": 0.7,
+    "mean_cost_usd": 0.72,
+    "strategy": "single-frontier"
+  },
+  {
+    "accuracy": {
+      "confidence": 0.95,
+      "lower": 0.7580728794866176,
+      "mean": 0.759905411093038,
+      "samples": 500,
+      "upper": 0.7616801177799047
+    },
+    "cost_usd": {
+      "confidence": 0.95,
+      "lower": 0.2745,
+      "mean": 0.2745,
+      "samples": 500,
+      "upper": 0.2745
+    },
+    "mean_accuracy": 0.759905411093038,
+    "mean_cost_usd": 0.2745,
+    "strategy": "ensemble"
+  },
+  {
+    "accuracy": {
+      "confidence": 0.95,
+      "lower": 0.7071146485518351,
+      "mean": 0.7229522321001928,
+      "samples": 500,
+      "upper": 0.7369588625339999
+    },
+    "cost_usd": {
+      "confidence": 0.95,
+      "lower": 0.060344999999999996,
+      "mean": 0.060759,
+      "samples": 500,
+      "upper": 0.061173000000000005
+    },
+    "mean_accuracy": 0.7229522321001928,
+    "mean_cost_usd": 0.060759,
+    "strategy": "council"
+  }
+]

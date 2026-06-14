@@ -1,0 +1,438 @@
+{
+  "model": "gemini-3.1-pro-preview",
+  "seeds": [
+    "planner",
+    "tester"
+  ],
+  "broadcast": {
+    "tasks": 10.0,
+    "passed": 10.0,
+    "success_rate": 1.0,
+    "mean_tokens": 9243.4,
+    "total_tokens": 92434.0
+  },
+  "agentprop": {
+    "tasks": 10.0,
+    "passed": 7.0,
+    "success_rate": 0.7,
+    "mean_tokens": 7725.4,
+    "total_tokens": 77254.0
+  },
+  "fitted": {
+    "predicted_saving": 0.2258684976355038,
+    "broadcast_total_cost": 10996.0,
+    "seeded_total_cost": 8512.35,
+    "fitted_edges": [
+      {
+        "source": "coder",
+        "target": "tester",
+        "weight": 10.0,
+        "message_cost": 1677.0,
+        "reliability": 1.0
+      },
+      {
+        "source": "planner",
+        "target": "coder",
+        "weight": 10.0,
+        "message_cost": 1957.0,
+        "reliability": 1.0
+      },
+      {
+        "source": "reviewer",
+        "target": "final",
+        "weight": 10.0,
+        "message_cost": 1663.0,
+        "reliability": 1.0
+      },
+      {
+        "source": "tester",
+        "target": "reviewer",
+        "weight": 10.0,
+        "message_cost": 201.0,
+        "reliability": 1.0
+      }
+    ]
+  },
+  "rows": [
+    {
+      "arm": "broadcast",
+      "task_id": "to_base",
+      "passed": true,
+      "detail": "ok",
+      "total_tokens": 5725,
+      "stage_tokens": {
+        "planner": 1339,
+        "coder": 1790,
+        "tester": 1308,
+        "reviewer": 1288
+      },
+      "stage_full_context": {
+        "planner": true,
+        "coder": true,
+        "tester": true,
+        "reviewer": true
+      }
+    },
+    {
+      "arm": "agentprop",
+      "task_id": "to_base",
+      "passed": true,
+      "detail": "ok",
+      "total_tokens": 9673,
+      "stage_tokens": {
+        "planner": 1766,
+        "coder": 1235,
+        "tester": 4328,
+        "reviewer": 1807
+      },
+      "stage_full_context": {
+        "planner": true,
+        "coder": false,
+        "tester": true,
+        "reviewer": false
+      }
+    },
+    {
+      "arm": "broadcast",
+      "task_id": "rle_encode",
+      "passed": true,
+      "detail": "ok",
+      "total_tokens": 10069,
+      "stage_tokens": {
+        "planner": 1706,
+        "coder": 2222,
+        "tester": 4458,
+        "reviewer": 1683
+      },
+      "stage_full_context": {
+        "planner": true,
+        "coder": true,
+        "tester": true,
+        "reviewer": true
+      }
+    },
+    {
+      "arm": "agentprop",
+      "task_id": "rle_encode",
+      "passed": true,
+      "detail": "ok",
+      "total_tokens": 4796,
+      "stage_tokens": {
+        "planner": 961,
+        "coder": 914,
+        "tester": 1530,
+        "reviewer": 854
+      },
+      "stage_full_context": {
+        "planner": true,
+        "coder": false,
+        "tester": true,
+        "reviewer": false
+      }
+    },
+    {
+      "arm": "broadcast",
+      "task_id": "roman_to_int",
+      "passed": true,
+      "detail": "ok",
+      "total_tokens": 10509,
+      "stage_tokens": {
+        "planner": 2162,
+        "coder": 3479,
+        "tester": 2160,
+        "reviewer": 2708
+      },
+      "stage_full_context": {
+        "planner": true,
+        "coder": true,
+        "tester": true,
+        "reviewer": true
+      }
+    },
+    {
+      "arm": "agentprop",
+      "task_id": "roman_to_int",
+      "passed": false,
+      "detail": "AssertionError",
+      "total_tokens": 8669,
+      "stage_tokens": {
+        "planner": 1498,
+        "coder": 1411,
+        "tester": 1618,
+        "reviewer": 3605
+      },
+      "stage_full_context": {
+        "planner": true,
+        "coder": false,
+        "tester": true,
+        "reviewer": false
+      }
+    },
+    {
+      "arm": "broadcast",
+      "task_id": "is_valid_ipv4",
+      "passed": true,
+      "detail": "ok",
+      "total_tokens": 12594,
+      "stage_tokens": {
+        "planner": 2153,
+        "coder": 3662,
+        "tester": 4450,
+        "reviewer": 2329
+      },
+      "stage_full_context": {
+        "planner": true,
+        "coder": true,
+        "tester": true,
+        "reviewer": true
+      }
+    },
+    {
+      "arm": "agentprop",
+      "task_id": "is_valid_ipv4",
+      "passed": true,
+      "detail": "ok",
+      "total_tokens": 9147,
+      "stage_tokens": {
+        "planner": 2444,
+        "coder": 1438,
+        "tester": 2137,
+        "reviewer": 2591
+      },
+      "stage_full_context": {
+        "planner": true,
+        "coder": false,
+        "tester": true,
+        "reviewer": false
+      }
+    },
+    {
+      "arm": "broadcast",
+      "task_id": "add_fractions",
+      "passed": true,
+      "detail": "ok",
+      "total_tokens": 12421,
+      "stage_tokens": {
+        "planner": 1751,
+        "coder": 2213,
+        "tester": 4561,
+        "reviewer": 3896
+      },
+      "stage_full_context": {
+        "planner": true,
+        "coder": true,
+        "tester": true,
+        "reviewer": true
+      }
+    },
+    {
+      "arm": "agentprop",
+      "task_id": "add_fractions",
+      "passed": false,
+      "detail": "AssertionError: expected ValueError for zero denominator",
+      "total_tokens": 9334,
+      "stage_tokens": {
+        "planner": 1841,
+        "coder": 1505,
+        "tester": 2802,
+        "reviewer": 2649
+      },
+      "stage_full_context": {
+        "planner": true,
+        "coder": false,
+        "tester": true,
+        "reviewer": false
+      }
+    },
+    {
+      "arm": "broadcast",
+      "task_id": "merge_intervals",
+      "passed": true,
+      "detail": "ok",
+      "total_tokens": 6706,
+      "stage_tokens": {
+        "planner": 1264,
+        "coder": 1677,
+        "tester": 2019,
+        "reviewer": 1746
+      },
+      "stage_full_context": {
+        "planner": true,
+        "coder": true,
+        "tester": true,
+        "reviewer": true
+      }
+    },
+    {
+      "arm": "agentprop",
+      "task_id": "merge_intervals",
+      "passed": true,
+      "detail": "ok",
+      "total_tokens": 4894,
+      "stage_tokens": {
+        "planner": 945,
+        "coder": 1107,
+        "tester": 1691,
+        "reviewer": 614
+      },
+      "stage_full_context": {
+        "planner": true,
+        "coder": false,
+        "tester": true,
+        "reviewer": false
+      }
+    },
+    {
+      "arm": "broadcast",
+      "task_id": "longest_unique",
+      "passed": true,
+      "detail": "ok",
+      "total_tokens": 5139,
+      "stage_tokens": {
+        "planner": 937,
+        "coder": 1862,
+        "tester": 1327,
+        "reviewer": 1013
+      },
+      "stage_full_context": {
+        "planner": true,
+        "coder": true,
+        "tester": true,
+        "reviewer": true
+      }
+    },
+    {
+      "arm": "agentprop",
+      "task_id": "longest_unique",
+      "passed": true,
+      "detail": "ok",
+      "total_tokens": 6798,
+      "stage_tokens": {
+        "planner": 1175,
+        "coder": 1049,
+        "tester": 1462,
+        "reviewer": 2575
+      },
+      "stage_full_context": {
+        "planner": true,
+        "coder": false,
+        "tester": true,
+        "reviewer": false
+      }
+    },
+    {
+      "arm": "broadcast",
+      "task_id": "is_balanced",
+      "passed": true,
+      "detail": "ok",
+      "total_tokens": 8325,
+      "stage_tokens": {
+        "planner": 2080,
+        "coder": 2629,
+        "tester": 1461,
+        "reviewer": 2155
+      },
+      "stage_full_context": {
+        "planner": true,
+        "coder": true,
+        "tester": true,
+        "reviewer": true
+      }
+    },
+    {
+      "arm": "agentprop",
+      "task_id": "is_balanced",
+      "passed": false,
+      "detail": "AssertionError",
+      "total_tokens": 7657,
+      "stage_tokens": {
+        "planner": 2204,
+        "coder": 1095,
+        "tester": 2291,
+        "reviewer": 1530
+      },
+      "stage_full_context": {
+        "planner": true,
+        "coder": false,
+        "tester": true,
+        "reviewer": false
+      }
+    },
+    {
+      "arm": "broadcast",
+      "task_id": "spiral_order",
+      "passed": true,
+      "detail": "ok",
+      "total_tokens": 10989,
+      "stage_tokens": {
+        "planner": 1326,
+        "coder": 3658,
+        "tester": 4509,
+        "reviewer": 1496
+      },
+      "stage_full_context": {
+        "planner": true,
+        "coder": true,
+        "tester": true,
+        "reviewer": true
+      }
+    },
+    {
+      "arm": "agentprop",
+      "task_id": "spiral_order",
+      "passed": true,
+      "detail": "ok",
+      "total_tokens": 6979,
+      "stage_tokens": {
+        "planner": 1931,
+        "coder": 1282,
+        "tester": 2200,
+        "reviewer": 1029
+      },
+      "stage_full_context": {
+        "planner": true,
+        "coder": false,
+        "tester": true,
+        "reviewer": false
+      }
+    },
+    {
+      "arm": "broadcast",
+      "task_id": "top_k_words",
+      "passed": true,
+      "detail": "ok",
+      "total_tokens": 9957,
+      "stage_tokens": {
+        "planner": 1521,
+        "coder": 4137,
+        "tester": 2244,
+        "reviewer": 2055
+      },
+      "stage_full_context": {
+        "planner": true,
+        "coder": true,
+        "tester": true,
+        "reviewer": true
+      }
+    },
+    {
+      "arm": "agentprop",
+      "task_id": "top_k_words",
+      "passed": true,
+      "detail": "ok",
+      "total_tokens": 9307,
+      "stage_tokens": {
+        "planner": 1868,
+        "coder": 1548,
+        "tester": 3908,
+        "reviewer": 1446
+      },
+      "stage_full_context": {
+        "planner": true,
+        "coder": false,
+        "tester": true,
+        "reviewer": false
+      }
+    }
+  ]
+}
