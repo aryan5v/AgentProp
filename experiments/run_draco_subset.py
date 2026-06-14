@@ -46,6 +46,7 @@ FRONTIER_SPEC = ModelSpec(
     "anthropic/claude-opus-4-6", 5.0, 25.0, capability_tier=3, tags=("search",)
 )
 JUDGE_MODEL = "google/gemini-3-pro-preview"
+JUDGE_SPEC = ModelSpec(JUDGE_MODEL, 0.50, 1.50, capability_tier=2)
 
 _JUDGE_SYSTEM = (
     "You are a strict grader. Given a QUERY, a RESPONSE, and a single CRITERION, "
@@ -102,7 +103,7 @@ def main() -> int:
         return 0
 
     tasks = load_draco_jsonl(args.tasks)[: args.limit]
-    pool = ModelPool(specs=(*BUDGET_SPECS, FRONTIER_SPEC))
+    pool = ModelPool(specs=(*BUDGET_SPECS, FRONTIER_SPEC, JUDGE_SPEC))
     budget_pool = ModelPool(specs=BUDGET_SPECS, api_key=pool.api_key)
     judge = make_judge(pool)
 

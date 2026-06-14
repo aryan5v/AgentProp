@@ -92,8 +92,11 @@ def grade_response(
             raw += criterion.weight
             met_count += 1
         # Pass-rate credit: positive criteria want MET, penalties want UNMET.
-        correct = met if criterion.weight > 0 else (not met)
-        axis_hits.setdefault(criterion.axis, []).append(correct)
+        # Zero-weight criteria are excluded from pass-rate calculations.
+        if criterion.weight > 0:
+            axis_hits.setdefault(criterion.axis, []).append(met)
+        elif criterion.weight < 0:
+            axis_hits.setdefault(criterion.axis, []).append(not met)
     denom = task.positive_weight_total or 1.0
     normalized = max(0.0, min(1.0, raw / denom)) * 100.0
     all_correct = [c for hits in axis_hits.values() for c in hits]
@@ -175,6 +178,12 @@ def _normalize_criteria(raw: object) -> list[dict[str, object]]:
         columns = {k: v for k, v in raw.items() if isinstance(v, list)}
         if not columns:
             return []
-        length = min(len(v) for v in columns.values())
+        lengths = [len(v) for v in columns.values()]
+        if len(set(lengths)) > 1:
+            raise ValueError(
+                f"Mismatched column lengths in dict-of-columns criteria: "
+                f"{dict(zip(columns.keys(), lengths, strict=True))}"
+            )
+        length = lengths[0] if lengths else 0
         return [{k: columns[k][i] for k in columns} for i in range(length)]
     return []
