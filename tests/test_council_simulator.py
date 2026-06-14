@@ -9,11 +9,11 @@ from agentprop.council.simulator import (
 )
 
 POOL = [
-    SimModel("flash", competence=0.55, price_per_ktok=0.10, tier=1),
-    SimModel("kimi", competence=0.58, price_per_ktok=0.15, tier=2),
-    SimModel("deepseek", competence=0.60, price_per_ktok=0.20, tier=2),
+    SimModel("flash", competence=0.55, price_per_mtok=0.10, tier=1),
+    SimModel("kimi", competence=0.58, price_per_mtok=0.15, tier=2),
+    SimModel("deepseek", competence=0.60, price_per_mtok=0.20, tier=2),
 ]
-FRONTIER = SimModel("frontier", competence=0.70, price_per_ktok=1.20, tier=3)
+FRONTIER = SimModel("frontier", competence=0.70, price_per_mtok=1.20, tier=3)
 
 
 def _by_name(outcomes):  # noqa: ANN001

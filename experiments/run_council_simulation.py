@@ -10,7 +10,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
+
+# Bootstrap sys.path to find agentprop when running from a fresh checkout
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+if (_REPO_ROOT / "src").exists():
+    sys.path.insert(0, str(_REPO_ROOT / "src"))
 
 from agentprop.council.simulator import SimConfig, SimModel, simulate_strategies
 
@@ -21,14 +27,18 @@ def main() -> int:
     parser.add_argument("--trials", type=int, default=500)
     args = parser.parse_args()
 
+    if args.trials <= 0:
+        print("Error: --trials must be greater than 0", file=sys.stderr)
+        return 1
+
     # Illustrative competence/price values (NOT measured; the live runs supply
     # real numbers). Prices are rough per-Ktok blended rates.
     pool = [
-        SimModel("gemini-3-flash", competence=0.55, price_per_ktok=0.10, tier=1),
-        SimModel("kimi-k2.6", competence=0.58, price_per_ktok=0.15, tier=2),
-        SimModel("deepseek-v4-pro", competence=0.60, price_per_ktok=0.20, tier=2),
+        SimModel("gemini-3-flash", competence=0.55, price_per_mtok=0.10, tier=1),
+        SimModel("kimi-k2.6", competence=0.58, price_per_mtok=0.15, tier=2),
+        SimModel("deepseek-v4-pro", competence=0.60, price_per_mtok=0.20, tier=2),
     ]
-    frontier = SimModel("frontier", competence=0.70, price_per_ktok=1.20, tier=3)
+    frontier = SimModel("frontier", competence=0.70, price_per_mtok=1.20, tier=3)
 
     outcomes = simulate_strategies(
         pool, cfg=SimConfig(), frontier=frontier, trials=args.trials, seed=0

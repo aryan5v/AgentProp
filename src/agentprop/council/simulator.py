@@ -34,7 +34,7 @@ class SimModel:
 
     name: str
     competence: float  # P(correct) on a sub-task at its tier, in [0, 1]
-    price_per_ktok: float
+    price_per_mtok: float
     tier: int = 1
 
 
@@ -77,7 +77,7 @@ class StrategyOutcome:
 
 
 def _single_trial(model: SimModel, cfg: SimConfig) -> tuple[float, float]:
-    cost = cfg.whole_task_ktok * model.price_per_ktok / 1000.0
+    cost = cfg.whole_task_ktok * model.price_per_mtok / 1000.0
     return model.competence, cost
 
 
@@ -88,8 +88,8 @@ def _ensemble_trial(
     diversity = min(cfg.diversity_lift_cap, 0.02 * (len(pool) - 1))
     accuracy = min(1.0, base + cfg.synthesis_lift + diversity)
     accuracy = max(0.0, accuracy + rng.gauss(0.0, 0.02))
-    cost = sum(cfg.whole_task_ktok * m.price_per_ktok for m in pool) / 1000.0
-    cost += cfg.synth_ktok * synth.price_per_ktok / 1000.0
+    cost = sum(cfg.whole_task_ktok * m.price_per_mtok for m in pool) / 1000.0
+    cost += cfg.synth_ktok * synth.price_per_mtok / 1000.0
     return min(1.0, accuracy), cost
 
 
@@ -100,14 +100,14 @@ def _council_trial(
     # The pool is static, so precompute the cheapest model satisfying each tier
     # once rather than re-scanning the pool inside the sub-task loop.
     cheapest_capable = {
-        t: min((m for m in pool if m.tier >= t), key=lambda x: x.price_per_ktok)
+        t: min((m for m in pool if m.tier >= t), key=lambda x: x.price_per_mtok)
         for t in tiers
     }
     correct = 0.0
     cost = 0.0
     for _ in range(cfg.subtasks):
         model = cheapest_capable[rng.choice(tiers)]
-        cost += cfg.subtask_ktok * model.price_per_ktok / 1000.0
+        cost += cfg.subtask_ktok * model.price_per_mtok / 1000.0
         if rng.random() < model.competence:
             correct += 1.0
         else:
@@ -115,7 +115,7 @@ def _council_trial(
             correct += cfg.claim_check_recovery
     accuracy = correct / cfg.subtasks
     accuracy = min(1.0, accuracy + cfg.synthesis_lift * 0.5)
-    cost += cfg.synth_ktok * synth.price_per_ktok / 1000.0
+    cost += cfg.synth_ktok * synth.price_per_mtok / 1000.0
     return max(0.0, min(1.0, accuracy + rng.gauss(0.0, 0.02))), cost
 
 
@@ -133,7 +133,7 @@ def simulate_strategies(
     cfg = cfg or SimConfig()
     rng = random.Random(seed)
     synth = synthesizer or max(pool, key=lambda m: m.tier)
-    budget = min(pool, key=lambda m: m.price_per_ktok)
+    budget = min(pool, key=lambda m: m.price_per_mtok)
 
     def collect(fn) -> StrategyOutcome:  # type: ignore[no-untyped-def]
         accs, costs = [], []
