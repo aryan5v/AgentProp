@@ -13,11 +13,6 @@ import json
 import sys
 from pathlib import Path
 
-# Bootstrap sys.path to find agentprop when running from a fresh checkout
-_REPO_ROOT = Path(__file__).resolve().parent.parent
-if (_REPO_ROOT / "src").exists():
-    sys.path.insert(0, str(_REPO_ROOT / "src"))
-
 from agentprop.council.simulator import SimConfig, SimModel, simulate_strategies
 
 
