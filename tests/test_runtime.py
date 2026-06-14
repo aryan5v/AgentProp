@@ -794,6 +794,35 @@ def test_controlled_terminal_loop_switches_strategy_without_executing_proposal()
     assert "SWITCH_STRATEGY" in {decision.action for decision in result.decisions}
 
 
+def test_controlled_terminal_loop_finalizes_without_extra_proposal() -> None:
+    loop = ControlledTerminalLoop(config=TerminalLoopConfig(max_steps=2))
+    proposed: list[int] = []
+
+    def proposer(request: TerminalTurnRequest) -> TerminalCommandProposal:
+        proposed.append(request.step)
+        return TerminalCommandProposal(command="pytest -q")
+
+    def executor(
+        request: TerminalTurnRequest,
+        proposal: TerminalCommandProposal,
+    ) -> TerminalCommandResult:
+        return TerminalCommandResult(
+            event=ExecutionEvent(
+                step=request.step,
+                command=proposal.command,
+                verifier_run=True,
+                verifier_passed=True,
+                trusted=True,
+            )
+        )
+
+    result = loop.run(task="demo", proposer=proposer, executor=executor)
+
+    assert proposed == [1]
+    assert [decision.action for decision in result.decisions] == ["CONTINUE", "FINALIZE"]
+    assert result.passed is True
+
+
 def test_controlled_terminal_loop_logs_state_action_outcome(tmp_path) -> None:
     logger = RuntimeRewardLogger(
         CategoryBanditRoutingPolicy(arms=("agentprop_controller",), epsilon=0.0),

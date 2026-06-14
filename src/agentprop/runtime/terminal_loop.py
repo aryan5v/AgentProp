@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field, replace
 from typing import Protocol
 
@@ -103,6 +103,8 @@ class TerminalLoopConfig:
     """Whether bandit strategy selection may explore. Set False when scoring
     held-out tasks so a graded run exploits the learned policy instead of risking
     a random exploration pick."""
+    retry_proposal_on_failure: bool = True
+    max_proposal_retries_per_step: int = 3
 
 
 @dataclass(frozen=True, slots=True)
@@ -128,6 +130,13 @@ class ControlledTerminalLoop:
     config: TerminalLoopConfig = field(default_factory=TerminalLoopConfig)
     bandit: CategoryBanditRoutingPolicy | None = None
     reward_logger: RuntimeRewardLogger | None = None
+    on_strategy_switch: (
+        Callable[
+            [TerminalTurnRequest, TerminalCommandProposal, ControlDecision],
+            tuple[TerminalCommandResult, ...],
+        ]
+        | None
+    ) = None
 
     def run(
         self,
@@ -159,41 +168,40 @@ class ControlledTerminalLoop:
                 transcript=tuple(tracker.events),
                 metadata=run_metadata,
             )
-            proposal = proposer(request)
-            proposals.append(proposal)
             decision = self.controller.decide(request.features)
             decisions.append(decision)
 
             if decision.action == "FINALIZE":
                 break
-            if decision.action == "FORCE_VERIFY":
+            if decision.action == "FORCE_VERIFY" and decision.defer_command:
                 if verifier is None:
-                    # A deferred verify confirms a claimed completion; with no
-                    # verifier available the claim can never be cleared, so stop
-                    # rather than executing commands until the budget is exhausted.
-                    # A proactive (non-deferred) check just falls through to run the
-                    # proposed command this step.
-                    if decision.defer_command:
-                        break
-                else:
-                    # A proactive (non-deferred) check keeps the agent's proposed
-                    # work: run it first, then verify alongside instead of discarding.
-                    if not decision.defer_command:
-                        work = executor(request, proposal)
-                        self._observe_result(tracker, work, stdout_parts, stderr_parts)
-                        # Refresh the request so the verifier sees the command it ran.
-                        request = replace(
-                            request,
-                            features=self._features(tracker),
-                            transcript=tuple(tracker.events),
-                        )
-                    result = verifier(request, proposal)
-                    # Guarantee the forced verification counts as a verifier run so
-                    # the staleness counter resets and we do not trigger a verify-
-                    # every-step storm if the harness omits verifier_run on its result.
-                    result = _as_verifier_run(result)
-                    self._observe_result(tracker, result, stdout_parts, stderr_parts)
-                    continue
+                    break
+                result = verifier(request, None)
+                result = _as_verifier_run(result)
+                self._observe_result(tracker, result, stdout_parts, stderr_parts)
+                continue
+
+            proposal = self._propose_with_retries(proposer, request)
+            proposals.append(proposal)
+
+            if decision.action == "FORCE_VERIFY" and verifier is not None:
+                # A proactive (non-deferred) check keeps the agent's proposed
+                # work: run it first, then verify alongside instead of discarding.
+                work = executor(request, proposal)
+                self._observe_result(tracker, work, stdout_parts, stderr_parts)
+                # Refresh the request so the verifier sees the command it ran.
+                request = replace(
+                    request,
+                    features=self._features(tracker),
+                    transcript=tuple(tracker.events),
+                )
+                result = verifier(request, proposal)
+                # Guarantee the forced verification counts as a verifier run so
+                # the staleness counter resets and we do not trigger a verify-
+                # every-step storm if the harness omits verifier_run on its result.
+                result = _as_verifier_run(result)
+                self._observe_result(tracker, result, stdout_parts, stderr_parts)
+                continue
             if decision.action == "SWITCH_STRATEGY":
                 strategy = self._switch_strategy(
                     request=request,
@@ -201,11 +209,14 @@ class ControlledTerminalLoop:
                     decision=decision,
                     strategy_switcher=strategy_switcher,
                 )
+                if self.on_strategy_switch is not None:
+                    for side_effect in self.on_strategy_switch(request, proposal, decision):
+                        self._observe_result(tracker, side_effect, stdout_parts, stderr_parts)
                 tracker.observe(
                     ExecutionEvent(
                         step=step,
                         command="agentprop:switch_strategy",
-                        progress_made=True,
+                        progress_made=False,
                     )
                 )
                 continue
@@ -232,6 +243,23 @@ class ControlledTerminalLoop:
             features=features,
             reward_row=reward_row,
         )
+
+    def _propose_with_retries(
+        self,
+        proposer: TerminalCommandProposer,
+        request: TerminalTurnRequest,
+    ) -> TerminalCommandProposal:
+        proposal = proposer(request)
+        if not self.config.retry_proposal_on_failure:
+            return proposal
+        retries = 0
+        while (
+            proposal.metadata.get("proposal_failed")
+            and retries < self.config.max_proposal_retries_per_step
+        ):
+            retries += 1
+            proposal = proposer(request)
+        return proposal
 
     def _initial_strategy(self) -> str:
         if self.bandit is not None and self.config.category is not None:
